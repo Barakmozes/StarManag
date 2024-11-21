@@ -12,8 +12,8 @@ builder.prismaObject("User", {
         email: t.exposeString("email", { nullable: true }),
         image: t.exposeString("image", { nullable: true }),
         role: t.expose("role", { type: Role }),
-        // profile: t.relation("profile", {nullable: true}),
-        // favorite: t.relation("favorite",{nullable: true}),
+        profile: t.relation("profile", {nullable: true}),
+        favorite: t.relation("favorite",{nullable: true}),
         order: t.relation("order", {nullable: true})
       }),
 })

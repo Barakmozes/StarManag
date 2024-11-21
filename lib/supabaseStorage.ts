@@ -14,7 +14,7 @@ export const SupabaseImageUpload = async (file: File) => {
   const filename = `${uuidv4()}-${file?.name}`;
 
   const { data, error } = await supabase.storage
-    .from("dpsresto")
+    .from("barakbucket1")
     .upload("public/" + filename, file as File);
   if (data) {
     console.log(data);
@@ -24,7 +24,7 @@ export const SupabaseImageUpload = async (file: File) => {
 
   const filepath = data?.path;
   const { data: clientUrl } = supabase.storage
-    .from("dpsresto")
+    .from("barakbucket1")
     .getPublicUrl(`${filepath}`);
 
   return clientUrl.publicUrl;
@@ -32,7 +32,7 @@ export const SupabaseImageUpload = async (file: File) => {
 
 export const SupabaseImageDelete = async (file: string) => {
   const { data, error } = await supabase.storage
-    .from("dpsresto")
+    .from("barakbucket1")
     .remove([`public/${file}`]);
 
   console.log(data);
