@@ -20,6 +20,7 @@ import {
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Base64 } from "js-base64";
+import axios from "axios";
 
 type Props = {
   user: User;
@@ -73,35 +74,56 @@ const CartSummary = ({ user }: Props) => {
 
   const handleCheckOut = async () => {
     if (userPhone === "" || userPhone === null || userPhone === undefined) {
-      toast.error(
-        "Please add your phone number: ...Redirecting to your profile",
-        { duration: 6000 }
-      );
+      toast.error("Please add your phone number: ...Redirecting to your profile", {
+        duration: 6000,
+      });
       router.push("/user");
     }
     if (deliveryAddress === "" || deliveryAddress === null) {
       toast.error("Please add a delivery address", { duration: 3000 });
     }
-
-    const res = await addOrder({
-      cart: menus,
-      deliveryAddress,
-      deliveryFee,
-      userEmail: email,
-      userName,
-      userPhone,
-      orderNumber,
-      serviceFee,
-      total,
-      discount,
-      note,
-    });
-    if (res.data?.addOrder) {
-      const orderId = res.data.addOrder.id;
+  
+    try {
+      // Add the order
+      const orderResponse = await addOrder({
+        cart: menus,
+        deliveryAddress,
+        deliveryFee,
+        userEmail: email,
+        userName,
+        userPhone,
+        orderNumber,
+        serviceFee,
+        total,
+        discount,
+        note,
+      });
+  
+      if (!orderResponse.data?.addOrder) {
+        console.error("Order creation failed:", orderResponse.data);
+        toast.error("Failed to create order. Please try again.", { duration: 800 });
+        return;
+      }
+  
+      const orderId = orderResponse.data.addOrder.id;
       const encodedTotal = Base64.encode(total.toString());
-      router.push(`/pay/${orderId}?total=${encodedTotal}`);
-    } else {
-      toast.error("An error occured", { duration: 800 });
+  
+      // Call the backend route to generate the payment link
+      const payPlusResponse = await axios.post(`/api/payplus/${encodedTotal}`, {
+        orderId,
+        userName,
+        email,
+        userPhone,
+      });
+  
+      if (payPlusResponse.data?.paymentLink) {
+        router.push(payPlusResponse.data.paymentLink);
+      } else {
+        throw new Error("Failed to retrieve payment link");
+      }
+    } catch (error) {
+      console.error("Error in handleCheckOut:", error);
+      toast.error("An unexpected error occurred. Please try again.", { duration: 800 });
     }
   };
 

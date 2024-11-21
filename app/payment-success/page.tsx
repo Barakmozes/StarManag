@@ -1,13 +1,12 @@
-import { getCurrentUser } from "@/lib/session"
+import { getCurrentUser } from "@/lib/session";
 import SuccessPaymentComponent from "./SuccessPaymentComponent";
 
-
 const SuccessfulPaymentPage = async () => {
-    const user = await getCurrentUser()
+  const user = await getCurrentUser();
 
-    if (!user) return <div>...Ooops an error occured</div>;
+  if (!user) return <div>Authentication required to view this page.</div>;
 
   return <SuccessPaymentComponent />;
-}
+};
 
-export default SuccessfulPaymentPage
+export default SuccessfulPaymentPage;

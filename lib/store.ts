@@ -61,7 +61,7 @@ export const useCartStore = create<CartType & CartActionTypes>()(
           set(INITIAL_STATE);
         },
       }),
-      { name: "dpsresto_yt_cart", skipHydration: true }
+      { name: "You&i_cart", skipHydration: true }
     )
   )
 );
