@@ -1,20 +1,12 @@
-// app/payment-failure/page.tsx
+import { getCurrentUser } from "@/lib/session";
+import PaymentFailureComponent from "./PaymentFailureComponent";
 
-"use client";
-import { useSearchParams } from "next/navigation";
+const PaymentFailurePage = async () => {
+  const user = await getCurrentUser();
 
-const PaymentFailurePage = () => {
-  const searchParams = useSearchParams();
+  if (!user) return <div>Authentication required to view this page.</div>;
 
-  const responseCode = searchParams.get("Response");
-
-  return (
-    <div>
-      <h1>Payment Failed</h1>
-      <p>Error Code: {responseCode}</p>
-      <p>Please try again or contact support if this problem persists.</p>
-    </div>
-  );
+  return <PaymentFailureComponent />;
 };
 
 export default PaymentFailurePage;

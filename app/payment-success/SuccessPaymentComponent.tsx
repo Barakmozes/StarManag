@@ -1,10 +1,14 @@
 'use client';
 
 import {
+  AddOrderDocument,
+  AddOrderMutation,
+  AddOrderMutationVariables,
   EditOrderOnPaymentDocument,
   EditOrderOnPaymentMutation,
   EditOrderOnPaymentMutationVariables,
 } from "@/graphql/generated";
+
 import { useCartStore } from "@/lib/store";
 import { useMutation } from "@urql/next";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,25 +21,24 @@ const SuccessPaymentComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Extract parameters from the PayPlus response
-  const paymentToken = searchParams.get("page_request_uid"); // Unique payment token
-  const transactionUid = searchParams.get("transaction_uid"); // Transaction UID
-  const status = searchParams.get("status"); // Transaction status (e.g., "approved")
-  const orderId = searchParams.get("orderId"); // Order ID
-  const amount = searchParams.get("amount"); // Transaction amount (optional)
+  const paymentToken = searchParams.get("page_request_uid");
+  const transactionUid = searchParams.get("transaction_uid");
+  const status = searchParams.get("status");
+  const orderId = searchParams.get("orderId");
 
   const { resetCart } = useCartStore();
   const [loading, setLoading] = useState(false);
 
-  // Mutation to update the order based on payment success
-  const [_, editOrderOnPayment] = useMutation<
-    EditOrderOnPaymentMutation,
-    EditOrderOnPaymentMutationVariables
-  >(EditOrderOnPaymentDocument);
+  const [_, addOrder] = useMutation<AddOrderMutation, AddOrderMutationVariables>(
+    AddOrderDocument
+  );
+
+  const [_a, editPaidOrder] = useMutation<EditOrderOnPaymentMutation, EditOrderOnPaymentMutationVariables>(
+    EditOrderOnPaymentDocument
+  );
 
   useEffect(() => {
     const handlePaymentSuccess = async () => {
-      // Ensure all required parameters are present
       if (!orderId || !paymentToken || !transactionUid || !status) {
         toast.error("Invalid payment details. Unable to process the order.", { duration: 800 });
         console.error("Missing required parameters:", {
@@ -47,7 +50,6 @@ const SuccessPaymentComponent = () => {
         return;
       }
 
-      // Check if the transaction was successful
       if (status !== "approved") {
         toast.error("Payment was not successful. Please contact support.", { duration: 800 });
         console.error("Transaction failed with status:", status);
@@ -57,32 +59,59 @@ const SuccessPaymentComponent = () => {
       try {
         setLoading(true);
 
-        console.log("Updating order with payment details:", {
-          orderId,
-          paymentToken,
-          transactionUid,
-          amount,
-        });
+        // Retrieve order details from localStorage
+        const orderDetails = JSON.parse(localStorage.getItem("You&i_order_details") || "{}");
 
-        // Call the mutation to update the order
-        const res = await editOrderOnPayment({
-          editOrderOnPaymentId: orderId,
-          paymentToken, // Use the payment token from PayPlus
-        });
-
-        console.log("Mutation response:", res);
-
-        if (res.data?.editOrderOnPayment) {
-          toast.success("Order updated successfully!", { duration: 800 });
-          resetCart();
-          router.push(`/user/orders`);
-        } else {
-          console.error("Mutation failed. Response:", res.error || "Unknown error");
-          throw new Error("Failed to update order in the database.");
+        if (!orderDetails.cart || orderDetails.cart.length === 0) {
+          throw new Error("Order details are missing or invalid.");
         }
+
+        // console.log("Adding order with details:", orderDetails);
+
+        // Add the order to the database
+        const addOrderRes = await addOrder({
+          cart: orderDetails.cart,
+          deliveryAddress: orderDetails.deliveryAddress,
+          deliveryFee: orderDetails.deliveryFee,
+          userEmail: orderDetails.userEmail,
+          userName: orderDetails.userName,
+          userPhone: orderDetails.userPhone,
+          orderNumber: orderDetails.orderNumber,
+          serviceFee: orderDetails.serviceFee,
+          total: orderDetails.total,
+          discount: orderDetails.discount,
+          note: orderDetails.note,
+        });
+
+        if (!addOrderRes.data?.addOrder) {
+          throw new Error("Failed to create order in the database.");
+        }
+
+        // console.log("Order created successfully:", addOrderRes.data.addOrder);
+
+        // Update the payment status and token
+        const editOrderRes = await editPaidOrder({
+          editOrderOnPaymentId: addOrderRes.data.addOrder.id, // Use the ID from the created order
+          paymentToken: paymentToken,
+        });
+
+        if (!editOrderRes.data?.editOrderOnPayment) {
+          throw new Error("Failed to update order payment status.");
+        }
+
+        // console.log("Order payment updated successfully:", editOrderRes.data.editOrderOnPayment);
+
+        toast.success("Order successfully created and payment updated!", { duration: 800 });
+
+        // Clear cart and localStorage
+        resetCart();
+        localStorage.removeItem("You&i_order_details");
+
+        // Redirect to user orders page
+        router.push(`/user/orders`);
       } catch (error) {
-        console.error("Error updating order:", error);
-        toast.error("An error occurred while updating the order. Please contact support.", {
+        console.error("Error processing order:", error);
+        toast.error("An error occurred while processing the order. Please contact support.", {
           duration: 800,
         });
       } finally {
@@ -91,7 +120,7 @@ const SuccessPaymentComponent = () => {
     };
 
     handlePaymentSuccess();
-  }, [orderId, paymentToken, transactionUid, status, amount, editOrderOnPayment, resetCart, router]);
+  }, [addOrder, editPaidOrder, resetCart, router, orderId, paymentToken, status, transactionUid]);
 
   return (
     <div className="flex flex-col items-center justify-center py-8 px-6 mb-24">

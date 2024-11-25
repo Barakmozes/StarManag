@@ -14,4 +14,4 @@ const combinedString = `${year.toString().slice(-2)}${month
   .toString()
   .padStart(2, "0")}`;
 
-export const ORDER_NUMBER = "DPS" + combinedString;
+export const ORDER_NUMBER = "BARAK" + combinedString;

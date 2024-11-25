@@ -82,10 +82,10 @@ const CartSummary = ({ user }: Props) => {
     if (deliveryAddress === "" || deliveryAddress === null) {
       toast.error("Please add a delivery address", { duration: 3000 });
     }
-  
+    console.log(orderNumber);
     try {
-      // Add the order
-      const orderResponse = await addOrder({
+      // Save order details with a unique key
+      const orderDetails = {
         cart: menus,
         deliveryAddress,
         deliveryFee,
@@ -97,20 +97,15 @@ const CartSummary = ({ user }: Props) => {
         total,
         discount,
         note,
-      });
+      };
   
-      if (!orderResponse.data?.addOrder) {
-        console.error("Order creation failed:", orderResponse.data);
-        toast.error("Failed to create order. Please try again.", { duration: 800 });
-        return;
-      }
+      localStorage.setItem("You&i_order_details", JSON.stringify(orderDetails));
   
-      const orderId = orderResponse.data.addOrder.id;
       const encodedTotal = Base64.encode(total.toString());
   
-      // Call the backend route to generate the payment link
+      // Generate the payment link
       const payPlusResponse = await axios.post(`/api/payplus/${encodedTotal}`, {
-        orderId,
+        orderId: orderNumber,
         userName,
         email,
         userPhone,
@@ -126,7 +121,6 @@ const CartSummary = ({ user }: Props) => {
       toast.error("An unexpected error occurred. Please try again.", { duration: 800 });
     }
   };
-
   if (menus.length < 1) {
     return (
       <div className="flex items-center justify-center space-x-3">

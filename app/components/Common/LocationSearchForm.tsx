@@ -17,8 +17,6 @@ const LocationSearchForm = () => {
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  /* Reverse geocoding */
-  /* Get User Location on page load and if granted permission by User */
   useEffect(() => {
     const askForLocationPermission = () => {
       navigator.geolocation.getCurrentPosition(
@@ -31,38 +29,30 @@ const LocationSearchForm = () => {
           }));
         },
         (error) => {
-          // Handle location access denied or error
           toast.error("Error getting location:");
           console.log(error);
         }
       );
     };
 
-    // Check if geolocation is supported by the browser
     if ("geolocation" in navigator) {
-      // Ask for permission
       navigator.permissions
         .query({ name: "geolocation" })
         .then((result) => {
           if (result.state === "granted") {
-            // Permission already granted
             askForLocationPermission();
           } else if (result.state === "prompt") {
-            // Permission not yet granted, ask the user
             askForLocationPermission();
           } else if (result.state === "denied") {
-            // Permission denied, handle accordingly
             toast.error("Location access denied by the user.", {
               duration: 1000,
             });
           }
         })
         .catch((error) => {
-          // Handle error
           console.error("Error checking location permission:", error);
         });
     } else {
-      // Geolocation is not supported
       toast.error("Geolocation is not supported by this browser.", {
         duration: 1000,
       });
@@ -71,12 +61,11 @@ const LocationSearchForm = () => {
 
   useEffect(() => {
     if (location) {
-      // search for place name using mapbox API
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.longitude},${location.latitude}.json?proximity=-33.9249,18.4241&country=ZA&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
+      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.longitude},${location.latitude}.json?proximity=31.7683,35.2137&country=IL&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
       fetch(endpoint)
         .then((response) => response.json())
         .then((data) => {
-          const place = data.features[0].place_name;
+          const place = data.features[0]?.place_name || "Unknown Location";
           localStorage.setItem("delivery_address", place);
           setQuery(place);
         });
@@ -86,7 +75,7 @@ const LocationSearchForm = () => {
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     try {
       setQuery(event.target.value);
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${event.target.value}.json?proximity=-33.9249,18.4241&country=ZA&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true`;
+      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${event.target.value}.json?proximity=31.7683,35.2137&country=IL&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true`;
 
       const response = await fetch(endpoint);
       const results = await response.json();
