@@ -16,7 +16,7 @@ const LocationBtn = () => {
   useEffect(() => {
     const retrievedAddress = localStorage?.getItem("delivery_address");
     setRetrievedAddress(retrievedAddress)
-  }, [])
+  }, [showChange])
   
 
   const openModal = () => setIsOpen(true);

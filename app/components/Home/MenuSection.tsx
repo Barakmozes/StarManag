@@ -8,6 +8,7 @@ import { useQuery } from '@urql/next'
 import DataLoading from '../Common/ClientLoaders'
 import { Menu, User } from '@prisma/client'
 
+
 type FetchedMenuProps = {
   variables: GetMenusQueryVariables;
   isLastPage: boolean;
@@ -26,16 +27,19 @@ const FetchedMenus = ({ variables, isLastPage, onLoadMore, user}: FetchedMenuPro
   const menus = data?.getMenus.edges;
   const endCursor = data?.getMenus.pageInfo.endCursor
   const hasNextPage = data?.getMenus.pageInfo.hasNextPage;
-
+  
   return (
     <>
       {!menus || menus.length === 0 ? (
-        <div className="text-center py-3">
-          {" "}
-          <h2 className="text-lg  leading-tight tracking-tight text-gray-600 ">
-            ...No Menus Found{" "}
-          </h2>
-        </div>
+    <div className="text-center py-3">
+    {fetching ? (
+      <DataLoading />
+    ) : (
+      <h2 className="text-lg leading-tight tracking-tight text-gray-600">
+        ...No Menus Found
+      </h2>
+    )}
+  </div>
       ) : (
         <div className="mb-24 space-y-5">
           <div className=" mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  ">

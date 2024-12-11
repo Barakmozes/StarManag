@@ -34,7 +34,7 @@ const UserDeliveredModal = ({ order }: Props) => {
 
       <Modal
         isOpen={isOpen}
-        title={"Order: DPS2023062514"}
+        title={"Order: "+order.orderNumber}
         closeModal={closeModal}
       >
         <div className="mt-4">

@@ -82,7 +82,7 @@ const CartSummary = ({ user }: Props) => {
     if (deliveryAddress === "" || deliveryAddress === null) {
       toast.error("Please add a delivery address", { duration: 3000 });
     }
-    console.log(orderNumber);
+    // console.log(orderNumber);
     try {
       // Save order details with a unique key
       const orderDetails = {
@@ -99,7 +99,7 @@ const CartSummary = ({ user }: Props) => {
         note,
       };
   
-      localStorage.setItem("You&i_order_details", JSON.stringify(orderDetails));
+      localStorage.setItem("You&i_cart", JSON.stringify(orderDetails));
   
       const encodedTotal = Base64.encode(total.toString());
   

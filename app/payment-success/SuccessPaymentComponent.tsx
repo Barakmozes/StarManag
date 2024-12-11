@@ -17,10 +17,11 @@ import ConfettiExplosion from "react-confetti-explosion";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+
+
 const SuccessPaymentComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const paymentToken = searchParams.get("page_request_uid");
   const transactionUid = searchParams.get("transaction_uid");
   const status = searchParams.get("status");
@@ -60,7 +61,7 @@ const SuccessPaymentComponent = () => {
         setLoading(true);
 
         // Retrieve order details from localStorage
-        const orderDetails = JSON.parse(localStorage.getItem("You&i_order_details") || "{}");
+        const orderDetails = JSON.parse(localStorage.getItem("You&i_cart") || "{}");
 
         if (!orderDetails.cart || orderDetails.cart.length === 0) {
           throw new Error("Order details are missing or invalid.");
@@ -83,21 +84,23 @@ const SuccessPaymentComponent = () => {
           note: orderDetails.note,
         });
 
-        if (!addOrderRes.data?.addOrder) {
-          throw new Error("Failed to create order in the database.");
+        
+// console.log("Added order", addOrderRes.data?.addOrder);
+  // Update the payment status and token
+        if (addOrderRes.data?.addOrder) {
+          const editOrderRes = await editPaidOrder({
+            editOrderOnPaymentId:addOrderRes.data.addOrder.id,// Use the ID from the created order
+            paymentToken: paymentToken,
+          });
+          if (!editOrderRes.data?.editOrderOnPayment) {
+            throw new Error("Failed to update order payment status.");
+          }
         }
+        else
+         console.error("Failed to add order to database:", addOrderRes);
 
         // console.log("Order created successfully:", addOrderRes.data.addOrder);
 
-        // Update the payment status and token
-        const editOrderRes = await editPaidOrder({
-          editOrderOnPaymentId: addOrderRes.data.addOrder.id, // Use the ID from the created order
-          paymentToken: paymentToken,
-        });
-
-        if (!editOrderRes.data?.editOrderOnPayment) {
-          throw new Error("Failed to update order payment status.");
-        }
 
         // console.log("Order payment updated successfully:", editOrderRes.data.editOrderOnPayment);
 
@@ -105,7 +108,7 @@ const SuccessPaymentComponent = () => {
 
         // Clear cart and localStorage
         resetCart();
-        localStorage.removeItem("You&i_order_details");
+        // localStorage.removeItem("You&i_cart");
 
         // Redirect to user orders page
         router.push(`/user/orders`);

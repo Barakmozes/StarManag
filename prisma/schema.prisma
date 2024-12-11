@@ -1,14 +1,14 @@
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+    provider = "postgresql" // Specifies PostgreSQL as the database provider.
+    url      = env("DATABASE_URL")  // Reads the database connection string from the environment variable.
 }
 
 generator client {
-    provider = "prisma-client-js"
+    provider = "prisma-client-js" // Generates a JavaScript/TypeScript client for interacting with the database.
 }
 
 generator pothos {
-  provider = "prisma-pothos-types"
+  provider = "prisma-pothos-types" // Generates GraphQL types compatible with the Pothos library for GraphQL APIs.
 }
 
 model Account {
@@ -39,9 +39,12 @@ model Session {
 }
 
 enum Role {
-    USER
-    ADMIN
-    DELIVERY
+    USER       // Regular customer
+    ADMIN      // System administrator
+    DELIVERY   // Delivery personnel
+    WAITER     // Restaurant staff (waiter)
+    CHEF       // Kitchen staff
+    MANAGER    // Restaurant manager
 }
 
 model User {
