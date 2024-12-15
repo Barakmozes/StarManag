@@ -46,3 +46,9 @@ export type CartActionTypes = {
   decreaseCartItem: (data: CartItemType[], id: string) => void;
   resetCart: () => void;
 };
+
+export type ZoneStore = {
+  selectedZone: string | null;
+  setSelectedZone: (zone: string) => void;
+  clearSelectedZone: () => void;
+};

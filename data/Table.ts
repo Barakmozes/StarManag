@@ -1,7 +1,7 @@
 export const tableData = [
   {
     tableNumber: 1,
-    diners: 2,
+    diners: 10,
     area: 'Patio',
     reserved: true,
     specialRequests: ['Near the fountain', 'No direct sunlight'],

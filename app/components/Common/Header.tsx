@@ -1,12 +1,12 @@
 "use client";
-import {  useCartStore, useLoginModal, useSideBarDrawer } from "@/lib/store";
+import {  useCartStore, useLoginModal, useSideBarDrawer ,useZoneStore} from "@/lib/store";
 import Link from "next/link";
 import { HiBars3, HiOutlineShoppingCart } from "react-icons/hi2";
 import LocationBtn from "./LocationBtn";
 import { User } from "@prisma/client";
 import AccountDropDown from "./AccountDropDown";
 import { zones } from "../Restaurant_interface/zone_restaurant"; // Import zones
-import { useState, useEffect } from "react";
+// import { useState } from "react";
 type HeaderProps = {
   user: User
 }
@@ -18,14 +18,18 @@ const Header = ({user}:HeaderProps) => {
 
     const {onSideBarOpen} = useSideBarDrawer()
 
-    const [selectedZone, setSelectedZone] = useState<string | null>(null);
+    // const [selectedZone, setSelectedZone] = useState<string | null>(null);
+    const { selectedZone, setSelectedZone } = useZoneStore();
 
+    const handleZoneClick = (zoneName: string) => {
+      setSelectedZone(zoneName);
+    };
  
       // Save the selected zone to local storage
-  const handleZoneClick = (zoneName: string) => {
-    setSelectedZone(zoneName);
-    localStorage.setItem("selectedZone", zoneName);
-  };
+  // const handleZoneClick = (zoneName: string) => {
+  //   setSelectedZone(zoneName);
+  //   localStorage.setItem("selectedZone", zoneName);
+  // };
     
   return (
     <header className="grid grid-cols-2 py-5 px-4 md:px-12 items-center sticky top-0 z-10 bg-white md:flex justify-between ">
@@ -42,23 +46,23 @@ const Header = ({user}:HeaderProps) => {
       </div>
 
       {/* Center Area - Display Zones */}
-  {["WAITER", "MANAGER"].includes(user?.role) && (
-    <div className="hidden md:flex flex-wrap items-center justify-center gap-1.5 flex-1">
-      {zones.map((zone) => (
-        <button
-          key={zone.name}
-          onClick={() => handleZoneClick(zone.name)}
-          className={`px-2 py-1 whitespace-nowrap rounded-lg text-xs md:text-base shadow-sm hover:shadow-md text-gray-700 bg-gray-100 hover:bg-green-100 transition ${
-            selectedZone === zone.name
-              ? "bg-green-200 text-green-800 font-semibold"
-              : ""
-          }`}
-        >
-          {zone.name}
-        </button>
-      ))}
-    </div>
-  )}
+      {["WAITER", "MANAGER"].includes(user?.role) && (
+      <div className="hidden md:flex flex-wrap items-center justify-center gap-1.5 flex-1">
+        {zones.map((zone) => (
+          <button
+            key={zone.name}
+            onClick={() => handleZoneClick(zone.name)}
+            className={`px-2 py-1 whitespace-nowrap rounded-lg text-xs md:text-base shadow-sm hover:shadow-md text-gray-700 bg-gray-100 hover:bg-green-100 transition ${
+              selectedZone === zone.name
+                ? "bg-green-200 text-green-800 font-semibold"
+                : ""
+            }`}
+          >
+            {zone.name}
+          </button>
+        ))}
+      </div>
+    )}
 
        {/* Center Area - Selector for Small Screens */}
        {["WAITER", "MANAGER"].includes(user?.role) && (

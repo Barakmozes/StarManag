@@ -3,6 +3,7 @@ import {
   CartType,
   LoginModalStore,
   SideBarDrawerStore,
+  ZoneStore
 } from "@/types";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
@@ -65,3 +66,8 @@ export const useCartStore = create<CartType & CartActionTypes>()(
     )
   )
 );
+export const useZoneStore = create<ZoneStore>((set) => ({
+  selectedZone: null,
+  setSelectedZone: (zone) => set({ selectedZone: zone }),
+  clearSelectedZone: () => set({ selectedZone: null }),
+}));
