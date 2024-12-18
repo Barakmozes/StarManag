@@ -1,37 +1,37 @@
-import React from 'react';
+"use client";
 
-type Props = {
-  table: {
-    tableNumber: number;
-    diners: number;
-    area: string;
-    reserved?: boolean;
-  };
-  openModal: () => void;
+import React from "react";
+import { TableData } from "@/types";
+
+type TableCardProps = {
+  table: TableData;
 };
 
-const TableCard = ({ table, openModal }: Props) => {
+const TableCard: React.FC<TableCardProps> = ({ table }) => {
+  const { tableNumber, diners, reserved } = table;
+
   return (
     <div
-      className="flex flex-col rounded-lg shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 ease-out cursor-pointer bg-white"
-      onClick={openModal}
+      className={`p-4 rounded-lg shadow-md flex flex-col items-center justify-center ${
+        reserved ? "bg-red-100 border-red-500" : "bg-green-100 border-green-500"
+      } border-2`}
+      aria-label={`Table ${tableNumber}`}
     >
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-700">
-          Table #{table.tableNumber}
-        </h3>
-        <p className="text-sm text-gray-500">Area: {table.area}</p>
-        <p className="text-sm text-gray-500">Diners: {table.diners}</p>
-        <p
-          className={`text-sm font-medium ${
-            table.reserved ? 'text-red-500' : 'text-green-500'
-          }`}
-        >
-          {table.reserved ? 'Reserved' : 'Available'}
-        </p>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-700">
+        Table #{tableNumber}
+      </h3>
+      <p className="text-sm text-gray-600">
+        Diners: <strong>{diners}</strong>
+      </p>
+      <p
+        className={`text-sm font-medium ${
+          reserved ? "text-red-600" : "text-green-600"
+        }`}
+      >
+        {reserved ? "Reserved" : "Available"}
+      </p>
     </div>
   );
 };
 
-export default TableCard;
+export default React.memo(TableCard);
