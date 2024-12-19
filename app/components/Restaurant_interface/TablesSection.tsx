@@ -99,7 +99,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({ zoneName }) => {
     >
       {/* Zone Title */}
       {zoneName && (
-        <div className="max-w-2xl mx-auto my-5 text-center">
+        <div className="max-w-2xl mx-auto mb-2 mt-0 text-center">
           <h2 className="text-2xl font-bold text-gray-800">{zoneName}</h2>
         </div>
       )}
@@ -107,7 +107,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({ zoneName }) => {
       {/* Floor Plan and Tables */}
       {currentZone?.floorPlanImage ? (
         <div
-          className="relative w-full h-[900px] bg-gray-200 rounded-lg shadow-md overflow-hidden mb-6"
+          className="relative w-full h-[900px] rounded-lg shadow-md overflow-hidden mb-6"
           style={{
             backgroundImage: `url(${currentZone.floorPlanImage})`,
             backgroundSize: "cover",

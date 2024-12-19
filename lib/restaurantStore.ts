@@ -39,8 +39,8 @@ const initialTableData: TableData[] = [
 ];
 
 const initialZones: Zone[] = [
-  { name: "Patio", tables: [], floorPlanImage: "/images/patio.png" },
-  { name: "Main Hall", tables: [], floorPlanImage: "/images/main-hall.png" },
+  { name: "Patio", tables: [], floorPlanImage: "/img/pexels-pixabay-235985.jpg" },
+  { name: "Main Hall", tables: [], floorPlanImage: "/img/pexels-pixabay-235985.jpg" },
 ];
 
 // Unified Zustand Store

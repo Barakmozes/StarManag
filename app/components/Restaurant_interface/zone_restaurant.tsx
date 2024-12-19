@@ -45,9 +45,9 @@ const ZoneRestaurant = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="px-6 bg-gray-50 min-h-screen">
         {/* Header Section */}
-        <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className="flex items-center justify-around bg-white px-2 rounded-lg shadow-md mb-6">
           <h2 className="text-xl font-bold text-gray-800">
             Restaurant Zones
           </h2>
