@@ -19,6 +19,24 @@ export type Scalars = {
   JSON: { input: any; output: any; }
 };
 
+export type Area = {
+  __typename?: 'Area';
+  children: Array<Area>;
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  floorPlanImage?: Maybe<Scalars['String']['output']>;
+  gridConfig?: Maybe<GridConfig>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  parent?: Maybe<Area>;
+  parentId?: Maybe<Scalars['String']['output']>;
+  restaurant: Restaurant;
+  restaurantId: Scalars['String']['output'];
+  tables: Array<Table>;
+  updatedAt: Scalars['DateTime']['output'];
+  waitlists: Array<Waitlist>;
+};
+
 export type Category = {
   __typename?: 'Category';
   desc: Scalars['String']['output'];
@@ -35,12 +53,22 @@ export type Favorite = {
   userEmail: Scalars['String']['output'];
 };
 
+export type GridConfig = {
+  __typename?: 'GridConfig';
+  area: Area;
+  areaId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  gridSize: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type Menu = {
   __typename?: 'Menu';
   category: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image: Scalars['String']['output'];
-  longDescr: Scalars['String']['output'];
+  longDescr?: Maybe<Scalars['String']['output']>;
   onPromo: Scalars['Boolean']['output'];
   prepType: Array<Scalars['String']['output']>;
   price: Scalars['Float']['output'];
@@ -51,20 +79,62 @@ export type Menu = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addArea: Area;
   addCategory: Category;
   addFavorite: Favorite;
+  addGridConfig: GridConfig;
   addMenu: Menu;
+  addNotification: Notification;
   addOrder: Order;
   addProfile: Profile;
+  addReservation: Reservation;
+  addRestaurant: Restaurant;
+  addTable: Table;
+  addTableUsage: TableUsage;
+  addWaitlistEntry: Waitlist;
+  callWaitlistEntry: Waitlist;
+  cancelReservation: Reservation;
+  cancelWaitlistEntry: Waitlist;
+  completeReservation: Reservation;
+  deleteArea: Area;
   deleteCategory: Category;
+  deleteGridConfig: GridConfig;
   deleteMenu: Menu;
+  deleteNotification: Notification;
+  deleteRestaurant: Restaurant;
+  deleteTable: Table;
+  deleteTableUsage: TableUsage;
+  deleteUser: User;
+  editArea: Area;
   editCategory: Category;
+  editGridConfig: GridConfig;
   editMenu: Menu;
   editOrder: Order;
   editOrderOnPayment: Order;
   editProfile: Profile;
+  editReservation: Reservation;
+  editRestaurant: Restaurant;
+  editTable: Table;
   editUserRole: User;
+  incrementUsageCount: TableUsage;
+  markNotificationAsRead: Notification;
   removeFavorite: Favorite;
+  removeWaitlistEntry: Waitlist;
+  seatWaitlistEntry: Waitlist;
+  toggleTableReservation: Table;
+  updateNotification: Notification;
+  updateTableUsage: TableUsage;
+  updateUserProfile: User;
+  updateWaitlistEntry: Waitlist;
+};
+
+
+export type MutationAddAreaArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  floorPlanImage?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['String']['input']>;
+  restaurantId: Scalars['String']['input'];
 };
 
 
@@ -81,6 +151,12 @@ export type MutationAddFavoriteArgs = {
 };
 
 
+export type MutationAddGridConfigArgs = {
+  areaId: Scalars['String']['input'];
+  gridSize?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationAddMenuArgs = {
   category: Scalars['String']['input'];
   image: Scalars['String']['input'];
@@ -90,6 +166,15 @@ export type MutationAddMenuArgs = {
   sellingPrice?: InputMaybe<Scalars['Float']['input']>;
   shortDescr: Scalars['String']['input'];
   title: Scalars['String']['input'];
+};
+
+
+export type MutationAddNotificationArgs = {
+  message: Scalars['String']['input'];
+  priority?: InputMaybe<NotificationPriority>;
+  status?: InputMaybe<NotificationStatus>;
+  type: Scalars['String']['input'];
+  userEmail: Scalars['String']['input'];
 };
 
 
@@ -117,7 +202,83 @@ export type MutationAddProfileArgs = {
 };
 
 
+export type MutationAddReservationArgs = {
+  createdBy: Role;
+  createdByUserEmail?: InputMaybe<Scalars['String']['input']>;
+  numOfDiners: Scalars['Int']['input'];
+  reservationTime: Scalars['DateTime']['input'];
+  tableId: Scalars['String']['input'];
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type MutationAddRestaurantArgs = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  bannerImg: Scalars['String']['input'];
+  deliveryFee?: InputMaybe<Scalars['Float']['input']>;
+  name: Scalars['String']['input'];
+  openTimes?: InputMaybe<Scalars['JSON']['input']>;
+  rating?: InputMaybe<Scalars['Float']['input']>;
+  serviceFee?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationAddTableArgs = {
+  areaId: Scalars['String']['input'];
+  diners: Scalars['Int']['input'];
+  position: Scalars['JSON']['input'];
+  reserved?: InputMaybe<Scalars['Boolean']['input']>;
+  specialRequests?: InputMaybe<Array<Scalars['String']['input']>>;
+  tableNumber: Scalars['Int']['input'];
+};
+
+
+export type MutationAddTableUsageArgs = {
+  lastUsed?: InputMaybe<Scalars['DateTime']['input']>;
+  tableId: Scalars['String']['input'];
+  usageCount?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationAddWaitlistEntryArgs = {
+  areaId: Scalars['String']['input'];
+  numOfDiners: Scalars['Int']['input'];
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type MutationCallWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationCancelReservationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationCancelWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationCompleteReservationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteAreaArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteCategoryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteGridConfigArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -127,11 +288,52 @@ export type MutationDeleteMenuArgs = {
 };
 
 
+export type MutationDeleteNotificationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteRestaurantArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTableArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTableUsageArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteUserArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationEditAreaArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  floorPlanImage?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  parentId?: InputMaybe<Scalars['String']['input']>;
+  restaurantId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationEditCategoryArgs = {
   desc: Scalars['String']['input'];
   id: Scalars['String']['input'];
   img: Scalars['String']['input'];
   title: Scalars['String']['input'];
+};
+
+
+export type MutationEditGridConfigArgs = {
+  gridSize?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['String']['input'];
 };
 
 
@@ -169,9 +371,51 @@ export type MutationEditProfileArgs = {
 };
 
 
+export type MutationEditReservationArgs = {
+  id: Scalars['String']['input'];
+  numOfDiners?: InputMaybe<Scalars['Int']['input']>;
+  reservationTime?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<ReservationStatus>;
+};
+
+
+export type MutationEditRestaurantArgs = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  bannerImg?: InputMaybe<Scalars['String']['input']>;
+  deliveryFee?: InputMaybe<Scalars['Float']['input']>;
+  id: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  openTimes?: InputMaybe<Scalars['JSON']['input']>;
+  rating?: InputMaybe<Scalars['Float']['input']>;
+  serviceFee?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationEditTableArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  diners?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['String']['input'];
+  position?: InputMaybe<Scalars['JSON']['input']>;
+  reserved?: InputMaybe<Scalars['Boolean']['input']>;
+  specialRequests?: InputMaybe<Array<Scalars['String']['input']>>;
+  tableNumber?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationEditUserRoleArgs = {
   id: Scalars['String']['input'];
   role: Role;
+};
+
+
+export type MutationIncrementUsageCountArgs = {
+  id: Scalars['String']['input'];
+  setLastUsed?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type MutationMarkNotificationAsReadArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -179,6 +423,79 @@ export type MutationRemoveFavoriteArgs = {
   menuId: Scalars['String']['input'];
   userEmail: Scalars['String']['input'];
 };
+
+
+export type MutationRemoveWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationSeatWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationToggleTableReservationArgs = {
+  id: Scalars['String']['input'];
+  reserved: Scalars['Boolean']['input'];
+};
+
+
+export type MutationUpdateNotificationArgs = {
+  id: Scalars['String']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<NotificationPriority>;
+  status?: InputMaybe<NotificationStatus>;
+};
+
+
+export type MutationUpdateTableUsageArgs = {
+  id: Scalars['String']['input'];
+  lastUsed?: InputMaybe<Scalars['DateTime']['input']>;
+  usageCount?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationUpdateUserProfileArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  image?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationUpdateWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+  numOfDiners?: InputMaybe<Scalars['Int']['input']>;
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<WaitlistStatus>;
+};
+
+export type Notification = {
+  __typename?: 'Notification';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  priority: NotificationPriority;
+  status: NotificationStatus;
+  type: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userEmail: Scalars['String']['output'];
+};
+
+/** The priority of a notification */
+export enum NotificationPriority {
+  High = 'HIGH',
+  Low = 'LOW',
+  Normal = 'NORMAL'
+}
+
+/** The status of a notification */
+export enum NotificationStatus {
+  Read = 'READ',
+  Unread = 'UNREAD'
+}
 
 export type Order = {
   __typename?: 'Order';
@@ -229,24 +546,69 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  getAllTableUsages: Array<TableUsage>;
+  getArea: Area;
+  getAreas: Array<Area>;
+  getAvailableTables: Array<Table>;
   getCategories: Array<Category>;
   getCategory: Category;
+  getChildAreas: Array<Area>;
   getFavorites: Array<Favorite>;
+  getGridConfig: GridConfig;
+  getGridConfigByArea?: Maybe<GridConfig>;
+  getGridConfigs: Array<GridConfig>;
   getMenu: Menu;
   getMenuUserFavorites: Array<Menu>;
   getMenus: QueryGetMenusConnection;
+  getNotification: Notification;
+  getNotifications: Array<Notification>;
   getOrder: Order;
   getOrders: QueryGetOrdersConnection;
+  getParentArea?: Maybe<Area>;
   getProfile: Profile;
   getProfiles: Array<Profile>;
+  getReservation: Reservation;
+  getReservations: Array<Reservation>;
+  getRestaurant: Restaurant;
+  getRestaurants: Array<Restaurant>;
+  getTable: Table;
+  getTableUsage: TableUsage;
+  getTableUsageByTable?: Maybe<TableUsage>;
+  getTables: Array<Table>;
   getUser: User;
   getUserFavorites: Favorite;
+  getUserNotifications: Array<Notification>;
+  getUserReservations: Array<Reservation>;
+  getUserWaitlistEntries: Array<Waitlist>;
   getUsers: Array<User>;
+  getWaitlist: Waitlist;
+  getWaitlists: Array<Waitlist>;
+  searchRestaurants: Array<Restaurant>;
+};
+
+
+export type QueryGetAreaArgs = {
+  id: Scalars['String']['input'];
 };
 
 
 export type QueryGetCategoryArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryGetChildAreasArgs = {
+  parentId: Scalars['String']['input'];
+};
+
+
+export type QueryGetGridConfigArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetGridConfigByAreaArgs = {
+  areaId: Scalars['String']['input'];
 };
 
 
@@ -269,6 +631,11 @@ export type QueryGetMenusArgs = {
 };
 
 
+export type QueryGetNotificationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type QueryGetOrderArgs = {
   id: Scalars['String']['input'];
 };
@@ -282,8 +649,43 @@ export type QueryGetOrdersArgs = {
 };
 
 
+export type QueryGetParentAreaArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type QueryGetProfileArgs = {
   email: Scalars['String']['input'];
+};
+
+
+export type QueryGetReservationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetReservationsArgs = {
+  status?: InputMaybe<ReservationStatus>;
+};
+
+
+export type QueryGetRestaurantArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetTableArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetTableUsageArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetTableUsageByTableArgs = {
+  tableId: Scalars['String']['input'];
 };
 
 
@@ -294,6 +696,31 @@ export type QueryGetUserArgs = {
 
 export type QueryGetUserFavoritesArgs = {
   userEmail: Scalars['String']['input'];
+};
+
+
+export type QueryGetUserNotificationsArgs = {
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type QueryGetUserReservationsArgs = {
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type QueryGetUserWaitlistEntriesArgs = {
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type QueryGetWaitlistArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QuerySearchRestaurantsArgs = {
+  keyword: Scalars['String']['input'];
 };
 
 export type QueryGetMenusConnection = {
@@ -320,22 +747,125 @@ export type QueryGetOrdersConnectionEdge = {
   node: Order;
 };
 
-/** User Role */
+export type Reservation = {
+  __typename?: 'Reservation';
+  createdAt: Scalars['DateTime']['output'];
+  createdBy: Scalars['String']['output'];
+  createdByUser?: Maybe<User>;
+  createdByUserEmail?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  numOfDiners: Scalars['Int']['output'];
+  reservationTime: Scalars['DateTime']['output'];
+  status: ReservationStatus;
+  table: Table;
+  tableId: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userEmail: Scalars['String']['output'];
+};
+
+/** The status of a reservation */
+export enum ReservationStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Confirmed = 'CONFIRMED',
+  Pending = 'PENDING'
+}
+
+export type Restaurant = {
+  __typename?: 'Restaurant';
+  address?: Maybe<Scalars['String']['output']>;
+  areas: Array<Area>;
+  bannerImg: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  deliveryFee: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  openTimes: Scalars['JSON']['output'];
+  rating: Scalars['Float']['output'];
+  serviceFee: Scalars['Float']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** User roles in the system */
 export enum Role {
   Admin = 'ADMIN',
+  Chef = 'CHEF',
   Delivery = 'DELIVERY',
-  User = 'USER'
+  Manager = 'MANAGER',
+  User = 'USER',
+  Waiter = 'WAITER'
 }
+
+export type Table = {
+  __typename?: 'Table';
+  area: Area;
+  areaId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  diners: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  orders: Array<Order>;
+  position: Scalars['JSON']['output'];
+  reservations: Array<Reservation>;
+  reserved: Scalars['Boolean']['output'];
+  specialRequests: Array<Scalars['String']['output']>;
+  tableNumber: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  usageStats?: Maybe<TableUsage>;
+};
+
+export type TableUsage = {
+  __typename?: 'TableUsage';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lastUsed?: Maybe<Scalars['DateTime']['output']>;
+  table: Table;
+  tableId: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  usageCount: Scalars['Int']['output'];
+};
 
 export type User = {
   __typename?: 'User';
+  createdAt: Scalars['DateTime']['output'];
+  createdReservations?: Maybe<Array<Reservation>>;
   email?: Maybe<Scalars['String']['output']>;
+  favorite?: Maybe<Favorite>;
   id: Scalars['ID']['output'];
   image?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
-  order?: Maybe<Array<Order>>;
+  notifications?: Maybe<Array<Notification>>;
+  order: Array<Order>;
+  profile?: Maybe<Profile>;
+  reservations?: Maybe<Array<Reservation>>;
   role: Role;
+  updatedAt: Scalars['DateTime']['output'];
+  waitlists?: Maybe<Array<Waitlist>>;
 };
+
+export type Waitlist = {
+  __typename?: 'Waitlist';
+  area: Area;
+  areaId: Scalars['String']['output'];
+  calledAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  numOfDiners: Scalars['Int']['output'];
+  priority?: Maybe<Scalars['Int']['output']>;
+  seatedAt?: Maybe<Scalars['DateTime']['output']>;
+  status: WaitlistStatus;
+  updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userEmail: Scalars['String']['output'];
+};
+
+/** Status of a waitlist entry */
+export enum WaitlistStatus {
+  Called = 'CALLED',
+  Cancelled = 'CANCELLED',
+  Seated = 'SEATED',
+  Waiting = 'WAITING'
+}
 
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
@@ -402,7 +932,7 @@ export type GetMenusQueryVariables = Exact<{
 }>;
 
 
-export type GetMenusQuery = { __typename?: 'Query', getMenus: { __typename?: 'QueryGetMenusConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMenusConnectionEdge', cursor: string, node: { __typename?: 'Menu', category: string, id: string, image: string, longDescr: string, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string } } | null> } };
+export type GetMenusQuery = { __typename?: 'Query', getMenus: { __typename?: 'QueryGetMenusConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMenusConnectionEdge', cursor: string, node: { __typename?: 'Menu', category: string, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string } } | null> } };
 
 export type GetMenuUserFavoritesQueryVariables = Exact<{
   menuIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -410,7 +940,7 @@ export type GetMenuUserFavoritesQueryVariables = Exact<{
 }>;
 
 
-export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavorites: Array<{ __typename?: 'Menu', category: string, id: string, image: string, longDescr: string, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string }> };
+export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavorites: Array<{ __typename?: 'Menu', category: string, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string }> };
 
 export type GetOrdersQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -460,7 +990,7 @@ export type GetUserQueryVariables = Exact<{
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'User', email?: string | null, id: string, image?: string | null, name?: string | null, role: Role, order?: Array<{ __typename?: 'Order', cart: any, deliveryAddress: string, deliveryFee: number, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userEmail: string, userName: string, userPhone: string }> | null } };
+export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'User', email?: string | null, id: string, image?: string | null, name?: string | null, role: Role, order: Array<{ __typename?: 'Order', cart: any, deliveryAddress: string, deliveryFee: number, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userEmail: string, userName: string, userPhone: string }> } };
 
 export type GetProfileQueryVariables = Exact<{
   email: Scalars['String']['input'];
