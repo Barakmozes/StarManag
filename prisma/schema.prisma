@@ -185,7 +185,7 @@ model Restaurant {
   openTimes   Json[]
   deliveryFee Float   @default(4)
   serviceFee  Float   @default(3)
-  bannerImg   String
+  bannerImg   String?
   rating      Float   @default(4.5)
 
   // Relationship
@@ -245,11 +245,11 @@ model Order {
   userName        String
   userEmail       String
   user            User        @relation(fields: [userEmail], references: [email])
-  userPhone       String
+  userPhone       String  @default("")
   paymentToken    String?
   paid            Boolean     @default(false)
   delivery        Delivery?
-  deliveryAddress String
+  deliveryAddress String  @default("")
   deliveryFee     Float       @default(4)
   serviceFee      Float       @default(3)
   status          OrderStatus @default(PREPARING)
@@ -320,8 +320,8 @@ model Area {
   children Area[]  @relation("ParentToChildren")
 
   // Relationship to Restaurant
-  restaurantId String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   // Additional relations
   gridConfig GridConfig?
@@ -357,7 +357,7 @@ model Table {
   diners          Int
   reserved        Boolean  @default(false)
   specialRequests String[] @default([])
-  position        Json
+  position        Json     @default("{ \"x\": 0, \"y\": 0 }")
 
   areaId String
   area   Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)

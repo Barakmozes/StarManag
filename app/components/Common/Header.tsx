@@ -1,16 +1,22 @@
 "use client";
 
-import {
-  useCartStore,
-  useLoginModal,
-  useSideBarDrawer,
-} from "@/lib/store";
-import { useRestaurantStore } from "@/lib/restaurantStore";
+import { useCartStore, useLoginModal, useSideBarDrawer } from "@/lib/store";
+import { useRestaurantStore } from "@/lib/AreaStore";
 import Link from "next/link";
 import { HiBars3, HiOutlineShoppingCart } from "react-icons/hi2";
 import LocationBtn from "./LocationBtn";
 import { User } from "@prisma/client";
 import AccountDropDown from "./AccountDropDown";
+import {
+  GetAreasNameDescriptionDocument,
+  GetAreasNameDescriptionQuery,
+  GetAreasNameDescriptionQueryVariables,
+} from "@/graphql/generated";
+import { useQuery } from "@urql/next";
+import { useEffect } from "react";
+
+
+
 
 type HeaderProps = {
   user: User;
@@ -20,11 +26,37 @@ const Header = ({ user }: HeaderProps) => {
   const { onOpen } = useLoginModal();
   const { menus } = useCartStore();
   const { onSideBarOpen } = useSideBarDrawer();
-  const { selectedZone, setSelectedZone, zones } = useRestaurantStore();
 
-  // Improved zone selection logic
-  const handleZoneClick = (zoneName: string) => {
-    setSelectedZone(zoneName);
+  const {
+    setSelectedArea,
+    setAreas,
+    selectedArea,
+  } = useRestaurantStore();
+
+
+  const [{ data: UserData, fetching, error }] = useQuery<
+    GetAreasNameDescriptionQuery,
+    GetAreasNameDescriptionQueryVariables
+  >({ query: GetAreasNameDescriptionDocument, variables: {} });
+
+
+
+  const FetcheAreas = UserData?.getAreasNameDescription;
+
+  useEffect(() => {
+    if (FetcheAreas) 
+      {
+    const adapted = FetcheAreas.map((zone) => ({
+    name:zone.name,
+      id:zone.id,
+      floorPlanImage:zone.floorPlanImage
+    }));
+   setAreas(adapted);
+  }
+  }, [FetcheAreas, setAreas]);
+
+  const handleZoneClickk = (zoneName: string) => {
+    setSelectedArea(zoneName); // picks an area by 'name'
   };
 
   return (
@@ -43,35 +75,40 @@ const Header = ({ user }: HeaderProps) => {
       </div>
 
       {/* Center Area - Display Zones for Desktop */}
-      {["WAITER", "MANAGER"].includes(user?.role) && (
-        <div className="hidden md:flex flex-wrap items-center justify-center gap-1.5 flex-1">
-          {zones.map((zone) => (
-            <button
-              key={zone.name}
-              onClick={() => handleZoneClick(zone.name)}
-              className={`px-2 py-1 whitespace-nowrap rounded-lg text-xs md:text-base shadow-sm hover:shadow-md text-gray-700 bg-gray-100 hover:bg-green-100 transition ${
-                selectedZone === zone.name
-                  ? "bg-green-200 text-green-800 font-semibold"
-                  : ""
-              }`}
-              aria-label={`Select zone: ${zone.name}`}
-            >
-              {zone.name}
-            </button>
-          ))}
-        </div>
-      )}
+      {["WAITER", "MANAGER"].includes(user?.role) &&
+        (fetching ? (
+          <header className="py-5 px-4 md:px-12 bg-white shadow">
+            <p className="text-center text-gray-500">Loading zones...</p>
+          </header>
+        ) : (
+          <div className="hidden md:flex flex-wrap items-center justify-center gap-1.5 flex-1">
+            {FetcheAreas?.map((zone) => (
+              <button
+                key={zone.name}
+                onClick={() => handleZoneClickk(zone.name)}
+                className={`px-2 py-1 whitespace-nowrap rounded-lg text-xs md:text-base shadow-sm hover:shadow-md text-gray-700 bg-gray-100 hover:bg-green-100 transition ${
+                  selectedArea?.name === zone.name
+                    ? "bg-green-200 text-green-800 font-semibold"
+                    : ""
+                }`}
+                aria-label={`Select zone: ${zone.name}`}
+              >
+                {zone.name}
+              </button>
+            ))}
+          </div>
+        ))}
 
       {/* Center Area - Zone Selector for Small Screens */}
       {["WAITER", "MANAGER"].includes(user?.role) && (
         <div className="flex md:hidden items-center justify-center w-full">
           <select
             className="p-2 border rounded-lg text-gray-700 bg-white focus:ring focus:ring-green-300 w-full"
-            value={selectedZone || ""}
-            onChange={(e) => handleZoneClick(e.target.value)}
+            value={selectedArea?.name || undefined}
+            onChange={(e) => handleZoneClickk(e.target.value)}
             aria-label="Select a zone"
             style={{
-              backgroundColor: selectedZone
+              backgroundColor: selectedArea
                 ? "rgba(144, 238, 144, 0.2)" /* Subtle light green */
                 : "white",
             }}
@@ -79,7 +116,7 @@ const Header = ({ user }: HeaderProps) => {
             <option value="" disabled>
               Select a Zone
             </option>
-            {zones.map((zone) => (
+            {FetcheAreas?.map((zone) => (
               <option key={zone.name} value={zone.name}>
                 {zone.name}
               </option>

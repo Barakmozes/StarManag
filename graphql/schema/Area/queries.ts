@@ -39,7 +39,7 @@ builder.prismaObject("Area", {
     children: t.relation("children"),
 
     // Foreign key to Restaurant
-    restaurantId: t.exposeString("restaurantId"),
+    restaurantId: t.exposeString("restaurantId", { nullable: true }),
 
     // Additional relations (not further defined here)
     restaurant: t.relation("restaurant"), // we do NOT define Restaurant object here
@@ -52,6 +52,23 @@ builder.prismaObject("Area", {
     updatedAt: t.expose("updatedAt", { type: "DateTime" }),
   }),
 });
+
+
+
+export const BasicArea = builder.objectRef<{
+  name: string;
+  floorPlanImage: string | null;
+  id: string;
+}>("BasicArea").implement({
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    name: t.exposeString("name"),
+    floorPlanImage: t.exposeString("floorPlanImage", { nullable: true }),
+  }),
+});
+
+
+
 
 /**
  * Query Fields for Area
@@ -130,4 +147,25 @@ builder.queryFields((t) => ({
       return area?.parent ?? null;
     },
   }),
+
+  /**
+   * getAreasNameDescription
+   * Returns only the name & description of all Areas.
+   */
+  getAreasNameDescription: t.field({
+    // We return an array of BasicArea objects (instead of full "Area").
+    type: [BasicArea],
+    resolve: async () => {
+      // Query only 'name' and 'description' from each row.
+      return prisma.area.findMany({
+        select: {
+          id: true,
+          name: true,
+          floorPlanImage: true,
+        },
+      });
+    },
+  }),
+
+
 }));

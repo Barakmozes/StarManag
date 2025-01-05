@@ -20,7 +20,7 @@ builder.mutationFields((t) => ({
       openTimes: t.arg({ type: "JSON" }),
       deliveryFee: t.arg.float(),
       serviceFee: t.arg.float(),
-      bannerImg: t.arg.string({ required: true }),
+      bannerImg: t.arg.string(),
       rating: t.arg.float(),
     },
     resolve: async (query, _parent, args, contextPromise) => {
@@ -53,7 +53,7 @@ builder.mutationFields((t) => ({
           openTimes: args.openTimes ?? [],
           deliveryFee: args.deliveryFee ?? 4,  // fallback to default
           serviceFee: args.serviceFee ?? 3,   // fallback to default
-          bannerImg: args.bannerImg,
+          bannerImg: args.bannerImg ?? undefined,
           rating: args.rating ?? 4.5,         // fallback to default
         },
       });

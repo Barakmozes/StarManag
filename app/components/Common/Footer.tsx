@@ -37,7 +37,7 @@ const Footer = () => {
         </div>
       </section>
       <section className="hidden md:flex py-12 px-12 justify-center">
-        <p> {Year} DPS Resto (Pty) Ltd</p>
+        <p> {Year} _BaRak_ (Pty) Ltd</p>
       </section>
     </footer>
   );

@@ -1,87 +1,93 @@
 "use client";
 
-import React, { useMemo, useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { useDrop } from "react-dnd";
-import { useRestaurantStore } from "@/lib/restaurantStore";
-import { TableManager } from "./TableManager";
-import TableModal from "./TableModal";
 import throttle from "lodash/throttle";
+import { useMutation } from "@urql/next";
 
-type TablesSectionProps = {
-  zoneName?: string; // Optional zoneName to filter tables
-};
+import TableModal from "./TableModal";
+import { Table } from "@prisma/client";
+import { BasicArea } from "@/graphql/generated";
 
-const TablesSection: React.FC<TablesSectionProps> = ({ zoneName }) => {
+import {
+  MovePositionTableDocument,
+  MovePositionTableMutation,
+  MovePositionTableMutationVariables,
+} from "@/graphql/generated";
+
+export interface TablesSectionProps {
+  areaSelect: BasicArea;
+  filteredTables: Table[];
+  scale: number;
+  moveTable: (
+    tableNum: number,
+    newArea: string,
+    newPos: { x: number; y: number }
+  ) => void;
+}
+
+const TablesSection: React.FC<TablesSectionProps> = ({
+  areaSelect,
+  filteredTables,
+  scale,
+  moveTable,
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const {
-    tableData,
-    moveTable,
-    scale,
-    zones,
-  } = useRestaurantStore((state) => ({
-    tableData: state.tableData,
-    moveTable: state.moveTable,
-    scale: state.scale,
-    zones: state.zones,
-  }));
+  const [_, movePositionTable] = useMutation<
+    MovePositionTableMutation,
+    MovePositionTableMutationVariables
+  >(MovePositionTableDocument);
 
-  // Get filtered tables for the current zone
-  const filteredTables = useMemo(() => {
-    if (!zoneName) return tableData; // If no zone is selected, show all tables
-    return tableData.filter((table) => table.area === zoneName);
-  }, [zoneName, tableData]);
-
-  // Get the current zone's floor plan image
-  const currentZone = useMemo(
-    () => zones.find((zone) => zone.name === zoneName),
-    [zones, zoneName]
-  );
-
-  // Throttled function to update table positions
   const throttledMoveTable = useCallback(
     throttle(
-      (tableNumber: number, newArea: string, newPosition: { x: number; y: number }) => {
-        TableManager.moveTable(tableNumber, newArea, newPosition);
+      async (
+        tableNumber: number,
+        newArea: string,
+        newPosition: { x: number; y: number }
+      ) => {
+        moveTable(tableNumber, newArea, newPosition);
+        try {
+          await movePositionTable({
+            tableNumber: tableNumber,
+            position: newPosition,
+          });
+        } catch (err) {
+          console.error("Failed to update position in DB:", err);
+        }
       },
       100,
       { leading: true, trailing: true }
     ),
-    []
+    [moveTable, movePositionTable]
   );
 
-  // Snap positions to a grid for better alignment
   const snapToGrid = (x: number, y: number, gridSize: number) => ({
     x: Math.round(x / gridSize) * gridSize,
     y: Math.round(y / gridSize) * gridSize,
   });
 
-  // Handle the drop functionality
   const [, drop] = useDrop({
     accept: "TABLE",
     drop: (item: { tableNumber: number }, monitor) => {
-      if (containerRef.current && currentZone) {
-        const offset = monitor.getClientOffset();
-        const containerRect = containerRef.current.getBoundingClientRect();
+      if (!containerRef.current || !areaSelect?.name) return;
 
-        if (offset) {
-          // Adjust for scaling
-          let x = (offset.x - containerRect.left) / scale;
-          let y = (offset.y - containerRect.top) / scale;
+      const offset = monitor.getClientOffset();
+      const containerRect = containerRef.current.getBoundingClientRect();
 
-          // Constrain positions to container boundaries
-          x = Math.max(0, Math.min(x, containerRect.width / scale));
-          y = Math.max(0, Math.min(y, containerRect.height / scale));
+      if (offset) {
+        let x = (offset.x - containerRect.left) / scale;
+        let y = (offset.y - containerRect.top) / scale;
 
-          // Snap to a grid
-          const newPosition = snapToGrid(x, y, 20);
-          throttledMoveTable(item.tableNumber, currentZone.name, newPosition);
-        }
+        x = Math.max(0, Math.min(x, containerRect.width / scale));
+        y = Math.max(0, Math.min(y, containerRect.height / scale));
+
+        const newPosition = snapToGrid(x, y, 5);
+        throttledMoveTable(item.tableNumber, areaSelect.name, newPosition);
       }
     },
   });
 
-  // Cleanup throttled function on unmount
   useEffect(() => {
     return () => {
       throttledMoveTable.cancel();
@@ -94,22 +100,22 @@ const TablesSection: React.FC<TablesSectionProps> = ({ zoneName }) => {
         drop(el as HTMLDivElement);
         containerRef.current = el as HTMLDivElement;
       }}
-      className="relative mb-24 flex flex-col items-center md:justify-center"
-      aria-label={zoneName ? `Tables in ${zoneName}` : "All tables"}
+      className="relative flex flex-col items-center justify-center px-4 mb-2"
+      aria-label={areaSelect.name ? `Tables in ${areaSelect.name}` : "All tables"}
     >
-      {/* Zone Title */}
-      {zoneName && (
-        <div className="max-w-2xl mx-auto mb-2 mt-0 text-center">
-          <h2 className="text-2xl font-bold text-gray-800">{zoneName}</h2>
+      {areaSelect.name && (
+        <div className="flex items-center max-w-2xl mx-auto mb-1 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            {areaSelect.name}
+          </h2>
         </div>
       )}
 
-      {/* Floor Plan and Tables */}
-      {currentZone?.floorPlanImage ? (
+      {areaSelect.floorPlanImage ? (
         <div
-          className="relative w-full h-[900px] rounded-lg shadow-md overflow-hidden mb-6"
+          className="relative w-full h-[100vh] rounded-lg shadow-md break-all mb-6"
           style={{
-            backgroundImage: `url(${currentZone.floorPlanImage})`,
+            backgroundImage: `url(${areaSelect.floorPlanImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -122,24 +128,14 @@ const TablesSection: React.FC<TablesSectionProps> = ({ zoneName }) => {
             }}
           >
             {filteredTables.map((table) => (
-              <TableModal
-                key={table.tableNumber}
-                table={table}
-                moveTable={moveTable}
-                scale={scale}
-              />
+              <TableModal key={table.id} table={table} scale={scale} />
             ))}
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-4 w-full sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filteredTables.map((table) => (
-            <TableModal
-              key={table.tableNumber}
-              table={table}
-              moveTable={moveTable}
-              scale={scale}
-            />
+            <TableModal key={table.id} table={table} scale={scale} />
           ))}
         </div>
       )}

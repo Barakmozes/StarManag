@@ -95,4 +95,86 @@ builder.queryFields((t) => ({
       });
     },
   }),
+
+
+
+  /**
+   * getTableOrder
+   * Returns a list of "active" orders for the specified table,
+   * along with all order details. 
+   * 
+   * "Active" typically excludes COMPLETED and CANCELLED orders,
+   * but includes PENDING, PREPARING, etc.
+   */
+  getTableOrder: t.prismaField({
+    // We return an array of Order objects
+    type: ["Order"],
+    args: {
+      tableId: t.arg.string({ required: true }),
+    },
+    resolve: async (query, _parent, args) => {
+      // Define which statuses you consider "active"
+      // (Add or remove as needed for your business logic)
+      const activeStatuses ="PREPARING";
+
+      // Fetch all orders for the table that match these statuses
+      const orders = await prisma.order.findMany({
+        ...query, // includes any selected fields from the Order object type
+        where: {
+          tableId: args.tableId,
+          status: activeStatuses,
+        },
+        // Example: Sort by most recent orders first
+        orderBy: { createdAt: "desc" },
+      });
+
+      // If no orders found, you could optionally throw an error or return empty array
+      if (!orders.length) {
+        // Optionally:
+        // throw new GraphQLError("No active orders found for this table");
+      }
+
+      return orders;
+    },
+  }),
+  /**
+   * getTableReservations
+   * Returns reservations for a specific table that fall on the given *calendar date*.
+   * Expects a date string like "2024-06-01". The code calculates start/end of that day.
+   */
+  getTableReservations: t.prismaField({
+    type: ["Reservation"], // Return a list of Reservation objects
+    args: {
+      tableId: t.arg.string({ required: true }),
+      date: t.arg.string({ required: true }), // or use a Date scalar if available
+    },
+    resolve: async (query, _parent, args) => {
+      // Convert the date argument to a JS Date (midnight on that date)
+      const startOfDay = new Date(args.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(args.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Fetch reservations where reservationTime is within [startOfDay, endOfDay]
+      const reservations = await prisma.reservation.findMany({
+        ...query,
+        where: {
+          tableId: args.tableId,
+          reservationTime: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+        },
+        orderBy: {
+          reservationTime: "asc",
+        },
+      });
+
+      return reservations;
+    },
+  }),
+
+
 }));
+

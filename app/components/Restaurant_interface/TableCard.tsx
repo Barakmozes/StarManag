@@ -1,36 +1,70 @@
 "use client";
 
-import React from "react";
-import { TableData } from "@/types";
-
+import React, { useState } from "react";
+import { Table } from "@prisma/client";
 type TableCardProps = {
-  table: TableData;
+  table: Table;
 };
 
 const TableCard: React.FC<TableCardProps> = ({ table }) => {
-  const { tableNumber, diners, reserved } = table;
-
+  const { tableNumber, diners } = table;
+ const [reserved, setReserved] = useState(table.reserved || false); // Reservation state
+   // Handle reservation toggle
+   const handleToggleReservation = () => {
+    setReserved(!reserved);
+  };
   return (
+  
     <div
-      className={`p-4 rounded-lg shadow-md flex flex-col items-center justify-center ${
-        reserved ? "bg-red-100 border-red-500" : "bg-green-100 border-green-500"
-      } border-2`}
-      aria-label={`Table ${tableNumber}`}
-    >
-      <h3 className="text-lg font-semibold text-gray-700">
-        Table #{tableNumber}
-      </h3>
-      <p className="text-sm text-gray-600">
-        Diners: <strong>{diners}</strong>
-      </p>
-      <p
-        className={`text-sm font-medium ${
-          reserved ? "text-red-600" : "text-green-600"
+    className={`relative ${
+      diners <= 4 ? "w-40 h-40 rounded-full" : "w-48 h-32 rounded-lg"
+    } mx-auto bg-gradient-to-t from-gray-300 via-gray-200 to-gray-100 shadow-inner flex items-center justify-center`}
+  >
+    <div className="flex-wrap  items-center justify-center text-center">
+    <h3 className=" text-sm font-bold text-gray-600  ">
+      Table #{tableNumber}
+    </h3>
+     {/* Reservation Toggle */}
+     <button
+        onClick={handleToggleReservation}
+        className={` rounded-lg text-xs  shadow  ${
+          reserved
+            ? "bg-red-500 text-white hover:bg-red-600"
+            : "bg-green-500 text-white hover:bg-green-600"
+        }`}
+        aria-label={`Mark table ${tableNumber} as ${
+          reserved ? "available" : "reserved"
         }`}
       >
-        {reserved ? "Reserved" : "Available"}
-      </p>
-    </div>
+        {reserved ? "Release Table" : "Reserve Table"}
+      </button>
+      </div>
+    {Array.from({ length: diners }).map((_, index) => {
+      const angle = (index / diners) * 360;
+      const radius = diners <= 4 ? 50 : 60;
+      const x = radius * Math.cos((angle * Math.PI) / 180);
+      const y = radius * Math.sin((angle * Math.PI) / 180);
+      
+      return (
+        <div
+        
+          key={index}
+          className="absolute w-6 h-6 bg-blue-500 text-white rounded-full shadow-md flex items-center justify-center text-xs font-bold"
+          style={{
+            transform: `translate(${x}px, ${y}px)`,
+          }}
+          aria-label={`Seat ${index + 1}`}
+        >
+          {index + 1}
+           
+        </div>
+        
+      );
+      
+    })}
+  </div>
+    
+   
   );
 };
 

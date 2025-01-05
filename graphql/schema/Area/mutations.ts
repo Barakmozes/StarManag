@@ -19,7 +19,7 @@ builder.mutationFields((t) => ({
       description: t.arg.string(),
       floorPlanImage: t.arg.string(),
       parentId: t.arg.string(),
-      restaurantId: t.arg.string({ required: true }),
+      restaurantId: t.arg.string(),
     },
     resolve: async (query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -49,7 +49,7 @@ builder.mutationFields((t) => ({
           description: args.description ?? undefined,
           floorPlanImage: args.floorPlanImage ?? undefined,
           parentId: args.parentId ?? null,
-          restaurantId: args.restaurantId,
+          restaurantId: args.restaurantId ?? undefined,
         },
       });
       return newArea;

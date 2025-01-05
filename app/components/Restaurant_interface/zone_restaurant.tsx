@@ -1,56 +1,88 @@
 "use client";
 
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { useRestaurantStore } from "@/lib/restaurantStore";
-import TableCard from "./TableCard";
-import TablesSection from "./TablesSection";
+import { useQuery } from "@urql/next";
 
+import { useRestaurantStore } from "@/lib/AreaStore";
+import TablesSection from "./TablesSection";
+import TableCard from "./TableCard";
+
+import {
+  GetTablesDocument,
+  GetTablesQuery,
+  GetTablesQueryVariables,
+} from "@/graphql/generated";
+import { Table } from "@prisma/client";
+
+/**
+ * ZoneRestaurant
+ * Renders:
+ *  - "Show All Tables" grouped by area
+ *  - or a single selectedArea's tables
+ *  - or a default message if no selection
+ */
 const ZoneRestaurant = () => {
+  // 1) GraphQL: Fetch the tables
+  const [{ data, fetching, error }] = useQuery<
+    GetTablesQuery,
+    GetTablesQueryVariables
+  >({
+    query: GetTablesDocument,
+    variables: {},
+  });
+  const tableData: Table[] = data?.getTables ?? [];
+
+  // 2) Zustand store references
   const {
-    selectedZone,
-    setSelectedZone,
-    clearSelectedZone,
-    tableData,
-    zones,
+    selectedArea,
+    setSelectedArea,
+    clearSelectedArea,
+    areas,
+    scale,
+    moveTable,
+    adjustScale,
   } = useRestaurantStore();
 
-  // State to toggle display of all tables
+  // 3) Local UI state: showAllTables toggles the "all areas" view
   const [showAllTables, setShowAllTables] = useState(false);
+ 
 
- // Reset showAllTables when a zone is selected
+  // When an area is selected in the store, we hide the "show all" view
   useEffect(() => {
-    if (selectedZone) {
+    if (selectedArea) {
       setShowAllTables(false);
     }
-  }, [selectedZone]);
-
+  }, [selectedArea]);
 
   // Handlers
   const handleShowAllTables = () => {
-    clearSelectedZone(); // Resets the selected zone
-    setShowAllTables(true); // Displays all tables
+    // Clear any selected area and show "all areas" mode
+    clearSelectedArea();
+    setShowAllTables(true);
   };
 
   const handleClearScreen = () => {
-    clearSelectedZone(); // Resets the selected zone
-    setShowAllTables(false); // Clears the "Show All Tables" view
+    // Reset the area selection and hide the "all" view
+    clearSelectedArea();
+    
+    setShowAllTables(false);
   };
 
+  // If you want to manually pick a zone by name
   const handleZoneView = (zoneName: string) => {
-    setSelectedZone(zoneName); // Selects the specific zone
-    setShowAllTables(false); // Ensures the all-tables view is not displayed
+    setSelectedArea(zoneName);
+    setShowAllTables(false);
   };
 
+  // 4) Rendering
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="px-6 bg-gray-50 min-h-screen">
         {/* Header Section */}
-        <div className="flex items-center justify-around bg-white px-2 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            Restaurant Zones
-          </h2>
+        <div className="flex items-center justify-around bg-white px-2 rounded-lg shadow-md mb-2">
+          <h2 className="text-xl font-bold text-gray-800">Restaurant Zones</h2>
           <div className="flex gap-4">
             <button
               onClick={handleShowAllTables}
@@ -66,42 +98,69 @@ const ZoneRestaurant = () => {
             >
               Clear Screen
             </button>
+            <button
+              onClick={() => adjustScale(0.1)}
+              className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+              aria-label="Zoom In"
+            >
+              Zoom In
+            </button>
+            <button
+              onClick={() => adjustScale(-0.1)}
+              className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+              aria-label="Zoom Out"
+            >
+              Zoom Out
+            </button>
           </div>
         </div>
 
         {/* Content Section */}
         <div>
-         {showAllTables ? (
-            // Display all tables grouped by zone
+          {/* 4A) If "Show All" is on, we group tables by zone */}
+          {showAllTables ? (
             <div className="grid gap-6">
-              {zones.map((zone) => (
-                <div
-                  key={zone.name}
-                  className="border rounded-lg p-4 bg-white"
-                >
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {zone.name}
-                  </h3>
-                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {tableData
-                      .filter((table) => table.area === zone.name)
-                      .map((table) => (
-                        <TableCard key={table.tableNumber} table={table} />
+              {areas.map((zone) => {
+                // Filter tables by matching areaId
+                const zoneTables = tableData.filter(
+                  (tbl) => tbl.areaId === zone.id
+                );
+
+                return (
+                  <div key={zone.id} className="border rounded-lg p-4 bg-white">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                      {zone.name}
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {zoneTables.map((table) => (
+                        <TableCard key={table.id} table={table as Table} />
                       ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          ) : selectedZone ? (
-            // Display tables for a specific selected zone
+          ) : selectedArea ? (
+            // 4B) If an area is selected, pass the filtered tables to TablesSection
             <div>
-              <TablesSection zoneName={selectedZone} />
+              {/* Filter tables for the selectedArea.id */}
+              <TablesSection
+                areaSelect={selectedArea} // { id, name, floorPlanImage }
+                scale={scale}
+                moveTable={(tableNum, newArea, newPos) =>
+                  moveTable(tableNum, newArea, newPos)
+                }
+                filteredTables={tableData.filter(
+                  (tbl) => tbl.areaId === selectedArea.id
+                )}
+              />
             </div>
           ) : (
-            // Default message when no zone is selected
+            // 4C) Default message
             <div className="text-center text-gray-500 mt-12">
               <p className="text-lg font-medium">
-                Select a zone to display tables or use Show All Tables for an overview.
+                Select a zone to display tables or use “Show All Tables” for an
+                overview.
               </p>
             </div>
           )}

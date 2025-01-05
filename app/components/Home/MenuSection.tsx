@@ -32,13 +32,11 @@ const FetchedMenus = ({ variables, isLastPage, onLoadMore, user}: FetchedMenuPro
     <>
       {!menus || menus.length === 0 ? (
     <div className="text-center py-3">
-    {fetching ? (
-      <DataLoading />
-    ) : (
+    <DataLoading/>
       <h2 className="text-lg leading-tight tracking-tight text-gray-600">
-        ...No Menus Found
+      Search menu...
       </h2>
-    )}
+   
   </div>
       ) : (
         <div className="mb-24 space-y-5">
