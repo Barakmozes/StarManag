@@ -15,6 +15,9 @@ import {
   MovePositionTableMutationVariables,
 } from "@/graphql/generated";
 
+
+
+
 export interface TablesSectionProps {
   areaSelect: BasicArea;
   filteredTables: Table[];
@@ -38,6 +41,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({
     MovePositionTableMutation,
     MovePositionTableMutationVariables
   >(MovePositionTableDocument);
+
 
   const throttledMoveTable = useCallback(
     throttle(
@@ -111,11 +115,11 @@ const TablesSection: React.FC<TablesSectionProps> = ({
         </div>
       )}
 
-      {areaSelect.floorPlanImage ? (
+      {true ? (
         <div
           className="relative w-full h-[100vh] rounded-lg shadow-md break-all mb-6"
           style={{
-            backgroundImage: `url(${areaSelect.floorPlanImage})`,
+            backgroundImage: `url(${areaSelect.floorPlanImage||"/img/pexels-pixabay-235985.jpg"})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

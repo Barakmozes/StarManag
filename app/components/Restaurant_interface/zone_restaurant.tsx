@@ -13,9 +13,13 @@ import {
   GetTablesDocument,
   GetTablesQuery,
   GetTablesQueryVariables,
+  BasicArea,
+  Area
 } from "@/graphql/generated";
 import { Table } from "@prisma/client";
-
+import AddZoneForm from "./CRUD_Zone-CRUD_Table/AddZoneForm";
+import DeleteZoneModal from "./CRUD_Zone-CRUD_Table/DeleteZoneModal";
+import EditZoneModal from "./CRUD_Zone-CRUD_Table/EditZoneModal";
 /**
  * ZoneRestaurant
  * Renders:
@@ -47,12 +51,12 @@ const ZoneRestaurant = () => {
 
   // 3) Local UI state: showAllTables toggles the "all areas" view
   const [showAllTables, setShowAllTables] = useState(false);
- 
-
+ const [showAllTablesable, setshowAllTablesable] = useState(false);
   // When an area is selected in the store, we hide the "show all" view
   useEffect(() => {
     if (selectedArea) {
       setShowAllTables(false);
+      setshowAllTablesable(false);
     }
   }, [selectedArea]);
 
@@ -61,12 +65,19 @@ const ZoneRestaurant = () => {
     // Clear any selected area and show "all areas" mode
     clearSelectedArea();
     setShowAllTables(true);
+    setshowAllTablesable(false);
+  };
+
+  const handleShowAllTablesable = () => {
+    clearSelectedArea();
+    setShowAllTables(false);
+    setshowAllTablesable(true);
   };
 
   const handleClearScreen = () => {
     // Reset the area selection and hide the "all" view
     clearSelectedArea();
-    
+    setshowAllTablesable(false);
     setShowAllTables(false);
   };
 
@@ -75,6 +86,8 @@ const ZoneRestaurant = () => {
     setSelectedArea(zoneName);
     setShowAllTables(false);
   };
+
+
 
   // 4) Rendering
   return (
@@ -90,6 +103,31 @@ const ZoneRestaurant = () => {
               aria-label="Show All Tables"
             >
               Show All Tables
+            </button>
+            <button
+              onClick={handleShowAllTablesable}
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+              Show All Tables available
+            </button>
+            <button
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+              <AddZoneForm />
+            </button>
+            <button
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+          < DeleteZoneModal areas={areas as BasicArea[] }  areaSelectToDelete={selectedArea as BasicArea }/>
+            </button>
+            <button
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+          < EditZoneModal areas={areas as Area[] }  areaSelectToEdit={selectedArea as Area }/>
             </button>
             <button
               onClick={handleClearScreen}
@@ -112,6 +150,7 @@ const ZoneRestaurant = () => {
             >
               Zoom Out
             </button>
+            
           </div>
         </div>
 
@@ -125,7 +164,7 @@ const ZoneRestaurant = () => {
                 const zoneTables = tableData.filter(
                   (tbl) => tbl.areaId === zone.id
                 );
-
+                // Render each zone with its tables available
                 return (
                   <div key={zone.id} className="border rounded-lg p-4 bg-white">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">
@@ -140,6 +179,27 @@ const ZoneRestaurant = () => {
                 );
               })}
             </div>
+          ): showAllTablesable ? ( // Render each zone with its tables available
+            <div className="grid gap-6">
+            {areas.map((zone) => {
+              // Filter tables by matching areaId
+              const zoneTables = tableData.filter(
+                (tbl) => tbl.areaId === zone.id && !tbl.reserved
+              );
+              return (
+                <div key={zone.id} className="border rounded-lg p-4 bg-white">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    {zone.name}
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {zoneTables.map((table) => (
+                      <TableCard key={table.id} table={table as Table} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           ) : selectedArea ? (
             // 4B) If an area is selected, pass the filtered tables to TablesSection
             <div>

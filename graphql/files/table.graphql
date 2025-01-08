@@ -1,14 +1,14 @@
+
+
 query GetAvailableTables {
   getAvailableTables {
-    area {
-      name
-      id
-      description
-    }
     areaId
-    diners
     id
+    diners
     tableNumber
+    reservations {
+      reservationTime
+    }
   }
 }
 

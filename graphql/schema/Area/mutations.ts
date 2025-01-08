@@ -29,7 +29,7 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("You must be logged in to perform this action");
       }
       // Must be ADMIN
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to perform this action");
       }
 
@@ -77,7 +77,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to perform this action");
       }
 
@@ -114,7 +114,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to perform this action");
       }
 

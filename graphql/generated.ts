@@ -37,8 +37,13 @@ export type Area = {
   waitlists: Array<Waitlist>;
 };
 
+export type AreaOrderByInput = {
+  createdAt?: InputMaybe<SortOrder>;
+};
+
 export type BasicArea = {
   __typename?: 'BasicArea';
+  createdAt: Scalars['DateTime']['output'];
   floorPlanImage?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -629,6 +634,11 @@ export type QueryGetAreaArgs = {
 };
 
 
+export type QueryGetAreasNameDescriptionArgs = {
+  orderBy?: InputMaybe<AreaOrderByInput>;
+};
+
+
 export type QueryGetCategoryArgs = {
   id: Scalars['String']['input'];
 };
@@ -845,6 +855,11 @@ export enum Role {
   Waiter = 'WAITER'
 }
 
+export enum SortOrder {
+  Asc = 'asc',
+  Desc = 'desc'
+}
+
 export type Table = {
   __typename?: 'Table';
   area: Area;
@@ -929,13 +944,11 @@ export type GetAreasQuery = { __typename?: 'Query', getAreas: Array<{ __typename
 
 export type AddAreaMutationVariables = Exact<{
   name: Scalars['String']['input'];
-  restaurantId: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
-  floorPlanImage?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type AddAreaMutation = { __typename?: 'Mutation', addArea: { __typename?: 'Area', createdAt: any, name: string, id: string } };
+export type AddAreaMutation = { __typename?: 'Mutation', addArea: { __typename?: 'Area', id: string } };
 
 export type DeleteAreaMutationVariables = Exact<{
   deleteAreaId: Scalars['String']['input'];
@@ -952,12 +965,14 @@ export type EditAreaMutationVariables = Exact<{
 }>;
 
 
-export type EditAreaMutation = { __typename?: 'Mutation', editArea: { __typename?: 'Area', updatedAt: any, name: string, id: string } };
+export type EditAreaMutation = { __typename?: 'Mutation', editArea: { __typename?: 'Area', id: string } };
 
-export type GetAreasNameDescriptionQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetAreasNameDescriptionQueryVariables = Exact<{
+  orderBy?: InputMaybe<AreaOrderByInput>;
+}>;
 
 
-export type GetAreasNameDescriptionQuery = { __typename?: 'Query', getAreasNameDescription: Array<{ __typename?: 'BasicArea', id: string, name: string, floorPlanImage?: string | null }> };
+export type GetAreasNameDescriptionQuery = { __typename?: 'Query', getAreasNameDescription: Array<{ __typename?: 'BasicArea', createdAt: any, floorPlanImage?: string | null, id: string, name: string }> };
 
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
@@ -1080,7 +1095,7 @@ export type EditOrderMutation = { __typename?: 'Mutation', editOrder: { __typena
 export type GetAvailableTablesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAvailableTablesQuery = { __typename?: 'Query', getAvailableTables: Array<{ __typename?: 'Table', areaId: string, diners: number, id: string, tableNumber: number, area: { __typename?: 'Area', name: string, id: string, description?: string | null } }> };
+export type GetAvailableTablesQuery = { __typename?: 'Query', getAvailableTables: Array<{ __typename?: 'Table', areaId: string, id: string, diners: number, tableNumber: number, reservations: Array<{ __typename?: 'Reservation', reservationTime: any }> }> };
 
 export type GetTableQueryVariables = Exact<{
   getTableId: Scalars['String']['input'];
@@ -1245,15 +1260,8 @@ export function useGetAreasQuery(options?: Omit<Urql.UseQueryArgs<GetAreasQueryV
   return Urql.useQuery<GetAreasQuery, GetAreasQueryVariables>({ query: GetAreasDocument, ...options });
 };
 export const AddAreaDocument = gql`
-    mutation AddArea($name: String!, $restaurantId: String!, $description: String, $floorPlanImage: String) {
-  addArea(
-    name: $name
-    restaurantId: $restaurantId
-    description: $description
-    floorPlanImage: $floorPlanImage
-  ) {
-    createdAt
-    name
+    mutation AddArea($name: String!, $description: String) {
+  addArea(name: $name, description: $description) {
     id
   }
 }
@@ -1282,8 +1290,6 @@ export const EditAreaDocument = gql`
     floorPlanImage: $floorPlanImage
     name: $name
   ) {
-    updatedAt
-    name
     id
   }
 }
@@ -1293,11 +1299,12 @@ export function useEditAreaMutation() {
   return Urql.useMutation<EditAreaMutation, EditAreaMutationVariables>(EditAreaDocument);
 };
 export const GetAreasNameDescriptionDocument = gql`
-    query GetAreasNameDescription {
-  getAreasNameDescription {
+    query GetAreasNameDescription($orderBy: AreaOrderByInput) {
+  getAreasNameDescription(orderBy: $orderBy) {
+    createdAt
+    floorPlanImage
     id
     name
-    floorPlanImage
   }
 }
     `;
@@ -1528,15 +1535,13 @@ export function useEditOrderMutation() {
 export const GetAvailableTablesDocument = gql`
     query GetAvailableTables {
   getAvailableTables {
-    area {
-      name
-      id
-      description
-    }
     areaId
-    diners
     id
+    diners
     tableNumber
+    reservations {
+      reservationTime
+    }
   }
 }
     `;

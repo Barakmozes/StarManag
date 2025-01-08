@@ -8,12 +8,14 @@ import LocationBtn from "./LocationBtn";
 import { User } from "@prisma/client";
 import AccountDropDown from "./AccountDropDown";
 import {
+  AreaOrderByInput,
   GetAreasNameDescriptionDocument,
   GetAreasNameDescriptionQuery,
   GetAreasNameDescriptionQueryVariables,
 } from "@/graphql/generated";
 import { useQuery } from "@urql/next";
 import { useEffect } from "react";
+
 
 
 
@@ -37,8 +39,10 @@ const Header = ({ user }: HeaderProps) => {
   const [{ data: UserData, fetching, error }] = useQuery<
     GetAreasNameDescriptionQuery,
     GetAreasNameDescriptionQueryVariables
-  >({ query: GetAreasNameDescriptionDocument, variables: {} });
-
+  >({ query: GetAreasNameDescriptionDocument,   variables: {
+    orderBy: { createdAt: "asc" as any,
+    }, // Now this is valid
+  },});
 
 
   const FetcheAreas = UserData?.getAreasNameDescription;
@@ -49,7 +53,8 @@ const Header = ({ user }: HeaderProps) => {
     const adapted = FetcheAreas.map((zone) => ({
     name:zone.name,
       id:zone.id,
-      floorPlanImage:zone.floorPlanImage
+      floorPlanImage:zone.floorPlanImage,
+      createdAt:zone.createdAt
     }));
    setAreas(adapted);
   }

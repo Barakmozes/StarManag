@@ -54,16 +54,28 @@ builder.prismaObject("Area", {
 });
 
 
+// Example with Pothos builder
+ const SortOrderEnum = builder.enumType("SortOrder", {
+  values: ["asc", "desc"] as const,
+});
 
+ const AreaOrderByInput = builder.inputType("AreaOrderByInput", {
+  fields: (t) => ({
+    createdAt: t.field({ type: SortOrderEnum, required: false }),
+    // ...other fields you want to allow sorting by
+  }),
+});
 export const BasicArea = builder.objectRef<{
   name: string;
   floorPlanImage: string | null;
   id: string;
+  createdAt:Date;
 }>("BasicArea").implement({
   fields: (t) => ({
     id: t.exposeID("id"),
     name: t.exposeString("name"),
     floorPlanImage: t.exposeString("floorPlanImage", { nullable: true }),
+    createdAt: t.expose("createdAt", { type: "DateTime" }),
   }),
 });
 
@@ -155,13 +167,25 @@ builder.queryFields((t) => ({
   getAreasNameDescription: t.field({
     // We return an array of BasicArea objects (instead of full "Area").
     type: [BasicArea],
-    resolve: async () => {
+    args: {
+      orderBy: t.arg({ type: AreaOrderByInput, required: false }),
+    },
+    resolve: async (_, { orderBy },) => {
       // Query only 'name' and 'description' from each row.
       return prisma.area.findMany({
+           // 2) Pass 'orderBy' to Prisma if provided
+           orderBy: orderBy
+           ? {
+
+               // For example, { createdAt: 'asc' }
+               createdAt: orderBy.createdAt ?? undefined,
+             }
+           : undefined,
         select: {
           id: true,
           name: true,
           floorPlanImage: true,
+          createdAt: true,
         },
       });
     },

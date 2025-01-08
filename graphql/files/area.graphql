@@ -35,10 +35,8 @@ query GetAreas {
   }
 }
 
-mutation AddArea($name: String!, $restaurantId: String!, $description: String, $floorPlanImage: String) {
-  addArea(name: $name, restaurantId: $restaurantId, description: $description, floorPlanImage: $floorPlanImage) {
-    createdAt
-    name
+mutation AddArea($name: String!, $description: String) {
+  addArea(name: $name, description: $description) {
     id
   }
 }
@@ -52,17 +50,15 @@ mutation DeleteArea($deleteAreaId: String!) {
 
 mutation EditArea($editAreaId: String!, $description: String, $floorPlanImage: String, $name: String) {
   editArea(id: $editAreaId, description: $description, floorPlanImage: $floorPlanImage, name: $name) {
-    updatedAt
-    name
     id
   }
 }
 
-
-query GetAreasNameDescription {
-  getAreasNameDescription {
+query GetAreasNameDescription($orderBy: AreaOrderByInput) {
+  getAreasNameDescription(orderBy: $orderBy) {
+    createdAt
+    floorPlanImage
     id
     name
-    floorPlanImage
   }
 }

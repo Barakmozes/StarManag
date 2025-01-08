@@ -82,6 +82,7 @@ export const useRestaurantStore = create<AreaStore>()(
             id: found.id,
             name: found.name,
             floorPlanImage: found.floorPlanImage ?? null,
+            createdAt: found.createdAt
           },
         });
       },
