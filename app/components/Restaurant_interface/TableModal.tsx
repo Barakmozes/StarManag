@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import { useDrag } from "react-dnd";
-import { Table } from "@prisma/client";
 
+import EditTableModal from "./CRUD_Zone-CRUD_Table/EditTableModal";
+import DeleteTableModal from "./CRUD_Zone-CRUD_Table/DeleteTableModal";
+import{TableInStore}from "@/lib/AreaStore";
 export interface TableModalProps {
-  table: Table;
+  table: TableInStore;
   scale: number;
 }
 
@@ -15,14 +17,15 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
   const [specialRequests, setSpecialRequests] = useState<string[]>(
     table.specialRequests || []
   );
+  const isDirty = table?.dirty;
 
-  const { tableNumber, diners, position } = table;
+  const { tableNumber, diners, position,id } = table;
   const x = (position as any)?.x ?? 0;
   const y = (position as any)?.y ?? 0;
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "TABLE",
-    item: { tableNumber },
+    item: { tableId: table.id }, 
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -40,10 +43,11 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
     setSpecialRequests((prev) => prev.filter((_, i) => i !== index));
   };
 
+
   return (
     <div
       ref={drag}
-      className={`relative p-2 sm:p-3 bg-white rounded-lg shadow-md border border-gray-200 transition-transform ${
+      className={`relative p-2 sm:p-2 bg-white rounded-lg shadow-md border border-gray-200 transition-transform ${
         isDragging ? "opacity-75 border-blue-500" : ""
       }`}
       style={{
@@ -57,10 +61,25 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
         reserved ? "Reserved" : "Available"
       }, for ${diners} diners`}
     >
+      
       {/* Table Info */}
       <div className="mb-2 text-start">
+        <div className="flex mx-auto justify-between">
+         <div
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+          < DeleteTableModal table={table as TableInStore}/> 
+            </div>
+            <div
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+         < EditTableModal  table={table as TableInStore}  /> 
+            </div>
+            </div>
         <h2 className="text-sm sm:text-base font-bold text-gray-700">
-          Table #{tableNumber}
+          Table #{tableNumber}{isDirty && <span className="text-red-500">*</span>}
         </h2>
         <p className="text-xs sm:text-sm text-gray-500">
           <strong>Diners:</strong> {diners}

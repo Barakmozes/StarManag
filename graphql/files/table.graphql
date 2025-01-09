@@ -80,6 +80,7 @@ mutation AddTable($areaId: String!, $diners: Int!, $position: JSON!, $tableNumbe
     tableNumber
   }
 }
+
 mutation DeleteTable($deleteTableId: String!) {
   deleteTable(id: $deleteTableId) {
     tableNumber
@@ -92,6 +93,7 @@ mutation EditTable($editTableId: String!, $areaId: String, $diners: Int, $positi
     tableNumber
   }
 }
+
 mutation AddOrderToTable($cart: JSON!, $orderNumber: String!, $serviceFee: Float!, $tableId: String!, $total: Float!, $userEmail: String!, $userName: String!, $discount: Float, $note: String, $paymentToken: String) {
   addOrderToTable(cart: $cart, orderNumber: $orderNumber, serviceFee: $serviceFee, tableId: $tableId, total: $total, userEmail: $userEmail, userName: $userName, discount: $discount, note: $note, paymentToken: $paymentToken) {
     cart
@@ -106,8 +108,19 @@ mutation AddOrderToTable($cart: JSON!, $orderNumber: String!, $serviceFee: Float
   }
 }
 
-mutation MovePositionTable($position: JSON!, $tableNumber: Int!) {
-  movePositionTable(position: $position, tableNumber: $tableNumber) {
+mutation MovePositionTable($movePositionTableId: String!, $position: JSON!) {
+  movePositionTable(id: $movePositionTableId, position: $position) {
     id
+  }
+}
+mutation UpdateManyTables($updates: [UpdateManyTablesInput!]!) {
+  updateManyTables(updates: $updates) {
+    id
+    tableNumber
+    position
+    areaId
+    reserved
+    diners
+    specialRequests
   }
 }

@@ -7,6 +7,20 @@ import { builder } from "@/graphql/builder";
 /**
  * Mutation Fields for Table
  */
+// In your builder config or an appropriate file:
+
+export const UpdateManyTablesInput = builder.inputType("UpdateManyTablesInput", {
+  fields: (t) => ({
+    id: t.string({ required: true }),
+    // The fields you want to allow updating in bulk:
+    position: t.field({ type: "JSON" }),  // optional
+    areaId: t.string(),                   // optional
+    reserved: t.boolean(),                // optional
+    diners: t.int(),                      // optional
+    specialRequests: t.stringList(),      // optional
+    // etc...
+  }),
+});
 builder.mutationFields((t) => ({
   /**
    * addTable
@@ -79,7 +93,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to edit tables");
       }
 
@@ -114,7 +128,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")){
         throw new GraphQLError("You are not authorized to delete tables");
       }
 
@@ -223,13 +237,14 @@ builder.mutationFields((t) => ({
 
 /**
  * movePositionTable
- * Updates only the "position" field of a specific table by "tableNumber" (Int).
- * Useful for drag-and-drop scenarios if your tableNumber is unique in the DB.
+ * Updates only the "position" field of a specific table by "id" (String/UUID).
+ * Use this if your Table model has an 'id' field as the unique primary key.
  */
 movePositionTable: t.prismaField({
   type: "Table",
+  // Now expect an 'id' argument, which is stable even if tableNumber changes
   args: {
-    tableNumber: t.arg.int({ required: true }),      // Changed from 'id' to 'tableNumber'
+    id: t.arg.string({ required: true }), // or t.arg.id({ required: true }) if you prefer
     position: t.arg({ type: "JSON", required: true }),
   },
   resolve: async (query, _parent, args, contextPromise) => {
@@ -239,25 +254,23 @@ movePositionTable: t.prismaField({
     if (!context.user) {
       throw new GraphQLError("You must be logged in to perform this action");
     }
-    // Example: Only ADMIN or MANAGER can update the table position
     if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
       throw new GraphQLError("You are not authorized to move the table");
     }
 
-    // 2) Verify the table exists by tableNumber
-    // Make sure 'tableNumber' is unique in your Prisma schema
+    // 2) Verify the table exists by id
     const table = await prisma.table.findUnique({
       ...query,
-      where: { tableNumber: args.tableNumber },
+      where: { id: args.id },
     });
     if (!table) {
-      throw new GraphQLError(`Table with tableNumber=${args.tableNumber} not found`);
+      throw new GraphQLError(`Table with id=${args.id} not found`);
     }
 
     // 3) Update only the 'position' field
     const updatedTable = await prisma.table.update({
       ...query,
-      where: { tableNumber: args.tableNumber },
+      where: { id: args.id },
       data: {
         position: args.position,
       },
@@ -268,6 +281,57 @@ movePositionTable: t.prismaField({
 }),
 
 
+updateManyTables: t.prismaField({
+  // Return an array of updated Table records
+  type: ["Table"],
+
+  // Single argument = array of table updates
+  args: {
+    updates: t.arg({
+      type: [UpdateManyTablesInput],
+      required: true,
+    }),
+  },
+
+  // The resolver function
+  resolve: async (query, _parent, args, contextPromise) => {
+    const context = await contextPromise;
+
+    // 1) Authorization checks
+    if (!context.user) {
+      throw new GraphQLError("You must be logged in to perform this action");
+    }
+    // e.g., only MANAGER or ADMIN can do bulk updates
+    if (!["ADMIN", "MANAGER"].includes(context.user?.role??"")) {
+      throw new GraphQLError("You are not authorized to update tables in bulk");
+    }
+
+    // 2) For concurrency and correctness, we use a transaction
+    //    We'll store the updated records so we can return them
+    const updatedTables = await prisma.$transaction(
+      args.updates.map((tableInput) => {
+        // Each item MUST have `id`. All other fields are optional.
+        const { id, position, areaId, reserved, diners, specialRequests } = tableInput;
+
+        return prisma.table.update({
+          ...query,  // optional if you want to use Prisma 'select' from builder
+          where: { id },
+          data: {
+            // Only update each field if passed in
+            position: position ?? undefined,
+            areaId: areaId ?? undefined,
+            reserved: reserved ?? undefined,
+            diners: diners ?? undefined,
+            specialRequests: specialRequests ?? undefined,
+          },
+        });
+      })
+    );
+
+    // 3) Return the updated Table records to the client
+    return updatedTables;
+  },
+}),
 
 
 }));

@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { useQuery } from "@urql/next";
+import { useQuery, useMutation } from "@urql/next";
 
-import { useRestaurantStore } from "@/lib/AreaStore";
+import { useRestaurantStore, TableInStore } from "@/lib/AreaStore";
 import TablesSection from "./TablesSection";
 import TableCard from "./TableCard";
 
@@ -14,12 +14,17 @@ import {
   GetTablesQuery,
   GetTablesQueryVariables,
   BasicArea,
-  Area
+  Area,
+  UpdateManyTablesDocument,
 } from "@/graphql/generated";
 import { Table } from "@prisma/client";
+
 import AddZoneForm from "./CRUD_Zone-CRUD_Table/AddZoneForm";
 import DeleteZoneModal from "./CRUD_Zone-CRUD_Table/DeleteZoneModal";
 import EditZoneModal from "./CRUD_Zone-CRUD_Table/EditZoneModal";
+import toast from "react-hot-toast";
+import AddTableModal from "./CRUD_Zone-CRUD_Table/AddTableModal";
+
 /**
  * ZoneRestaurant
  * Renders:
@@ -36,12 +41,21 @@ const ZoneRestaurant = () => {
     query: GetTablesDocument,
     variables: {},
   });
-  const tableData: Table[] = data?.getTables ?? [];
+  const [{}, reexecuteTablesQuery] = useQuery({
+    query: GetTablesDocument,
+    pause: true,
+  });
+  const serverTables: Table[] = data?.getTables ?? [];
 
+  // GraphQL mutation to update table position in DB
+  const [updateManyResult, updateManyTables] = useMutation(
+    UpdateManyTablesDocument
+  );
   // 2) Zustand store references
   const {
+    tables,
+    setTables,
     selectedArea,
-    setSelectedArea,
     clearSelectedArea,
     areas,
     scale,
@@ -51,7 +65,8 @@ const ZoneRestaurant = () => {
 
   // 3) Local UI state: showAllTables toggles the "all areas" view
   const [showAllTables, setShowAllTables] = useState(false);
- const [showAllTablesable, setshowAllTablesable] = useState(false);
+  const [showAllTablesable, setshowAllTablesable] = useState(false);
+  
   // When an area is selected in the store, we hide the "show all" view
   useEffect(() => {
     if (selectedArea) {
@@ -59,6 +74,34 @@ const ZoneRestaurant = () => {
       setshowAllTablesable(false);
     }
   }, [selectedArea]);
+
+  // On first load or any refetch, populate local store
+  useEffect(() => {
+    if (serverTables.length) {
+      
+      setTables(
+        serverTables.map((t) => ({
+          id: t.id,
+          tableNumber: t.tableNumber,
+          areaId: t.areaId,
+          position: t.position as { x: number; y: number },
+          dirty: false,
+          diners: t.diners,
+          reserved: t.reserved,
+          specialRequests: t.specialRequests,
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
+        }))
+      );
+    }
+  }, [serverTables, setTables]);
+
+  // The locally updated tables
+  const localTables = tables;
+  // If an area is selected, filter local tables
+  const localFiltered = selectedArea
+    ? localTables.filter((t) => t.areaId === selectedArea.id)
+    : localTables;
 
   // Handlers
   const handleShowAllTables = () => {
@@ -81,16 +124,52 @@ const ZoneRestaurant = () => {
     setShowAllTables(false);
   };
 
-  // If you want to manually pick a zone by name
-  const handleZoneView = (zoneName: string) => {
-    setSelectedArea(zoneName);
-    setShowAllTables(false);
+  const handleSaveChanges = async () => {
+    // Get all local tables from Zustand
+    const allTables = useRestaurantStore.getState().tables;
+    // Filter only those with dirty === true
+    const changedTables = allTables.filter((t) => t.dirty);
+
+    if (changedTables.length === 0) {
+      console.log("No changed tables to save.");
+      return;
+    }
+
+    try {
+      // Prepare the array for GraphQL
+      // Each object must match UpdateManyTablesInput: { id, position?, areaId?, etc. }
+      const updates = changedTables.map((t) => ({
+        id: t.id,
+        position: t.position,
+        areaId: t.areaId,
+        // If you need to update reserved/diners as well, include them
+        // e.g. reserved: t.reserved
+      }));
+
+      // Send the mutation request
+      const result = await updateManyTables({ updates });
+      if (result.error) {
+        console.error("Failed to update tables:", result.error);
+        return;
+      }
+
+      // 1) Clear dirty flags locally
+      useRestaurantStore.setState((state) => ({
+        tables: state.tables.map((tbl) => ({ ...tbl, dirty: false })),
+      }));
+
+      // 2) Re-fetch from server if you want the updated data
+      reexecuteTablesQuery({ requestPolicy: "network-only" });
+      // Or do a direct cache update if you prefer.
+      toast.success("Tables updated successfully!", { duration: 800 });
+    } catch (err) {
+      console.error("Error saving changes:", err);
+    }
   };
-
-
 
   // 4) Rendering
   return (
+    
     <DndProvider backend={HTML5Backend}>
       <div className="px-6 bg-gray-50 min-h-screen">
         {/* Header Section */}
@@ -112,6 +191,13 @@ const ZoneRestaurant = () => {
               Show All Tables available
             </button>
             <button
+              onClick={handleShowAllTablesable}
+              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+              aria-label="Show All Tables"
+            >
+              Show All Tables not pay
+            </button>
+            <button
               className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
               aria-label="Show All Tables"
             >
@@ -121,13 +207,19 @@ const ZoneRestaurant = () => {
               className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
               aria-label="Show All Tables"
             >
-          < DeleteZoneModal areas={areas as BasicArea[] }  areaSelectToDelete={selectedArea as BasicArea }/>
+              <DeleteZoneModal
+                areas={areas as BasicArea[]}
+                areaSelectToDelete={selectedArea as BasicArea}
+              />
             </button>
             <button
               className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
               aria-label="Show All Tables"
             >
-          < EditZoneModal areas={areas as Area[] }  areaSelectToEdit={selectedArea as Area }/>
+              <EditZoneModal
+                areas={areas as Area[]}
+                areaSelectToEdit={selectedArea as Area}
+              />
             </button>
             <button
               onClick={handleClearScreen}
@@ -150,7 +242,17 @@ const ZoneRestaurant = () => {
             >
               Zoom Out
             </button>
-            
+            <button
+              onClick={handleSaveChanges}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Save Table Positions
+            </button>
+            <AddTableModal
+              allAreas={areas} // array of BasicArea
+              areaSelectID={selectedArea} // optional pre-selected area
+            />
+    
           </div>
         </div>
 
@@ -161,7 +263,7 @@ const ZoneRestaurant = () => {
             <div className="grid gap-6">
               {areas.map((zone) => {
                 // Filter tables by matching areaId
-                const zoneTables = tableData.filter(
+                const zoneTables = localFiltered.filter(
                   (tbl) => tbl.areaId === zone.id
                 );
                 // Render each zone with its tables available
@@ -172,47 +274,52 @@ const ZoneRestaurant = () => {
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                       {zoneTables.map((table) => (
-                        <TableCard key={table.id} table={table as Table} />
+                        <TableCard
+                          key={table.id}
+                          table={table as TableInStore}
+                        />
+                        
                       ))}
                     </div>
                   </div>
                 );
               })}
             </div>
-          ): showAllTablesable ? ( // Render each zone with its tables available
+          ) : showAllTablesable ? ( // Render each zone with its tables available
             <div className="grid gap-6">
-            {areas.map((zone) => {
-              // Filter tables by matching areaId
-              const zoneTables = tableData.filter(
-                (tbl) => tbl.areaId === zone.id && !tbl.reserved
-              );
-              return (
-                <div key={zone.id} className="border rounded-lg p-4 bg-white">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    {zone.name}
-                  </h3>
-                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {zoneTables.map((table) => (
-                      <TableCard key={table.id} table={table as Table} />
-                    ))}
+              {areas.map((zone) => {
+                // Filter tables by matching areaId
+                const zoneTables = localFiltered.filter(
+                  (tbl) => tbl.areaId === zone.id && !tbl.reserved
+                );
+                return (
+                  <div key={zone.id} className="border rounded-lg p-4 bg-white">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                      {zone.name}
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {zoneTables.map((table) => (
+                        <TableCard
+                          key={table.id}
+                          table={table as TableInStore}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           ) : selectedArea ? (
             // 4B) If an area is selected, pass the filtered tables to TablesSection
             <div>
               {/* Filter tables for the selectedArea.id */}
               <TablesSection
-                areaSelect={selectedArea} // { id, name, floorPlanImage }
+                areaSelect={selectedArea}
                 scale={scale}
-                moveTable={(tableNum, newArea, newPos) =>
-                  moveTable(tableNum, newArea, newPos)
+                moveTable={(tableId, areaId, newPos) =>
+                  moveTable(tableId, areaId, newPos)
                 }
-                filteredTables={tableData.filter(
-                  (tbl) => tbl.areaId === selectedArea.id
-                )}
+                filteredTables={localFiltered}
               />
             </div>
           ) : (

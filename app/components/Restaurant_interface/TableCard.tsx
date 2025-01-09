@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Table } from "@prisma/client";
+import{TableInStore}from "@/lib/AreaStore";
 type TableCardProps = {
-  table: Table;
+  table: TableInStore;
 };
 
 const TableCard: React.FC<TableCardProps> = ({ table }) => {

@@ -11,6 +11,19 @@ import { BasicArea } from "@/graphql/generated";
  * 5) setSelectedArea, clearSelectedArea, etc.
  */
 
+// If your store also needs to keep local track of Tables, add a type for them:
+export interface TableInStore {
+  id: string;
+  tableNumber: number;
+  areaId: string;
+  position: { x: number; y: number };
+  dirty?: boolean; // optional: track if table was modified
+    diners: number;
+   reserved: boolean;
+    specialRequests: string[];
+   createdAt: Date;
+   updatedAt: Date;
+}
 
 type AreaStore = {
   // ---------- Areas and Selection ----------
@@ -27,15 +40,18 @@ type AreaStore = {
   setScale: (newScale: number) => void;
   adjustScale: (delta: number) => void;
 
-  // ---------- Table Moving Logic ----------
+  // ---------- Table Data & Moving Logic ----------
+  // Optional: local array of tables if you store them in Zustand
+  tables: TableInStore[];
+  setTables: (t: TableInStore[]) => void;
+
   /**
-   * A general moveTable function. You can adapt it
-   * to do a local update or call a DB mutation. 
-   * Right now it's just a placeholder signature.
+   * Use a stable 'id' to update table location or area.
+   * The newAreaId could be an actual area ID. 
    */
   moveTable: (
-    tableNumber: number,
-    newAreaIdOrName: string,
+    tableId: string,
+    newAreaId: string,
     newPosition: { x: number; y: number }
   ) => void;
 
@@ -54,22 +70,20 @@ export const useRestaurantStore = create<AreaStore>()(
       scale: 1,
       scaleLimits: { min: 0.5, max: 2 },
 
+      // If you want to keep local table data:
+      tables: [],
+      setTables: (fetchedTables) => {
+        set({ tables: fetchedTables });
+      },
+
       // ---------- Actions / Methods ----------
 
-      // 1) Overwrite the store's areas with newly fetched data
       setAreas: (fetchedAreas) => {
         set({ areas: fetchedAreas });
       },
 
-      /**
-       * 2) setSelectedArea
-       * Accepts an ID or name to find a matching area in 'areas'.
-       * If found, store { id, name, floorPlanImage } in 'selectedArea'
-       */
-
       setSelectedArea: (areaIdOrName) => {
         const { areas } = get();
-        // find area by ID or name
         const found = areas.find(
           (a) => a.id === areaIdOrName || a.name === areaIdOrName
         );
@@ -82,16 +96,13 @@ export const useRestaurantStore = create<AreaStore>()(
             id: found.id,
             name: found.name,
             floorPlanImage: found.floorPlanImage ?? null,
-            createdAt: found.createdAt
+            createdAt: found.createdAt,
           },
         });
       },
 
-
-      // 3) Clear the currently selected area
       clearSelectedArea: () => set({ selectedArea: null }),
 
-      // 4) Directly set the scale if you want
       setScale: (newScale) => {
         const { scaleLimits } = get();
         // clamp the new scale
@@ -102,7 +113,6 @@ export const useRestaurantStore = create<AreaStore>()(
         set({ scale: clampedScale });
       },
 
-      // 5) Increase/decrease scale by delta
       adjustScale: (delta) => {
         const { scale, setScale } = get();
         setScale(scale + delta);
@@ -110,24 +120,28 @@ export const useRestaurantStore = create<AreaStore>()(
 
       /**
        * 6) moveTable
-       * Here you can do local or server updates. 
-       * For now, we just log or do a placeholder. 
+       * We'll do a local update if 'tables' are stored here.
+       * Or you can do nothing local and just rely on server re-fetch.
        */
-      moveTable: (tableNumber, newAreaIdOrName, newPosition) => {
-        console.log(
-          "Store moveTable() called:",
-          tableNumber,
-          newAreaIdOrName,
-          newPosition
-        );
-        // Potentially call a local update or a GraphQL mutation here.
-        // e.g.:
-        // await mutate({
-        //   variables: { tableNumber, newAreaIdOrName, position: newPosition },
-        // });
+      moveTable: (tableId, newAreaId, newPosition) => {
+        set((state) => {
+          const updatedTables = state.tables.map((t) => {
+            if (t.id === tableId) {
+              const positionChanged =
+                t.position.x !== newPosition.x || t.position.y !== newPosition.y;
+              const areaChanged = t.areaId !== newAreaId;
+      
+              if (positionChanged || areaChanged) {
+                return { ...t, areaId: newAreaId, position: newPosition, dirty: true };
+              }
+            }
+            return t;
+          });
+          return { tables: updatedTables };
+        });
       },
+      
 
-      // 7) Persist area selection and scale in localStorage
       persistAreaState: () => {
         try {
           const { areas, selectedArea, scale } = get();

@@ -136,6 +136,7 @@ export type Mutation = {
   removeWaitlistEntry: Waitlist;
   seatWaitlistEntry: Waitlist;
   toggleTableReservation: Table;
+  updateManyTables: Array<Table>;
   updateNotification: Notification;
   updateTableUsage: TableUsage;
   updateUserProfile: User;
@@ -448,8 +449,8 @@ export type MutationMarkNotificationAsReadArgs = {
 
 
 export type MutationMovePositionTableArgs = {
+  id: Scalars['String']['input'];
   position: Scalars['JSON']['input'];
-  tableNumber: Scalars['Int']['input'];
 };
 
 
@@ -472,6 +473,11 @@ export type MutationSeatWaitlistEntryArgs = {
 export type MutationToggleTableReservationArgs = {
   id: Scalars['String']['input'];
   reserved: Scalars['Boolean']['input'];
+};
+
+
+export type MutationUpdateManyTablesArgs = {
+  updates: Array<UpdateManyTablesInput>;
 };
 
 
@@ -888,6 +894,15 @@ export type TableUsage = {
   usageCount: Scalars['Int']['output'];
 };
 
+export type UpdateManyTablesInput = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  diners?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['String']['input'];
+  position?: InputMaybe<Scalars['JSON']['input']>;
+  reserved?: InputMaybe<Scalars['Boolean']['input']>;
+  specialRequests?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
@@ -1171,12 +1186,19 @@ export type AddOrderToTableMutationVariables = Exact<{
 export type AddOrderToTableMutation = { __typename?: 'Mutation', addOrderToTable: { __typename?: 'Order', cart: any, discount?: number | null, note?: string | null, orderNumber: string, paymentToken?: string | null, total: number, userEmail: string, userName: string, id: string } };
 
 export type MovePositionTableMutationVariables = Exact<{
+  movePositionTableId: Scalars['String']['input'];
   position: Scalars['JSON']['input'];
-  tableNumber: Scalars['Int']['input'];
 }>;
 
 
 export type MovePositionTableMutation = { __typename?: 'Mutation', movePositionTable: { __typename?: 'Table', id: string } };
+
+export type UpdateManyTablesMutationVariables = Exact<{
+  updates: Array<UpdateManyTablesInput> | UpdateManyTablesInput;
+}>;
+
+
+export type UpdateManyTablesMutation = { __typename?: 'Mutation', updateManyTables: Array<{ __typename?: 'Table', id: string, tableNumber: number, position: any, areaId: string, reserved: boolean, diners: number, specialRequests: Array<string> }> };
 
 export type GetUserQueryVariables = Exact<{
   email: Scalars['String']['input'];
@@ -1710,8 +1732,8 @@ export function useAddOrderToTableMutation() {
   return Urql.useMutation<AddOrderToTableMutation, AddOrderToTableMutationVariables>(AddOrderToTableDocument);
 };
 export const MovePositionTableDocument = gql`
-    mutation MovePositionTable($position: JSON!, $tableNumber: Int!) {
-  movePositionTable(position: $position, tableNumber: $tableNumber) {
+    mutation MovePositionTable($movePositionTableId: String!, $position: JSON!) {
+  movePositionTable(id: $movePositionTableId, position: $position) {
     id
   }
 }
@@ -1719,6 +1741,23 @@ export const MovePositionTableDocument = gql`
 
 export function useMovePositionTableMutation() {
   return Urql.useMutation<MovePositionTableMutation, MovePositionTableMutationVariables>(MovePositionTableDocument);
+};
+export const UpdateManyTablesDocument = gql`
+    mutation UpdateManyTables($updates: [UpdateManyTablesInput!]!) {
+  updateManyTables(updates: $updates) {
+    id
+    tableNumber
+    position
+    areaId
+    reserved
+    diners
+    specialRequests
+  }
+}
+    `;
+
+export function useUpdateManyTablesMutation() {
+  return Urql.useMutation<UpdateManyTablesMutation, UpdateManyTablesMutationVariables>(UpdateManyTablesDocument);
 };
 export const GetUserDocument = gql`
     query GetUser($email: String!) {
