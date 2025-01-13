@@ -1137,7 +1137,7 @@ export type GetTableReservationsQueryVariables = Exact<{
 }>;
 
 
-export type GetTableReservationsQuery = { __typename?: 'Query', getTableReservations: Array<{ __typename?: 'Reservation', createdAt: any, createdBy: string, numOfDiners: number, id: string, reservationTime: any, status: ReservationStatus, createdByUser?: { __typename?: 'User', name?: string | null, role: Role, email?: string | null } | null }> };
+export type GetTableReservationsQuery = { __typename?: 'Query', getTableReservations: Array<{ __typename?: 'Reservation', reservationTime: any, numOfDiners: number, status: ReservationStatus, userEmail: string, createdBy: string, id: string, user: { __typename?: 'User', profile?: { __typename?: 'Profile', name?: string | null, phone?: string | null } | null } }> };
 
 export type AddTableMutationVariables = Exact<{
   areaId: Scalars['String']['input'];
@@ -1199,6 +1199,14 @@ export type UpdateManyTablesMutationVariables = Exact<{
 
 
 export type UpdateManyTablesMutation = { __typename?: 'Mutation', updateManyTables: Array<{ __typename?: 'Table', id: string, tableNumber: number, position: any, areaId: string, reserved: boolean, diners: number, specialRequests: Array<string> }> };
+
+export type ToggleTableReservationMutationVariables = Exact<{
+  toggleTableReservationId: Scalars['String']['input'];
+  reserved: Scalars['Boolean']['input'];
+}>;
+
+
+export type ToggleTableReservationMutation = { __typename?: 'Mutation', toggleTableReservation: { __typename?: 'Table', id: string, reserved: boolean } };
 
 export type GetUserQueryVariables = Exact<{
   email: Scalars['String']['input'];
@@ -1635,17 +1643,18 @@ export function useGetTableOrderQuery(options: Omit<Urql.UseQueryArgs<GetTableOr
 export const GetTableReservationsDocument = gql`
     query GetTableReservations($date: String!, $tableId: String!) {
   getTableReservations(date: $date, tableId: $tableId) {
-    createdAt
-    createdBy
-    createdByUser {
-      name
-      role
-      email
-    }
-    numOfDiners
-    id
     reservationTime
+    numOfDiners
     status
+    userEmail
+    createdBy
+    id
+    user {
+      profile {
+        name
+        phone
+      }
+    }
   }
 }
     `;
@@ -1758,6 +1767,18 @@ export const UpdateManyTablesDocument = gql`
 
 export function useUpdateManyTablesMutation() {
   return Urql.useMutation<UpdateManyTablesMutation, UpdateManyTablesMutationVariables>(UpdateManyTablesDocument);
+};
+export const ToggleTableReservationDocument = gql`
+    mutation ToggleTableReservation($toggleTableReservationId: String!, $reserved: Boolean!) {
+  toggleTableReservation(id: $toggleTableReservationId, reserved: $reserved) {
+    id
+    reserved
+  }
+}
+    `;
+
+export function useToggleTableReservationMutation() {
+  return Urql.useMutation<ToggleTableReservationMutation, ToggleTableReservationMutationVariables>(ToggleTableReservationDocument);
 };
 export const GetUserDocument = gql`
     query GetUser($email: String!) {

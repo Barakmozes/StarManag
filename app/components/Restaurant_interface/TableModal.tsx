@@ -1,47 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useDrag } from "react-dnd";
 
 import EditTableModal from "./CRUD_Zone-CRUD_Table/EditTableModal";
 import DeleteTableModal from "./CRUD_Zone-CRUD_Table/DeleteTableModal";
-import{TableInStore}from "@/lib/AreaStore";
+import { TableInStore } from "@/lib/AreaStore";
+import ToggleReservation from "./Table_Settings/ToggleReservation";
+import SpecialRequests from "./Table_Settings/specialRequests";
+import TableReservations from "./Table_Settings/TableReservations";
+
 export interface TableModalProps {
   table: TableInStore;
   scale: number;
 }
 
 const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [reserved, setReserved] = useState(table.reserved || false);
-  const [specialRequests, setSpecialRequests] = useState<string[]>(
-    table.specialRequests || []
-  );
+
   const isDirty = table?.dirty;
 
-  const { tableNumber, diners, position,id } = table;
+  const { tableNumber, diners, position, id, reserved } = table;
   const x = (position as any)?.x ?? 0;
   const y = (position as any)?.y ?? 0;
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "TABLE",
-    item: { tableId: table.id }, 
+    item: { tableId: table.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
-  const handleToggleReservation = () => setReserved((prev) => !prev);
-
-  const handleAddRequest = (request: string) => {
-    if (request.trim()) {
-      setSpecialRequests((prev) => [...prev, request]);
-    }
-  };
-
-  const handleRemoveRequest = (index: number) => {
-    setSpecialRequests((prev) => prev.filter((_, i) => i !== index));
-  };
 
 
   return (
@@ -61,51 +50,41 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
         reserved ? "Reserved" : "Available"
       }, for ${diners} diners`}
     >
-      
       {/* Table Info */}
       <div className="mb-2 text-start">
-        <div className="flex mx-auto justify-between">
-         <div
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
-          < DeleteTableModal table={table as TableInStore}/> 
-            </div>
-            <div
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
-         < EditTableModal  table={table as TableInStore}  /> 
-            </div>
-            </div>
+        <div className="flex mx-auto justify-between mb-1">
+          <div
+            className="text-sm bg-green-600 text-white px-2 py-1 rounded-lg shadow hover:bg-green-700 transition"
+            aria-label="Show All Tables"
+          >
+            <DeleteTableModal table={table as TableInStore} />
+          </div>
+          <div
+            className="text-sm bg-green-600 text-white px-2 py-1 rounded-lg shadow hover:bg-green-700 transition"
+            aria-label="Show All Tables"
+          >
+            <EditTableModal table={table as TableInStore} />
+          </div>
+        </div>
         <h2 className="text-sm sm:text-base font-bold text-gray-700">
-          Table #{tableNumber}{isDirty && <span className="text-red-500">*</span>}
+          Table #{tableNumber}
+          {isDirty && <span className="text-red-500">*</span>}
         </h2>
         <p className="text-xs sm:text-sm text-gray-500">
           <strong>Diners:</strong> {diners}
         </p>
-        <p className="text-xs sm:text-sm font-semibold">
-          <span className={reserved ? "text-red-600" : "text-green-600"}>
-            {reserved ? "Reserved" : "Available"}
-          </span>
-        </p>
+        {/* Reservation Toggle */}
+        <div className="flex">
+        <ToggleReservation table={table as TableInStore} />
+        <TableReservations table={table as TableInStore} />
+        </div>
       </div>
 
-      {/* Reservation Toggle */}
-      <button
-        onClick={handleToggleReservation}
-        className={`w-full py-1 sm:py-2 text-xs sm:text-sm rounded ${
-          reserved ? "bg-red-500 text-white" : "bg-green-500 text-white"
-        }`}
-        aria-label={`Mark table ${tableNumber} as ${
-          reserved ? "available" : "reserved"
-        }`}
-      >
-        {reserved ? "Release" : "Reserve"}
-      </button>
+      
+  
 
       {/* Special Requests */}
-      <div className="mt-2">
+      {/* <div className="mt-2">
         <button
           onClick={() => setIsEditing((prev) => !prev)}
           className="w-full py-1 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded"
@@ -141,7 +120,8 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
             </li>
           ))}
         </ul>
-      </div>
+      </div> */}
+         <SpecialRequests table={table as TableInStore  /* if needed, or typed to the same shape */} />
 
       {/* Table Visualization */}
       <div className="relative mt-4 mx-auto">

@@ -143,7 +143,7 @@ const ZoneRestaurant = () => {
         position: t.position,
         areaId: t.areaId,
         // If you need to update reserved/diners as well, include them
-        // e.g. reserved: t.reserved
+        reserved: t.reserved
       }));
 
       // Send the mutation request
@@ -176,6 +176,13 @@ const ZoneRestaurant = () => {
         <div className="flex items-center justify-around bg-white px-2 rounded-lg shadow-md mb-2">
           <h2 className="text-xl font-bold text-gray-800">Restaurant Zones</h2>
           <div className="flex gap-4">
+          <button
+              onClick={handleClearScreen}
+              className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
+              aria-label="Clear Screen"
+            >
+              Clear Screen
+            </button>
             <button
               onClick={handleShowAllTables}
               className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
@@ -221,13 +228,7 @@ const ZoneRestaurant = () => {
                 areaSelectToEdit={selectedArea as Area}
               />
             </button>
-            <button
-              onClick={handleClearScreen}
-              className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
-              aria-label="Clear Screen"
-            >
-              Clear Screen
-            </button>
+         
             <button
               onClick={() => adjustScale(0.1)}
               className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"

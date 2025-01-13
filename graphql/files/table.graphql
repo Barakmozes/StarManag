@@ -60,18 +60,18 @@ query GetTableOrder($tableId: String!) {
 
 query GetTableReservations($date: String!, $tableId: String!) {
   getTableReservations(date: $date, tableId: $tableId) {
-    createdAt
-    createdBy
-    createdByUser {
-      name
-      role
-      email
-    }
-    numOfDiners
-    id
     reservationTime
+    numOfDiners
     status
-   
+    userEmail
+    createdBy
+    id
+    user {
+      profile {
+        name
+        phone
+      }
+    }
   }
 }
 mutation AddTable($areaId: String!, $diners: Int!, $position: JSON!, $tableNumber: Int!) {
@@ -122,5 +122,12 @@ mutation UpdateManyTables($updates: [UpdateManyTablesInput!]!) {
     reserved
     diners
     specialRequests
+  }
+}
+
+mutation ToggleTableReservation($toggleTableReservationId: String!, $reserved: Boolean!) {
+  toggleTableReservation(id: $toggleTableReservationId, reserved: $reserved) {
+    id
+    reserved
   }
 }

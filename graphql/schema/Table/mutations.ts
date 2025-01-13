@@ -155,7 +155,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if  (!["ADMIN", "MANAGER", "WAITER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to modify reservation status");
       }
 
