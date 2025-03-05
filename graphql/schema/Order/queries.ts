@@ -33,6 +33,11 @@ builder.prismaObject("Order", {
     note: t.exposeString("note", { nullable: true }),
     discount: t.exposeFloat("discount", { nullable: true }),
     total: t.exposeFloat("total"),
+    // NEW fields for the table relationship
+    tableId: t.exposeString("tableId", { nullable: true }),
+    table: t.relation("table", { nullable: true }),
+    createdAt: t.expose("createdAt", { type: "DateTime" }),
+    updatedAt: t.expose("updatedAt", { type: "DateTime" }),
   }),
 });
 

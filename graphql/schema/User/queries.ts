@@ -74,7 +74,7 @@ builder.queryFields((t) => ({
       const userRole = context.user?.role;
 
       // Permission check
-      if (userRole !== "USER" && userRole !== "ADMIN") {
+      if (userRole !== "USER" && userRole !== "ADMIN" && userRole !== "MANAGER"&& userRole !== "WAITER") {
         throw new GraphQLError("You must be logged in as a user or an admin to perform this action");
       }
 

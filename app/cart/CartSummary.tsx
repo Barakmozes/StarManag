@@ -153,7 +153,7 @@ const CartSummary = ({ user }: Props) => {
                 Cart Summary
               </h2>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Review your order details and then pay securely via Stripe
+                Review your order details and then pay securely via payplus
               </p>
             </div>
 

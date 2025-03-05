@@ -108,6 +108,8 @@ mutation AddOrderToTable($cart: JSON!, $orderNumber: String!, $serviceFee: Float
   }
 }
 
+
+
 mutation MovePositionTable($movePositionTableId: String!, $position: JSON!) {
   movePositionTable(id: $movePositionTableId, position: $position) {
     id

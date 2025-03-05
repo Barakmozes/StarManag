@@ -23,6 +23,7 @@ query GetUser($email: String!) {
       userEmail
       userName
       userPhone
+      tableId
     }
   }
 }

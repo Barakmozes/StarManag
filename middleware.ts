@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-const ROLES_ALLOWED_TO_AUTH = ["USER", "ADMIN", "DELIVERY"];
+const ROLES_ALLOWED_TO_AUTH = ["USER", "ADMIN", "DELIVERY","WAITER","MANAGER"];
 
 export default withAuth(
   function middleware(req) {

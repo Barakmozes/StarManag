@@ -34,7 +34,8 @@ const CartList = () => {
             <p>
               {" "}
               <span className="text-sm">{item.shortDescr}: </span>{" "}
-              <span className="text-xs italic">({item.instructions}) </span>{" "}
+              <span className="text-xs italic">notes({item.instructions}) </span>{" "}
+              <span className="text-xs italic">prepare({item.prepare}) </span>{" "}
             </p>
           </div>
           <div className="flex items-center space-x-2">

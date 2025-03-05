@@ -9,6 +9,7 @@ import { TableInStore } from "@/lib/AreaStore";
 import ToggleReservation from "./Table_Settings/ToggleReservation";
 import SpecialRequests from "./Table_Settings/specialRequests";
 import TableReservations from "./Table_Settings/TableReservations";
+import Start_an_order from "./Table_Settings/Start_an_order_Table";
 
 export interface TableModalProps {
   table: TableInStore;
@@ -73,56 +74,22 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
         <p className="text-xs sm:text-sm text-gray-500">
           <strong>Diners:</strong> {diners}
         </p>
-        {/* Reservation Toggle */}
+        
         <div className="flex">
+          {/* Reservation Toggle */}
         <ToggleReservation table={table as TableInStore} />
+             {/* Table Reservations */}
         <TableReservations table={table as TableInStore} />
         </div>
+      
       </div>
 
       
-  
-
       {/* Special Requests */}
-      {/* <div className="mt-2">
-        <button
-          onClick={() => setIsEditing((prev) => !prev)}
-          className="w-full py-1 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded"
-        >
-          {isEditing ? "Done" : "Edit Requests"}
-        </button>
-        {isEditing && (
-          <div className="mt-1">
-            <input
-              type="text"
-              className="w-full px-1 py-1 sm:py-2 text-xs sm:text-sm rounded border"
-              placeholder="Add request"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleAddRequest(e.currentTarget.value);
-                  e.currentTarget.value = "";
-                }
-              }}
-              aria-label="Add new request"
-            />
-          </div>
-        )}
-        <ul className="mt-1 space-y-1 text-xs sm:text-sm">
-          {specialRequests.map((request, index) => (
-            <li key={index} className="flex justify-between">
-              <span>{request}</span>
-              <button
-                onClick={() => handleRemoveRequest(index)}
-                className="text-red-500 hover:underline"
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div> */}
          <SpecialRequests table={table as TableInStore  /* if needed, or typed to the same shape */} />
 
+              
+         <Start_an_order table={table as TableInStore}/>
       {/* Table Visualization */}
       <div className="relative mt-4 mx-auto">
         <div

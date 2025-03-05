@@ -540,6 +540,7 @@ export enum NotificationStatus {
 export type Order = {
   __typename?: 'Order';
   cart: Scalars['JSON']['output'];
+  createdAt: Scalars['DateTime']['output'];
   deliveryAddress: Scalars['String']['output'];
   deliveryFee: Scalars['Float']['output'];
   deliveryTime?: Maybe<Scalars['DateTime']['output']>;
@@ -552,7 +553,10 @@ export type Order = {
   paymentToken?: Maybe<Scalars['String']['output']>;
   serviceFee: Scalars['Float']['output'];
   status: OrderStatus;
+  table?: Maybe<Table>;
+  tableId?: Maybe<Scalars['String']['output']>;
   total: Scalars['Float']['output'];
+  updatedAt: Scalars['DateTime']['output'];
   user: User;
   userEmail: Scalars['String']['output'];
   userName: Scalars['String']['output'];
@@ -1213,7 +1217,7 @@ export type GetUserQueryVariables = Exact<{
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'User', email?: string | null, id: string, image?: string | null, name?: string | null, role: Role, order: Array<{ __typename?: 'Order', cart: any, deliveryAddress: string, deliveryFee: number, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userEmail: string, userName: string, userPhone: string }> } };
+export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'User', email?: string | null, id: string, image?: string | null, name?: string | null, role: Role, order: Array<{ __typename?: 'Order', cart: any, deliveryAddress: string, deliveryFee: number, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userEmail: string, userName: string, userPhone: string, tableId?: string | null }> } };
 
 export type GetProfileQueryVariables = Exact<{
   email: Scalars['String']['input'];
@@ -1806,6 +1810,7 @@ export const GetUserDocument = gql`
       userEmail
       userName
       userPhone
+      tableId
     }
   }
 }

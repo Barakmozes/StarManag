@@ -267,7 +267,7 @@ const ZoneRestaurant = () => {
                 const zoneTables = localFiltered.filter(
                   (tbl) => tbl.areaId === zone.id
                 );
-                // Render each zone with its tables available
+                // Render each zone with its tables 
                 return (
                   <div key={zone.id} className="border rounded-lg p-4 bg-white">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">
@@ -331,6 +331,7 @@ const ZoneRestaurant = () => {
                 overview.
               </p>
             </div>
+            
           )}
         </div>
       </div>

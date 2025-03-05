@@ -8,14 +8,13 @@ import LocationBtn from "./LocationBtn";
 import { User } from "@prisma/client";
 import AccountDropDown from "./AccountDropDown";
 import {
-  AreaOrderByInput,
   GetAreasNameDescriptionDocument,
   GetAreasNameDescriptionQuery,
   GetAreasNameDescriptionQueryVariables,
 } from "@/graphql/generated";
 import { useQuery } from "@urql/next";
 import { useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 
 
 
@@ -28,7 +27,7 @@ const Header = ({ user }: HeaderProps) => {
   const { onOpen } = useLoginModal();
   const { menus } = useCartStore();
   const { onSideBarOpen } = useSideBarDrawer();
-
+  const router = useRouter();
   const {
     setSelectedArea,
     setAreas,
@@ -62,6 +61,7 @@ const Header = ({ user }: HeaderProps) => {
 
   const handleZoneClickk = (zoneName: string) => {
     setSelectedArea(zoneName); // picks an area by 'name'
+    router.replace("/#top_header"); 
   };
 
   return (
@@ -82,7 +82,7 @@ const Header = ({ user }: HeaderProps) => {
       {/* Center Area - Display Zones for Desktop */}
       {["WAITER", "MANAGER"].includes(user?.role) &&
         (fetching ? (
-          <header className="py-5 px-4 md:px-12 bg-white shadow">
+          <header id="top_header" className="py-5 px-4 md:px-12 bg-white shadow">
             <p className="text-center text-gray-500">Loading zones...</p>
           </header>
         ) : (
@@ -90,7 +90,8 @@ const Header = ({ user }: HeaderProps) => {
             {FetcheAreas?.map((zone) => (
               <button
                 key={zone.name}
-                onClick={() => handleZoneClickk(zone.name)}
+                onClick={() => handleZoneClickk(zone.name)
+                }
                 className={`px-2 py-1 whitespace-nowrap rounded-lg text-xs md:text-base shadow-sm hover:shadow-md text-gray-700 bg-gray-100 hover:bg-green-100 transition ${
                   selectedArea?.name === zone.name
                     ? "bg-green-200 text-green-800 font-semibold"

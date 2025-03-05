@@ -8,13 +8,23 @@ import {
 import Image from "next/image";
 import { User } from "@prisma/client";
 import { signOut } from "next-auth/react";
-
+import { useCartStore } from "@/lib/store";  // Adj
 type AccountDropDownProps = {
   user: User
 }
 
 export default function AccountDropDown({user}: AccountDropDownProps) {
- 
+  const resetCart = useCartStore((state) => state.resetCart);
+    // Handler for sign-out, resetting the cart if the user is staff
+    const handleSignOut = () => {
+      // 3) Only if role is "ADMIN", "MANAGER", or "WAITER", then reset the cart
+      if (["ADMIN", "MANAGER", "WAITER"].includes(user?.role ?? "")) {
+        resetCart();
+      }
+  
+      // 4) Proceed to sign out, redirecting to home page
+      signOut({ callbackUrl: "/" });
+    };
   return (
     <div className="">
       <Menu as="div" className="relative inline-block text-left">
@@ -71,7 +81,8 @@ export default function AccountDropDown({user}: AccountDropDownProps) {
                   className="flex items-center py-4 pl-3
                  w-full rounded-md text-gray-500 transition-all 
                   hover:bg-green-200 hover:text-green-600"
-                  onClick={() => signOut({ callbackUrl: "/" })}
+                  // 5) Call our custom sign-out handler
+                  onClick={handleSignOut}
                 >
                   <HiOutlineArrowRightOnRectangle className="h-6 w-6 mr-4 shrink-0" />
                   <span className="pl-4">Sign Out </span>

@@ -181,7 +181,7 @@ model Notification {
 model Restaurant {
   id          String  @id @default(cuid())
   name        String
-  address     String? @default("27 DrickField, Darwin, Australia")
+  address     String? @default("rmat hsron 14")
   openTimes   Json[]
   deliveryFee Float   @default(4)
   serviceFee  Float   @default(3)
