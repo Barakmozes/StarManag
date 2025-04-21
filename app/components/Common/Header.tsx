@@ -76,7 +76,7 @@ const Header = ({ user }: HeaderProps) => {
           <HiBars3 size={28} className="cursor-pointer shrink-0" />
         </button>
 
-        {["ADMIN", "USER"].includes(user?.role) && <LocationBtn />}
+        {!["WAITER", "MANAGER"].includes(user?.role) && <LocationBtn />}
       </div>
 
       {/* Center Area - Display Zones for Desktop */}

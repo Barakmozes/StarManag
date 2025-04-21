@@ -78,7 +78,7 @@ const MenuSection = ({ user }: MenuSectionProps) => {
   ]);
 
   return (
-    <Suspense fallback={DataLoading()}>
+   <Suspense fallback={<DataLoading />}>
     <section className='mb-24 flex flex-col items-center md:justify-center'>
     <div className="text-center">
         <h2 className="text-3xl  leading-tight tracking-tight text-gray-600 sm:text-4xl ">

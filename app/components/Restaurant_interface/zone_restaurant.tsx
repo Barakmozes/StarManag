@@ -290,7 +290,7 @@ const ZoneRestaurant = () => {
             <div className="grid gap-6">
               {areas.map((zone) => {
                 // Filter tables by matching areaId
-                const zoneTables = localFiltered.filter(
+                const zoneTables = localFiltered.filter(                  
                   (tbl) => tbl.areaId === zone.id && !tbl.reserved
                 );
                 return (
