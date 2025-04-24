@@ -65,3 +65,11 @@ export type CartActionTypes = {
   clearTableNumber: () => void;
   startOrderForTable: (tableId: string, tableNumber: number) => void;
 };
+
+/**
+ * LangCode
+ *
+ * • Two-letter codes for supported locales.
+ * • Extend as needed (e.g. 'es', 'fr').
+ */
+export type LangCode = 'en' | 'he'

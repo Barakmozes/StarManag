@@ -75,7 +75,6 @@ const Header = ({ user }: HeaderProps) => {
         >
           <HiBars3 size={28} className="cursor-pointer shrink-0" />
         </button>
-
         {!["WAITER", "MANAGER"].includes(user?.role) && <LocationBtn />}
       </div>
 

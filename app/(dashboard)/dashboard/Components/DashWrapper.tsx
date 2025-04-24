@@ -16,6 +16,7 @@ const DashWrapper = ({ user, children }: DashWrapperProps) => {
     setShow(!show);
   };
   return (
+    
     <div className="min-h-screen bg-slate-200 ">
       <DashSideBar show={show} showSideBar={showSideBar} />
 
