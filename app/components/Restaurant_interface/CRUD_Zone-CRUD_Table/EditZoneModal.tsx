@@ -18,6 +18,7 @@ import {
 import { SupabaseImageUpload } from "@/lib/supabaseStorage";
 // The UploadImg component you mentioned
 import UploadImg from "../../../(dashboard)/dashboard/Components/UploadImg";
+import Image from "next/image";
 
 type Props = {
   /** All available areas, if you want to populate a dropdown */
@@ -260,12 +261,15 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
               {/* Show current image thumbnail if available */}
               {zoneImage && (
                 <div className="mb-2">
-                  <img
+                  <Image
                     src={zoneImage}
                     alt="Floor Plan Preview"
                     className="w-full h-auto max-h-48 object-contain border rounded"
                   />
+
                 </div>
+
+
               )}
 
               {/* Upload input */}

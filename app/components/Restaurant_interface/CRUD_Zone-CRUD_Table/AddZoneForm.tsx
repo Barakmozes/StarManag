@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation } from "@urql/next";
-
+import { useMutation, useQuery } from "@urql/next";
 import Modal from "../../Common/Modal";
 import AddZoneModal from "./AddZoneModal";
-
 import {
   AddAreaDocument,
   AddAreaMutation,
@@ -13,12 +11,6 @@ import {
   GetAreasNameDescriptionDocument,
 } from "@/graphql/generated";
 import toast from "react-hot-toast";
-
-import { useQuery } from "@urql/next";
-
-
-
-
 
 const AddZoneForm = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,15 +20,21 @@ const AddZoneForm = () => {
   const closeModal = () => setIsOpen(false);
   const openModal = () => setIsOpen(true);
 
+  // 1) Pause the query so it won't run on mount. We only reexecute after mutation success.
+  const [{}, reexecuteQuery] = useQuery({
+    query: GetAreasNameDescriptionDocument,
+    pause: true,
+    variables: {
+      // Same example from DeleteZoneModal
+      orderBy: { createdAt: "asc" },
+    },
+  });
 
-  // GraphQL Mutation: addArea
-  // addArea(name: $name, description: $description) { id }
-  const [{ fetching, error }, addArea ] = useMutation<
+  // 2) GraphQL Mutation: addArea
+  const [{ fetching, error }, addArea] = useMutation<
     AddAreaMutation,
     AddAreaMutationVariables
   >(AddAreaDocument);
-
-  const [{ data }, reexecuteQuery] = useQuery({ query: GetAreasNameDescriptionDocument });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,13 +45,14 @@ const AddZoneForm = () => {
         name: zoneName,
         description: zoneDescription,
       });
+
       if (result.data?.addArea?.id) {
-        // Success: reset form and close modal
+        // Success: re-fetch the areas, reset form, show toast
+        await reexecuteQuery({ requestPolicy: "network-only" });
         setZoneName("");
         setZoneDescription("");
         closeModal();
-        toast.success("area successfully add and updated!", { duration: 800 }); 
-        reexecuteQuery({ requestPolicy: "network-only" });
+        toast.success("Area successfully added and updated!", { duration: 800 });
       }
     } catch (err) {
       console.error("Failed to add area:", err);

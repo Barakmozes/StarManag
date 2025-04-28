@@ -110,7 +110,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({
         className="relative w-full h-[100vh] rounded-lg shadow-md break-all mb-6"
         style={{
           backgroundImage: `url(${
-            areaSelect.floorPlanImage || "/img/pexels-pixabay-235985.jpg"
+             "/img/pexels-pixabay-235985.jpg"
           })`,
           backgroundSize: "cover",
           backgroundPosition: "center",

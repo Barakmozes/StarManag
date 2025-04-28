@@ -27,7 +27,7 @@ builder.prismaObject("Restaurant", {
     openTimes: t.expose("openTimes", { type: "JSON" }),
     deliveryFee: t.exposeFloat("deliveryFee"),
     serviceFee: t.exposeFloat("serviceFee"),
-    bannerImg: t.exposeString("bannerImg"),
+    bannerImg: t.exposeString("bannerImg",{ nullable: true }),
     rating: t.exposeFloat("rating"),
 
     // Relation to areas (not defining the Area object here)
