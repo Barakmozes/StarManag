@@ -1,7 +1,7 @@
 import React from 'react'
 import PromoCard from './PromoCard';
 
-import CrazyWaveHeading from './PromoHeading';
+
 import ModernWaveHeading from './PromoHeading';
 
 const Promos = () => {
@@ -41,9 +41,7 @@ const Promos = () => {
   <div className='max-w-2xl mx-auto my-5 text-center'>
        
   <ModernWaveHeading/>
-    </div> */
-    
-    
+    </div> 
     <section className="flex flex-row items-center py-8 gap-4 md:justify-center 
     justify-between my-12 overflow-x-auto">
         {onPromo.map((promo) => (

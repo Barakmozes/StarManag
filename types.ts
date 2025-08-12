@@ -1,3 +1,17 @@
+/**
+ * types.ts
+ * 
+ * קובץ מרכזי המגדיר טיפוסים (Types) נפוצים בפרויקט לצורך אחידות, תחזוקה נוחה והשלמה אוטומטית (IntelliSense).
+ * כולל טיפוסים ל:
+ * - פריטי שיווק וקטגוריות תצוגה
+ * - ניהול מצבים של מודלים ותפריטים צדדיים (UI State)
+ * - עגלת קניות ופעולות עליה
+ * - תמיכה בריבוי שפות
+ * 
+ * טיפוסים אלו משמשים את ממשק המשתמש, ניהול מצב (Store), ואינטראקציה עם מודלים מ-Prisma.
+ * graphql\generated.ts שהוגדרו כאן בקובץ או בפריזמה לקוח או ב (Types)כמו כן אפשר לבחור להשתמש 
+ */
+
 import { Menu } from "@prisma/client";
 
 // Promo and Category Types
@@ -68,7 +82,7 @@ export type CartActionTypes = {
 
 /**
  * LangCode
- *
+ *יוניון
  * • Two-letter codes for supported locales.
  * • Extend as needed (e.g. 'es', 'fr').
  */

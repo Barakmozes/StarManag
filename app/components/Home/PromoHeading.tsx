@@ -1,4 +1,4 @@
-// components/ModernWaveHeading.tsx
+// components/home/ModernWaveHeading.tsx
 import React from 'react'
 
 export default function ModernWaveHeading() {

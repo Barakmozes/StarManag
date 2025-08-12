@@ -45,7 +45,7 @@ const ZoneRestaurant = () => {
     query: GetTablesDocument,
     pause: true,
   });
-  const serverTables: Table[] = data?.getTables ?? [];
+
 
   // GraphQL mutation to update table position in DB
   const [updateManyResult, updateManyTables] = useMutation(
@@ -75,26 +75,27 @@ const ZoneRestaurant = () => {
     }
   }, [selectedArea]);
 
-  // On first load or any refetch, populate local store
-  useEffect(() => {
-    if (serverTables.length) {
-      
-      setTables(
-        serverTables.map((t) => ({
-          id: t.id,
-          tableNumber: t.tableNumber,
-          areaId: t.areaId,
-          position: t.position as { x: number; y: number },
-          dirty: false,
-          diners: t.diners,
-          reserved: t.reserved,
-          specialRequests: t.specialRequests,
-          createdAt: t.createdAt,
-          updatedAt: t.updatedAt,
-        }))
-      );
-    }
-  }, [serverTables, setTables]);
+// On first load or any refetch, populate local store
+useEffect(() => {
+  if (data?.getTables?.length) {
+    const tablesFromServer: Table[] = data.getTables;
+
+    setTables(
+      tablesFromServer.map((t) => ({
+        id: t.id,
+        tableNumber: t.tableNumber,
+        areaId: t.areaId,
+        position: t.position as { x: number; y: number },
+        dirty: false,
+        diners: t.diners,
+        reserved: t.reserved,
+        specialRequests: t.specialRequests,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+      }))
+    );
+  }
+}, [data, setTables]);
 
   // The locally updated tables
   const localTables = tables;

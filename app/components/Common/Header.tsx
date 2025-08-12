@@ -15,7 +15,7 @@ import {
 import { useQuery } from "@urql/next";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+// import FullscreenButton from "../Home/fullScrenF11.jsx"
 
 
 
@@ -40,7 +40,7 @@ const Header = ({ user }: HeaderProps) => {
     GetAreasNameDescriptionQueryVariables
   >({ query: GetAreasNameDescriptionDocument,   variables: {
     orderBy: { createdAt: "asc" as any,
-    }, // Now this is valid
+    }, 
   },});
 
 
@@ -159,6 +159,7 @@ const Header = ({ user }: HeaderProps) => {
             Login/Signup
           </button>
         )}
+        {/* <FullscreenButton/>  אם ארצה מצב מסך מלא לחוויה של אפליקצה*/}
       </div>
     </header>
   );
