@@ -1,0 +1,95 @@
+query GetRestaurants {
+  getRestaurants {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+
+query GetRestaurant($getRestaurantId: String!) {
+  getRestaurant(id: $getRestaurantId) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+
+mutation AddRestaurant(
+  $name: String!
+  $address: String
+  $bannerImg: String
+  $deliveryFee: Float
+  $serviceFee: Float
+  $rating: Float
+  $openTimes: JSON
+) {
+  addRestaurant(
+    name: $name
+    address: $address
+    bannerImg: $bannerImg
+    deliveryFee: $deliveryFee
+    serviceFee: $serviceFee
+    rating: $rating
+    openTimes: $openTimes
+  ) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+
+mutation EditRestaurant(
+  $editRestaurantId: String!
+  $name: String
+  $address: String
+  $bannerImg: String
+  $deliveryFee: Float
+  $serviceFee: Float
+  $rating: Float
+  $openTimes: JSON
+) {
+  editRestaurant(
+    id: $editRestaurantId
+    name: $name
+    address: $address
+    bannerImg: $bannerImg
+    deliveryFee: $deliveryFee
+    serviceFee: $serviceFee
+    rating: $rating
+    openTimes: $openTimes
+  ) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+
+mutation DeleteRestaurant($deleteRestaurantId: String!) {
+  deleteRestaurant(id: $deleteRestaurantId) {
+    id
+  }
+}

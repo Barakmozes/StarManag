@@ -49,7 +49,7 @@ const UserOnDeliveryModal = ({ order }: Props) => {
                 <HiLocationMarker className="" />
               </div>
 
-              <h5 className=" ">DPS Resto</h5>
+              <h5 className=" ">barak rst</h5>
               <p className="mb-1 text-sm font-normal leading-none ">
                 {order.deliveryAddress}
               </p>

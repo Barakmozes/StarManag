@@ -21,7 +21,7 @@ type Props = {
 const UserAddProfile = ({ user }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [phone, setPhone] = useState("");
-  //   const [userName, setUserName] = useState("");
+    //  const [userName, setUserName] = useState("");
   const closeModal = () => setIsOpen(false);
   const OpenModal = () => setIsOpen(true);
   const router = useRouter();
@@ -61,16 +61,23 @@ const UserAddProfile = ({ user }: Props) => {
             <h2>Basic Info</h2>
           </div>
           <div className="flex flex-col space-y-8 ">
-            <div className="">
-              <label htmlFor="phone" className="form-label">
-                Phone
-              </label>
-              <input
-                className="form-input"
-                placeholder="Phone"
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
+         <div>
+  <label htmlFor="phone" className="form-label">
+    Phone
+  </label>
+
+  <input
+    id="phone"                 // 🔑 חובה
+    name="phone"               // 🔑 חובה לאוטופיל
+    type="tel"
+    className="form-input"
+    placeholder="Phone"
+    autoComplete="tel"         // 🔑 מומלץ
+    value={phone}
+    onChange={(e) => setPhone(e.target.value)}
+  />
+</div>
+
 
             {/* <div className="">
               <label htmlFor="email" className="form-label">

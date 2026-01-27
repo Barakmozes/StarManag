@@ -1,99 +1,186 @@
-"use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@urql/next";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-type OpeningHours = {
+import TableWrapper from "../Components/TableWrapper";
+
+import {
+  EditRestaurantDocument,
+  EditRestaurantMutation,
+  EditRestaurantMutationVariables,
+} from "@/graphql/generated";
+import PanelWrapper from "../Components/PanelWrapper";
+
+type OpenDay = {
   day: string;
-  openingTime: string;
-  closingTime: string;
+  open: string;
+  close: string;
+  closed: boolean;
 };
 
-const OpeningHoursForm = () => {
-  const [openingHours, setOpeningHours] = useState<OpeningHours[]>([]);
-  const daysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+const DEFAULT_OPEN_TIMES: OpenDay[] = [
+  { day: "Sunday", open: "09:00", close: "22:00", closed: false },
+  { day: "Monday", open: "09:00", close: "22:00", closed: false },
+  { day: "Tuesday", open: "09:00", close: "22:00", closed: false },
+  { day: "Wednesday", open: "09:00", close: "22:00", closed: false },
+  { day: "Thursday", open: "09:00", close: "22:00", closed: false },
+  { day: "Friday", open: "09:00", close: "23:00", closed: false },
+  { day: "Saturday", open: "09:00", close: "23:00", closed: false },
+];
 
-  const handleTimeChange = (
-    day: string,
-    field: "openingTime" | "closingTime",
-    value: string
-  ) => {
-    const updatedOpeningHours = [...openingHours];
-    const index = updatedOpeningHours.findIndex((oh) => oh.day === day);
+const normalizeOpenTimes = (raw: any): OpenDay[] => {
+  if (!raw) return DEFAULT_OPEN_TIMES;
 
-    if (index !== -1) {
-      updatedOpeningHours[index][field] = value;
-    } else {
-      updatedOpeningHours.push({ day, openingTime: "", closingTime: "" });
-      updatedOpeningHours[updatedOpeningHours.length - 1][field] = value;
+  // if stored as stringified JSON
+  let parsed = raw;
+  if (typeof raw === "string") {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = raw;
     }
+  }
 
-    setOpeningHours(updatedOpeningHours);
+  // expected: array of { day, open, close, closed }
+  if (Array.isArray(parsed)) {
+    const ok = parsed.every(
+      (x) =>
+        x &&
+        typeof x.day === "string" &&
+        typeof x.open === "string" &&
+        typeof x.close === "string" &&
+        typeof x.closed === "boolean"
+    );
+    if (ok) return parsed as OpenDay[];
+  }
+
+  return DEFAULT_OPEN_TIMES;
+};
+
+type Props = {
+  restaurantId: string;
+  openTimes: any;
+};
+
+const OpeningHours = ({ restaurantId, openTimes }: Props) => {
+  const router = useRouter();
+
+  const normalized = useMemo(() => normalizeOpenTimes(openTimes), [openTimes]);
+
+  const [days, setDays] = useState<OpenDay[]>(normalized);
+
+  useEffect(() => {
+    setDays(normalized);
+  }, [restaurantId, normalized]);
+
+  const [_, editRestaurant] = useMutation<
+    EditRestaurantMutation,
+    EditRestaurantMutationVariables
+  >(EditRestaurantDocument);
+
+  const updateDay = (index: number, patch: Partial<OpenDay>) => {
+    setDays((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
+    );
   };
 
-  const saveOpeningHours = () => {
-    console.log(openingHours);
+  const handleSave = async () => {
+    if (!restaurantId) return;
+
+    try {
+      const res = await editRestaurant({
+        editRestaurantId: restaurantId,
+        openTimes: days,
+      });
+
+      if (res.data?.editRestaurant) {
+        toast.success("Opening hours saved", { duration: 1000 });
+        router.refresh();
+      } else {
+        toast.error("An error occurred", { duration: 2000 });
+      }
+    } catch (err) {
+      console.error("Error saving opening hours:", err);
+      toast.error("An error occurred", { duration: 2000 });
+    }
   };
 
   return (
-    <section className="py-16 px-4 space-y-3 bg-white">
-      <div className="text-center ">
-        <h2 className="text-2xl py-4 leading-tight tracking-tight text-gray-600 ">
-          Opening Hours
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  xl:grid-cols-5">
-        {daysOfWeek.map((day) => (
-          <div key={day}>
-            <div className="text-center font-semibold">
-              <label>{day}:</label>
-            </div>
-            <div className="space-x-2 py-2">
-              <span>Opening Time:</span>
+    <PanelWrapper title="Opening Hours" >
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-slate-500">
+          <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100">
+            <tr>
+              <th className="px-6 py-3">Day</th>
+              <th className="px-6 py-3">Open</th>
+              <th className="px-6 py-3">Close</th>
+              <th className="px-6 py-3">Closed</th>
+            </tr>
+          </thead>
 
-              <input
-                type="time"
-                name="ct"
-                id="op"
-                onChange={(e) =>
-                  handleTimeChange(day, "openingTime", e.target.value)
-                }
-                className=" rounded-md border border-slate-300 bg-white py-2 px-6 text-base font-medium text-gray-600 outline-none focus:border-green-600 focus:shadow-md"
-              />
-            </div>
-            <div className="space-x-2">
-              <span className=" mr-2">Closing Time:</span>
+          <tbody>
+            {days.map((d, idx) => (
+              <tr className="bg-white" key={d.day}>
+                <td className="px-6 py-2 whitespace-nowrap">{d.day}</td>
 
-              <input
-                type="time"
-                name="ct"
-                id="ct"
-                onChange={(e) =>
-                  handleTimeChange(day, "closingTime", e.target.value)
-                }
-                className=" rounded-md border border-slate-300 bg-white py-2 px-6 text-base font-medium text-gray-600 outline-none focus:border-green-600 focus:shadow-md"
-              />
-            </div>
-          </div>
-        ))}
+                <td className="px-6 py-2">
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={d.open}
+                    disabled={d.closed}
+                    onChange={(e) => updateDay(idx, { open: e.target.value })}
+                  />
+                </td>
+
+                <td className="px-6 py-2">
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={d.close}
+                    disabled={d.closed}
+                    onChange={(e) => updateDay(idx, { close: e.target.value })}
+                  />
+                </td>
+
+                <td className="px-6 py-2">
+                  <input
+                    type="checkbox"
+                    className="w-6 h-6 accent-green-600 rounded focus:ring-green-500"
+                    checked={d.closed}
+                    onChange={(e) => updateDay(idx, { closed: e.target.checked })}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="flex items-center gap-3 pt-4">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="text-white inline-flex items-center bg-green-600
+              hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
+              font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Save Opening Hours
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDays(DEFAULT_OPEN_TIMES)}
+            className="text-gray-700 inline-flex items-center bg-gray-100
+              hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-200
+              font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Reset Default
+          </button>
+        </div>
       </div>
-      <button
-        className="py-2 px-4 
-              border border-transparent shadow-sm text-sm font-medium rounded-md
-               text-white bg-green-600 hover:bg-green-700 focus:outline-none 
-               focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        onClick={saveOpeningHours}
-      >
-        Save Opening Hours
-      </button>
-    </section>
+    </PanelWrapper>
   );
 };
 
-export default OpeningHoursForm;
+export default OpeningHours;

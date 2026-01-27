@@ -176,6 +176,7 @@ export type MutationAddMenuArgs = {
   category: Scalars['String']['input'];
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
+  onPromo: Scalars['Boolean']['input'];
   prepType: Array<Scalars['String']['input']>;
   price: Scalars['Float']['input'];
   sellingPrice?: InputMaybe<Scalars['Float']['input']>;
@@ -371,6 +372,7 @@ export type MutationEditMenuArgs = {
   id: Scalars['String']['input'];
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
+  onPromo: Scalars['Boolean']['input'];
   prepType: Array<Scalars['String']['input']>;
   price: Scalars['Float']['input'];
   sellingPrice?: InputMaybe<Scalars['Float']['input']>;
@@ -844,7 +846,7 @@ export type Restaurant = {
   __typename?: 'Restaurant';
   address?: Maybe<Scalars['String']['output']>;
   areas: Array<Area>;
-  bannerImg: Scalars['String']['output'];
+  bannerImg?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   deliveryFee: Scalars['Float']['output'];
   id: Scalars['ID']['output'];
@@ -993,6 +995,44 @@ export type GetAreasNameDescriptionQueryVariables = Exact<{
 
 export type GetAreasNameDescriptionQuery = { __typename?: 'Query', getAreasNameDescription: Array<{ __typename?: 'BasicArea', createdAt: any, floorPlanImage?: string | null, id: string, name: string }> };
 
+export type GetCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCategoriesQuery = { __typename?: 'Query', getCategories: Array<{ __typename?: 'Category', id: string, title: string, desc: string, img: string }> };
+
+export type GetCategoryQueryVariables = Exact<{
+  getCategoryId: Scalars['String']['input'];
+}>;
+
+
+export type GetCategoryQuery = { __typename?: 'Query', getCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+
+export type AddCategoryMutationVariables = Exact<{
+  title: Scalars['String']['input'];
+  desc: Scalars['String']['input'];
+  img: Scalars['String']['input'];
+}>;
+
+
+export type AddCategoryMutation = { __typename?: 'Mutation', addCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+
+export type EditCategoryMutationVariables = Exact<{
+  editCategoryId: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+  desc: Scalars['String']['input'];
+  img: Scalars['String']['input'];
+}>;
+
+
+export type EditCategoryMutation = { __typename?: 'Mutation', editCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+
+export type DeleteCategoryMutationVariables = Exact<{
+  deleteCategoryId: Scalars['String']['input'];
+}>;
+
+
+export type DeleteCategoryMutation = { __typename?: 'Mutation', deleteCategory: { __typename?: 'Category', id: string } };
+
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
 }>;
@@ -1025,6 +1065,7 @@ export type AddMenuMutationVariables = Exact<{
   shortDescr: Scalars['String']['input'];
   title: Scalars['String']['input'];
   sellingPrice?: InputMaybe<Scalars['Float']['input']>;
+  onPromo: Scalars['Boolean']['input'];
 }>;
 
 
@@ -1040,6 +1081,7 @@ export type EditMenuMutationVariables = Exact<{
   shortDescr: Scalars['String']['input'];
   title: Scalars['String']['input'];
   sellingPrice?: InputMaybe<Scalars['Float']['input']>;
+  onPromo: Scalars['Boolean']['input'];
 }>;
 
 
@@ -1067,6 +1109,20 @@ export type GetMenuUserFavoritesQueryVariables = Exact<{
 
 
 export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavorites: Array<{ __typename?: 'Menu', category: string, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string }> };
+
+export type GetUserNotificationsQueryVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+}>;
+
+
+export type GetUserNotificationsQuery = { __typename?: 'Query', getUserNotifications: Array<{ __typename?: 'Notification', id: string, type: string, message: string, status: NotificationStatus, priority: NotificationPriority, createdAt: any, updatedAt: any }> };
+
+export type MarkNotificationAsReadMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type MarkNotificationAsReadMutation = { __typename?: 'Mutation', markNotificationAsRead: { __typename?: 'Notification', id: string, status: NotificationStatus, updatedAt: any } };
 
 export type GetOrdersQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1110,6 +1166,52 @@ export type EditOrderMutationVariables = Exact<{
 
 
 export type EditOrderMutation = { __typename?: 'Mutation', editOrder: { __typename?: 'Order', id: string } };
+
+export type GetRestaurantsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetRestaurantsQuery = { __typename?: 'Query', getRestaurants: Array<{ __typename?: 'Restaurant', id: string, name: string, address?: string | null, bannerImg?: string | null, deliveryFee: number, serviceFee: number, rating: number, openTimes: any, updatedAt: any }> };
+
+export type GetRestaurantQueryVariables = Exact<{
+  getRestaurantId: Scalars['String']['input'];
+}>;
+
+
+export type GetRestaurantQuery = { __typename?: 'Query', getRestaurant: { __typename?: 'Restaurant', id: string, name: string, address?: string | null, bannerImg?: string | null, deliveryFee: number, serviceFee: number, rating: number, openTimes: any, updatedAt: any } };
+
+export type AddRestaurantMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+  address?: InputMaybe<Scalars['String']['input']>;
+  bannerImg?: InputMaybe<Scalars['String']['input']>;
+  deliveryFee?: InputMaybe<Scalars['Float']['input']>;
+  serviceFee?: InputMaybe<Scalars['Float']['input']>;
+  rating?: InputMaybe<Scalars['Float']['input']>;
+  openTimes?: InputMaybe<Scalars['JSON']['input']>;
+}>;
+
+
+export type AddRestaurantMutation = { __typename?: 'Mutation', addRestaurant: { __typename?: 'Restaurant', id: string, name: string, address?: string | null, bannerImg?: string | null, deliveryFee: number, serviceFee: number, rating: number, openTimes: any, updatedAt: any } };
+
+export type EditRestaurantMutationVariables = Exact<{
+  editRestaurantId: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  address?: InputMaybe<Scalars['String']['input']>;
+  bannerImg?: InputMaybe<Scalars['String']['input']>;
+  deliveryFee?: InputMaybe<Scalars['Float']['input']>;
+  serviceFee?: InputMaybe<Scalars['Float']['input']>;
+  rating?: InputMaybe<Scalars['Float']['input']>;
+  openTimes?: InputMaybe<Scalars['JSON']['input']>;
+}>;
+
+
+export type EditRestaurantMutation = { __typename?: 'Mutation', editRestaurant: { __typename?: 'Restaurant', id: string, name: string, address?: string | null, bannerImg?: string | null, deliveryFee: number, serviceFee: number, rating: number, openTimes: any, updatedAt: any } };
+
+export type DeleteRestaurantMutationVariables = Exact<{
+  deleteRestaurantId: Scalars['String']['input'];
+}>;
+
+
+export type DeleteRestaurantMutation = { __typename?: 'Mutation', deleteRestaurant: { __typename?: 'Restaurant', id: string } };
 
 export type GetAvailableTablesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1346,6 +1448,73 @@ export const GetAreasNameDescriptionDocument = gql`
 export function useGetAreasNameDescriptionQuery(options?: Omit<Urql.UseQueryArgs<GetAreasNameDescriptionQueryVariables>, 'query'>) {
   return Urql.useQuery<GetAreasNameDescriptionQuery, GetAreasNameDescriptionQueryVariables>({ query: GetAreasNameDescriptionDocument, ...options });
 };
+export const GetCategoriesDocument = gql`
+    query GetCategories {
+  getCategories {
+    id
+    title
+    desc
+    img
+  }
+}
+    `;
+
+export function useGetCategoriesQuery(options?: Omit<Urql.UseQueryArgs<GetCategoriesQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetCategoriesQuery, GetCategoriesQueryVariables>({ query: GetCategoriesDocument, ...options });
+};
+export const GetCategoryDocument = gql`
+    query GetCategory($getCategoryId: String!) {
+  getCategory(id: $getCategoryId) {
+    id
+    title
+    desc
+    img
+  }
+}
+    `;
+
+export function useGetCategoryQuery(options: Omit<Urql.UseQueryArgs<GetCategoryQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetCategoryQuery, GetCategoryQueryVariables>({ query: GetCategoryDocument, ...options });
+};
+export const AddCategoryDocument = gql`
+    mutation AddCategory($title: String!, $desc: String!, $img: String!) {
+  addCategory(title: $title, desc: $desc, img: $img) {
+    id
+    title
+    desc
+    img
+  }
+}
+    `;
+
+export function useAddCategoryMutation() {
+  return Urql.useMutation<AddCategoryMutation, AddCategoryMutationVariables>(AddCategoryDocument);
+};
+export const EditCategoryDocument = gql`
+    mutation EditCategory($editCategoryId: String!, $title: String!, $desc: String!, $img: String!) {
+  editCategory(id: $editCategoryId, title: $title, desc: $desc, img: $img) {
+    id
+    title
+    desc
+    img
+  }
+}
+    `;
+
+export function useEditCategoryMutation() {
+  return Urql.useMutation<EditCategoryMutation, EditCategoryMutationVariables>(EditCategoryDocument);
+};
+export const DeleteCategoryDocument = gql`
+    mutation DeleteCategory($deleteCategoryId: String!) {
+  deleteCategory(id: $deleteCategoryId) {
+    id
+  }
+}
+    `;
+
+export function useDeleteCategoryMutation() {
+  return Urql.useMutation<DeleteCategoryMutation, DeleteCategoryMutationVariables>(DeleteCategoryDocument);
+};
 export const GetUserFavoritesDocument = gql`
     query GetUserFavorites($userEmail: String!) {
   getUserFavorites(userEmail: $userEmail) {
@@ -1384,7 +1553,7 @@ export function useRemoveFavoriteMutation() {
   return Urql.useMutation<RemoveFavoriteMutation, RemoveFavoriteMutationVariables>(RemoveFavoriteDocument);
 };
 export const AddMenuDocument = gql`
-    mutation AddMenu($category: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float) {
+    mutation AddMenu($category: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
   addMenu(
     category: $category
     image: $image
@@ -1394,6 +1563,7 @@ export const AddMenuDocument = gql`
     shortDescr: $shortDescr
     title: $title
     sellingPrice: $sellingPrice
+    onPromo: $onPromo
   ) {
     id
   }
@@ -1404,7 +1574,7 @@ export function useAddMenuMutation() {
   return Urql.useMutation<AddMenuMutation, AddMenuMutationVariables>(AddMenuDocument);
 };
 export const EditMenuDocument = gql`
-    mutation EditMenu($category: String!, $editMenuId: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float) {
+    mutation EditMenu($category: String!, $editMenuId: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
   editMenu(
     category: $category
     id: $editMenuId
@@ -1415,6 +1585,7 @@ export const EditMenuDocument = gql`
     shortDescr: $shortDescr
     title: $title
     sellingPrice: $sellingPrice
+    onPromo: $onPromo
   ) {
     id
   }
@@ -1483,6 +1654,36 @@ export const GetMenuUserFavoritesDocument = gql`
 
 export function useGetMenuUserFavoritesQuery(options: Omit<Urql.UseQueryArgs<GetMenuUserFavoritesQueryVariables>, 'query'>) {
   return Urql.useQuery<GetMenuUserFavoritesQuery, GetMenuUserFavoritesQueryVariables>({ query: GetMenuUserFavoritesDocument, ...options });
+};
+export const GetUserNotificationsDocument = gql`
+    query GetUserNotifications($userEmail: String!) {
+  getUserNotifications(userEmail: $userEmail) {
+    id
+    type
+    message
+    status
+    priority
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetUserNotificationsQuery(options: Omit<Urql.UseQueryArgs<GetUserNotificationsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetUserNotificationsQuery, GetUserNotificationsQueryVariables>({ query: GetUserNotificationsDocument, ...options });
+};
+export const MarkNotificationAsReadDocument = gql`
+    mutation MarkNotificationAsRead($id: String!) {
+  markNotificationAsRead(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}
+    `;
+
+export function useMarkNotificationAsReadMutation() {
+  return Urql.useMutation<MarkNotificationAsReadMutation, MarkNotificationAsReadMutationVariables>(MarkNotificationAsReadDocument);
 };
 export const GetOrdersDocument = gql`
     query GetOrders($first: Int, $after: ID) {
@@ -1565,6 +1766,110 @@ export const EditOrderDocument = gql`
 
 export function useEditOrderMutation() {
   return Urql.useMutation<EditOrderMutation, EditOrderMutationVariables>(EditOrderDocument);
+};
+export const GetRestaurantsDocument = gql`
+    query GetRestaurants {
+  getRestaurants {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+    `;
+
+export function useGetRestaurantsQuery(options?: Omit<Urql.UseQueryArgs<GetRestaurantsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetRestaurantsQuery, GetRestaurantsQueryVariables>({ query: GetRestaurantsDocument, ...options });
+};
+export const GetRestaurantDocument = gql`
+    query GetRestaurant($getRestaurantId: String!) {
+  getRestaurant(id: $getRestaurantId) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+    `;
+
+export function useGetRestaurantQuery(options: Omit<Urql.UseQueryArgs<GetRestaurantQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetRestaurantQuery, GetRestaurantQueryVariables>({ query: GetRestaurantDocument, ...options });
+};
+export const AddRestaurantDocument = gql`
+    mutation AddRestaurant($name: String!, $address: String, $bannerImg: String, $deliveryFee: Float, $serviceFee: Float, $rating: Float, $openTimes: JSON) {
+  addRestaurant(
+    name: $name
+    address: $address
+    bannerImg: $bannerImg
+    deliveryFee: $deliveryFee
+    serviceFee: $serviceFee
+    rating: $rating
+    openTimes: $openTimes
+  ) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+    `;
+
+export function useAddRestaurantMutation() {
+  return Urql.useMutation<AddRestaurantMutation, AddRestaurantMutationVariables>(AddRestaurantDocument);
+};
+export const EditRestaurantDocument = gql`
+    mutation EditRestaurant($editRestaurantId: String!, $name: String, $address: String, $bannerImg: String, $deliveryFee: Float, $serviceFee: Float, $rating: Float, $openTimes: JSON) {
+  editRestaurant(
+    id: $editRestaurantId
+    name: $name
+    address: $address
+    bannerImg: $bannerImg
+    deliveryFee: $deliveryFee
+    serviceFee: $serviceFee
+    rating: $rating
+    openTimes: $openTimes
+  ) {
+    id
+    name
+    address
+    bannerImg
+    deliveryFee
+    serviceFee
+    rating
+    openTimes
+    updatedAt
+  }
+}
+    `;
+
+export function useEditRestaurantMutation() {
+  return Urql.useMutation<EditRestaurantMutation, EditRestaurantMutationVariables>(EditRestaurantDocument);
+};
+export const DeleteRestaurantDocument = gql`
+    mutation DeleteRestaurant($deleteRestaurantId: String!) {
+  deleteRestaurant(id: $deleteRestaurantId) {
+    id
+  }
+}
+    `;
+
+export function useDeleteRestaurantMutation() {
+  return Urql.useMutation<DeleteRestaurantMutation, DeleteRestaurantMutationVariables>(DeleteRestaurantDocument);
 };
 export const GetAvailableTablesDocument = gql`
     query GetAvailableTables {

@@ -24,6 +24,7 @@ builder.mutationFields((t) => ({
       image: t.arg.string({ required: true }),
       category: t.arg.string({ required: true }),
       prepType: t.arg.stringList({ required: true }),
+       onPromo: t.arg.boolean({ required: true }),
     },
     resolve: async (query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -53,6 +54,7 @@ builder.mutationFields((t) => ({
           image: args.image,
           category: args.category,
           prepType: args.prepType,
+           onPromo: args.onPromo, // ✅ חדש
         },
       });
       return newMenu;
@@ -75,6 +77,7 @@ builder.mutationFields((t) => ({
       image: t.arg.string({ required: true }),
       category: t.arg.string({ required: true }),
       prepType: t.arg.stringList({ required: true }),
+         onPromo: t.arg.boolean({ required: true }), // ✅ חדש
     },
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -96,6 +99,8 @@ builder.mutationFields((t) => ({
           image: args.image,
           category: args.category,
           prepType: args.prepType,
+           onPromo: args.onPromo, // ✅ חדש
+          
         },
       });
       return updatedMenu;

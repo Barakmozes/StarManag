@@ -1,224 +1,337 @@
-import { FormEvent, useState } from "react";
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
-import { HiOutlinePencil, HiOutlinePencilSquare } from "react-icons/hi2";
-import { Menu } from "@prisma/client";
-import { useMutation } from "@urql/next";
+import { HiOutlinePencil } from "react-icons/hi2";
+import { useMutation, useQuery } from "@urql/next";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { categoriesData } from "@/data/categories-data";
+import { gql } from "graphql-tag";
+
+import {
+  EditMenuDocument,
+  type EditMenuMutation,
+  type EditMenuMutationVariables,
+} from "@/graphql/generated";
 import { SupabaseImageDelete, SupabaseImageUpload } from "@/lib/supabaseStorage";
-import { EditMenuDocument, EditMenuMutation, EditMenuMutationVariables } from "@/graphql/generated";
 import Modal from "@/app/components/Common/Modal";
 import UploadImg from "../Components/UploadImg";
 
-type Props = {
-  menu: Menu;
+type DbCategory = { id: string; title: string };
+type GetCategoriesForMenuQuery = { getCategories: DbCategory[] };
+
+const GetCategoriesForMenuDocument = gql`
+  query GetCategoriesForMenu {
+    getCategories {
+      id
+      title
+    }
+  }
+`;
+
+type MenuLike = {
+  id: string;
+  title: string;
+  category: string;
+  longDescr?: string | null;
+  shortDescr: string;
+  price: number;
+  sellingPrice?: number | null;
+  prepType: string[];
+  image: string;
+  onPromo?: boolean; // ✅ make sure your menu object includes this
 };
+
+function extractSupabaseFilename(urlOrName: string): string | null {
+  if (!urlOrName) return null;
+  const clean = urlOrName.split("?")[0].split("#")[0];
+
+  const idx = clean.lastIndexOf("/public/");
+  if (idx !== -1) return clean.substring(idx + "/public/".length);
+
+  const parts = clean.split("/");
+  return parts[parts.length - 1] || null;
+}
+
+type Props = { menu: MenuLike };
 
 const AdminEditMenu = ({ menu }: Props) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+
   const [title, setTitle] = useState(menu.title);
-  const [category, setCategory] = useState(menu.category);
-  const [longDescr, setLongDescr] = useState('');
+  const [categoryTitle, setCategoryTitle] = useState(menu.category);
+  const [longDescr, setLongDescr] = useState(menu.longDescr ?? "");
   const [shortDescr, setShortDescr] = useState(menu.shortDescr);
   const [price, setPrice] = useState(menu.price);
-  const [prepType, setPrepType] = useState<string[]>([]);
+
+  // ✅ promo fields
+  const [onPromo, setOnPromo] = useState(!!menu.onPromo);
+  const [sellingPrice, setSellingPrice] = useState<string>(
+    typeof menu.sellingPrice === "number" ? String(menu.sellingPrice) : ""
+  );
+
+  const [prepType, setPrepType] = useState<string[]>(menu.prepType ?? []);
+  const [preparationInput, setPreparationInput] = useState("");
   const [image, setImage] = useState(menu.image);
-  // const [onPromo, setOnPromo] = useState(false)
 
   const closeModal = () => setIsOpen(false);
+  const openModal = () => setIsOpen(true);
 
-  const OpenModal = () => setIsOpen(true);
+  const [{ data: catData, fetching: catFetching }] =
+    useQuery<GetCategoriesForMenuQuery>({
+      query: GetCategoriesForMenuDocument,
+      requestPolicy: "cache-and-network",
+    });
 
-  const clearForm = async () => {
-    setTitle("");
-    setCategory("");
-    setLongDescr("");
-    setShortDescr("");
-    setPrice(0);
-    setPrepType([""]);
-    setImage("");
-  };
-
-  const [preparationInput, setPreparationInput] = useState("");
+  const categories = useMemo(() => {
+    const list = catData?.getCategories ?? [];
+    return list.slice().sort((a, b) => a.title.localeCompare(b.title));
+  }, [catData]);
 
   const addPreparation = () => {
-    const tempData = prepType;
-    tempData.push(preparationInput);
-    setPrepType(prepType);
+    const value = preparationInput.trim();
+    if (!value) {
+      toast.error("Please enter a preparation type", { duration: 2000 });
+      return;
+    }
+    setPrepType((prev) => (prev.includes(value) ? prev : [...prev, value]));
     setPreparationInput("");
   };
 
-  const deleteOldMenuImg = async () => {
-    const file = menu.image;
-    if (file) {
-      await SupabaseImageDelete(file);
-    } else return;
+  const removePreparation = (value: string) => {
+    setPrepType((prev) => prev.filter((x) => x !== value));
   };
 
-  const getMenuImageFile = async (file: File) => {
-    await deleteOldMenuImg();
+  const replaceMenuImage = async (file: File) => {
+    const toastId = toast.loading("Uploading image...");
+    const old = image;
+
     try {
-      const res = await SupabaseImageUpload(file);
-      if (res) {
-        setImage(res);
-      }
-    } catch (error) {
-      toast.error(`Error uploading image: ${error}`, { duration: 3000 });
+      const newUrl = await SupabaseImageUpload(file);
+      if (!newUrl) throw new Error("Upload failed");
+
+      const filename = extractSupabaseFilename(old);
+      if (filename) await SupabaseImageDelete(filename);
+
+      setImage(newUrl);
+      toast.success("Image updated", { id: toastId, duration: 1200 });
+    } catch {
+      toast.error("Error uploading image", { id: toastId, duration: 2500 });
     }
   };
 
-  const editMenuId = menu.id;
-  const [_, editMenu] = useMutation<
-    EditMenuMutation,
-    EditMenuMutationVariables
-  >(EditMenuDocument);
+  const [, editMenu] = useMutation<EditMenuMutation, EditMenuMutationVariables>(
+    EditMenuDocument
+  );
 
   const handleEditMenu = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Check if any of the required fields are empty
-    const requiredFields = [
-      image,
-      title,
-      category,
-      shortDescr,
-      prepType,
-      price,
-    ];
-    if (requiredFields.some((field) => !field)) {
-      toast.error("Please fill in all required fields", { duration: 3000 });
+    const cleanedTitle = title.trim();
+    const cleanedCategory = categoryTitle.trim();
+    const cleanedShort = shortDescr.trim();
+    const cleanedLong = longDescr.trim();
+    const cleanedPrep = prepType.map((p) => p.trim()).filter(Boolean);
+
+    if (!image || !cleanedTitle || !cleanedCategory || !cleanedShort) {
+      toast.error("Please fill in all required fields", { duration: 2500 });
       return;
     }
 
+    if (!Number.isFinite(price) || price <= 0) {
+      toast.error("Price must be greater than 0", { duration: 2500 });
+      return;
+    }
+
+    if (cleanedPrep.length === 0) {
+      toast.error("Please add at least one preparation type", { duration: 2500 });
+      return;
+    }
+
+    const selling =
+      sellingPrice.trim() === "" ? null : Number(sellingPrice.trim());
+
+    if (selling !== null) {
+      if (!Number.isFinite(selling) || selling <= 0) {
+        toast.error("Selling price must be a valid number", { duration: 2500 });
+        return;
+      }
+      if (selling >= price) {
+        toast.error("Selling price must be lower than the regular price", {
+          duration: 2500,
+        });
+        return;
+      }
+    }
+
+    const toastId = toast.loading("Saving changes...");
     try {
       const res = await editMenu({
-        editMenuId,
+        editMenuId: menu.id,
         image,
-        title,
-        category,
-        longDescr,
-        shortDescr,
-        prepType,
+        title: cleanedTitle,
+        category: cleanedCategory,
+        longDescr: cleanedLong,
+        shortDescr: cleanedShort,
+        prepType: cleanedPrep,
         price,
-      });
+        sellingPrice: selling, // ✅ null clears
+        onPromo,              // ✅ NEW
+      } as any); // <- remove after codegen updates
 
-      if (res.data?.editMenu) {
-        toast.success("Menu Edited Successfully", { duration: 1000 });
-        await clearForm();
-        setTimeout(closeModal, 3000);
+      if (res.data?.editMenu?.id) {
+        toast.success("Menu Edited Successfully", { id: toastId, duration: 1200 });
+        setTimeout(closeModal, 700);
         router.refresh();
       } else {
-        toast.error("An error occurred", { duration: 1000 });
+        toast.error("An error occurred", { id: toastId, duration: 2000 });
       }
-    } catch (error) {
-      console.error("Error editing menu:", error);
-      toast.error("An error occurred", { duration: 1000 });
+    } catch {
+      toast.error("An error occurred", { id: toastId, duration: 2000 });
     }
   };
 
   return (
     <>
-      <HiOutlinePencilSquare
-        onClick={OpenModal}
-        className="cursor-pointer h-6 w-6 text-green-600"
-      />
+      <button type="button" onClick={openModal} className="inline-flex">
+        <HiOutlinePencil className="cursor-pointer h-6 w-6 text-green-600" />
+      </button>
+
       <Modal isOpen={isOpen} title={title} closeModal={closeModal}>
         <form onSubmit={handleEditMenu}>
           <div className="grid gap-4 mb-4 sm:grid-cols-2">
             <div className="sm:col-span-2 border-gray-300">
               <Image
-                src={menu.image}
-                alt="chefy"
+                src={image}
+                alt={title}
                 width={360}
                 height={200}
-                className="h-32 w-full object-cover rounded-md "
+                className="h-32 w-full object-cover rounded-md"
               />
             </div>
+
             <div>
-              <label htmlFor="name" className="form-label ">
-                Title
+              <label htmlFor="title" className="form-label">
+                Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="name"
-                id="name"
+                id="title"
                 className="form-input"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
+
             <div>
-              <label htmlFor="price" className="form-label ">
-                Price
+              <label htmlFor="price" className="form-label">
+                Price <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
-                name="price"
                 id="price"
                 className="form-input"
                 placeholder="$"
                 value={price}
+                min={0}
+                step={0.01}
                 onChange={(e) => setPrice(e.target.valueAsNumber)}
               />
             </div>
+
+            {/* ✅ promo toggle */}
+            <div className="flex items-center gap-3">
+              <label className="form-label mb-0">On Promo</label>
+              <input
+                type="checkbox"
+                className="w-5 h-5 accent-green-600 rounded"
+                checked={onPromo}
+                onChange={(e) => setOnPromo(e.target.checked)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sellingPrice" className="form-label">
+                Selling Price (optional)
+              </label>
+              <input
+                type="number"
+                id="sellingPrice"
+                className="form-input"
+                placeholder="$"
+                value={sellingPrice}
+                min={0}
+                step={0.01}
+                onChange={(e) => setSellingPrice(e.target.value)}
+              />
+            </div>
+
             <div>
               <label htmlFor="category" className="form-label">
-                Category
+                Category <span className="text-red-500">*</span>
               </label>
+
               <select
                 id="category"
                 className="form-input"
-                onChange={(e) => setCategory(e.target.value)}
-                value={category}
+                onChange={(e) => setCategoryTitle(e.target.value)}
+                value={categoryTitle}
+                disabled={catFetching}
               >
-                {categoriesData.map((cat) => (
-                  <option key={cat.id}>{cat.title}</option>
-                ))}
+                {!catFetching &&
+                  categoryTitle &&
+                  !categories.some((c) => c.title === categoryTitle) && (
+                    <option value={categoryTitle}>
+                      {categoryTitle} (current)
+                    </option>
+                  )}
+
+                {catFetching && <option>Loading categories…</option>}
+
+                {!catFetching &&
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.title}>
+                      {cat.title}
+                    </option>
+                  ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="onPromo" className="form-label">
-                Promo?
-              </label>
-              <input
-                type="checkbox"
-                className="w-6 h-6 accent-green-600  rounded focus:ring-green-500"
-              />
-            </div>
+
             <div className="sm:col-span-2">
-              <label htmlFor="description" className="form-label">
+              <label htmlFor="longDescr" className="form-label">
                 Long Description
               </label>
               <textarea
-                id="description"
+                id="longDescr"
                 rows={2}
                 className="form-input"
                 placeholder="Long description here"
                 value={longDescr}
                 onChange={(e) => setLongDescr(e.target.value)}
-              ></textarea>
+              />
             </div>
+
             <div className="sm:col-span-2">
-              <label htmlFor="description" className="form-label">
-                Short Description
+              <label htmlFor="shortDescr" className="form-label">
+                Short Description <span className="text-red-500">*</span>
               </label>
               <textarea
-                id="description"
+                id="shortDescr"
                 rows={2}
                 className="form-input"
                 placeholder="Short description here"
                 value={shortDescr}
                 onChange={(e) => setShortDescr(e.target.value)}
-              ></textarea>
+              />
             </div>
-            <div className=" sm:col-span-2">
-              <label htmlFor="price" className="form-label ">
-                Preparation Types
+
+            <div className="sm:col-span-2">
+              <label className="form-label">
+                Preparation Types <span className="text-red-500">*</span>
               </label>
 
-              <div className="flex  sm:col-span-2">
+              <div className="flex sm:col-span-2 gap-2">
                 <input
                   type="text"
                   className="form-input"
@@ -234,34 +347,33 @@ const AdminEditMenu = ({ menu }: Props) => {
                   Add
                 </button>
               </div>
-            </div>
-            {prepType.length ? (
-              <ul className="list-none flex flex-wrap space-x-2">
-                {prepType.map((value, index) => {
-                  return (
-                    <li key={index} className="">
-                      <span className="bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded">
+
+              {prepType.length > 0 && (
+                <ul className="list-none flex flex-wrap gap-2 mt-2">
+                  {prepType.map((value) => (
+                    <li key={value}>
+                      <button
+                        type="button"
+                        onClick={() => removePreparation(value)}
+                        className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded hover:bg-green-200"
+                        title="Click to remove"
+                      >
                         {value}
-                      </span>
+                      </button>
                     </li>
-                  );
-                })}
-              </ul>
-            ) : null}
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          <UploadImg handleCallBack={getMenuImageFile} id="editAdminImg"/>
+          <UploadImg handleCallBack={replaceMenuImage} id="editAdminImg" />
 
           <button
             type="submit"
-            className="text-white inline-flex items-center bg-green-600
-             hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
-              font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+            className="text-white inline-flex items-center bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           >
-            <HiOutlinePencil
-              className="mr-1 -ml-1 w-4 h-4"
-              fill="currentColor"
-            />
+            <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
             Edit Menu
           </button>
         </form>

@@ -1,0 +1,21 @@
+# graphql/files/notification.graphql
+
+query GetUserNotifications($userEmail: String!) {
+  getUserNotifications(userEmail: $userEmail) {
+    id
+    type
+    message
+    status
+    priority
+    createdAt
+    updatedAt
+  }
+}
+
+mutation MarkNotificationAsRead($id: String!) {
+  markNotificationAsRead(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}

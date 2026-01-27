@@ -1,18 +1,26 @@
 "use client";
 
-
 import Modal from "@/app/components/Common/Modal";
-import {  useState } from "react";
+import { useState } from "react";
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import EditRoleForm from "./EditRoleForm";
-import { User } from "@prisma/client";
+import { Role } from "@/graphql/generated";
+
+type UserRow = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: Role;
+};
 
 type Props = {
-    user: User
-}
+  user: UserRow;
+  currentUserId?: string | null;
+  onChanged?: () => void;
+};
 
-
-const EditRoleModal = ({user}: Props) => { 
+const EditRoleModal = ({ user, currentUserId = null, onChanged }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const openModal = () => setIsOpen(true);
@@ -20,12 +28,14 @@ const EditRoleModal = ({user}: Props) => {
 
   return (
     <>
-      <HiOutlinePencilSquare
-        onClick={openModal}
-        className="cursor-pointer h-6 w-6"
-      />
-      <Modal isOpen={isOpen} closeModal={closeModal} title="Edit Role" >
-        <EditRoleForm user={user} />
+      <HiOutlinePencilSquare onClick={openModal} className="cursor-pointer h-6 w-6" />
+      <Modal isOpen={isOpen} closeModal={closeModal} title="Edit User">
+        <EditRoleForm
+          user={user}
+          currentUserId={currentUserId}
+          closeModal={closeModal}
+          onChanged={onChanged}
+        />
       </Modal>
     </>
   );

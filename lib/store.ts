@@ -20,11 +20,40 @@ export const useLoginModal = create<LoginModalStore>()((set) => ({
   onClose: () => set({ isOpen: false }),
 }));
 
+/** -------------------- sellingPrice helpers -------------------- */
+
+function normalizeCartItem(item: any) {
+  const base =
+    typeof item?.basePrice === "number" && Number.isFinite(item.basePrice)
+      ? item.basePrice
+      : typeof item?.price === "number" && Number.isFinite(item.price)
+        ? item.price
+        : 0;
+
+  const selling =
+    typeof item?.sellingPrice === "number" && Number.isFinite(item.sellingPrice)
+      ? item.sellingPrice
+      : null;
+
+  const hasValidDiscount =
+    selling !== null && selling > 0 && selling < base;
+
+  const effectivePrice = hasValidDiscount ? (selling as number) : base;
+
+  return {
+    ...item,
+    basePrice: base,
+    sellingPrice: selling,
+    // ✅ for all calculations in the app (subtotal/order/etc.)
+    price: effectivePrice,
+  };
+}
+
 // Extend INITIAL_STATE with 'tableId' and 'tableNumber'
 const INITIAL_STATE = {
-  menus: [],            // Existing cart items
-  tableId: undefined,   // ID in your database for the table
-  tableNumber: undefined, // e.g., Table #5 in the restaurant
+  menus: [],
+  tableId: undefined as string | undefined,
+  tableNumber: undefined as number | undefined,
 };
 
 export const useCartStore = create<CartType & CartActionTypes>()(
@@ -37,95 +66,61 @@ export const useCartStore = create<CartType & CartActionTypes>()(
         tableNumber: INITIAL_STATE.tableNumber,
 
         // ----- Actions -----
-        /**
-         * addToCart
-         * Always add new item to cart (allow duplicates).
-         */
-        addToCart(item) {
+        addToCart(item: any) {
           const { menus } = get();
-          set({ menus: [...menus, item] });
+          const normalized = normalizeCartItem(item);
+          set({ menus: [...menus, normalized] });
         },
 
-        /**
-         * deleteFromcart
-         * Removes an item by its ID.
-         */
-        deleteFromcart(itemId) {
+        deleteFromcart(itemId: string) {
           const { menus } = get();
-          const updatedMenus = menus.filter((menu) => menu.id !== itemId);
+          const updatedMenus = menus.filter((menu: any) => menu.id !== itemId);
           set({ menus: updatedMenus });
         },
 
-        /**
-         * increaseCartItem
-         * Increments quantity of a specific cart item.
-         */
-        increaseCartItem(data, id) {
+        increaseCartItem(data: any[], id: string) {
           const newData = [...data];
-          newData.forEach((item) => {
+          newData.forEach((item: any) => {
             if (item.id === id) item.quantity += 1;
           });
           set({ menus: newData });
         },
 
-        /**
-         * decreaseCartItem
-         * Decrements quantity of a specific cart item.
-         */
-        decreaseCartItem(data, id) {
+        decreaseCartItem(data: any[], id: string) {
           const newData = [...data];
-          newData.forEach((item) => {
+          newData.forEach((item: any) => {
             if (item.id === id) item.quantity -= 1;
           });
           set({ menus: newData });
         },
 
-        /**
-         * resetCart
-         * Clears the entire cart (menus)
-         * and resets table-related fields to initial state.
-         */
+        // ✅ keeps old persisted carts compatible (adds basePrice/uses sellingPrice)
+        syncCartPrices() {
+          const { menus } = get();
+          set({ menus: (menus as any[]).map(normalizeCartItem) });
+        },
+
         resetCart() {
           set(INITIAL_STATE);
         },
 
-        /**
-         * setTableId
-         * Updates tableId to identify which table is ordering.
-         */
-        setTableId(tableId) {
+        setTableId(tableId: string) {
           set({ tableId });
         },
 
-        /**
-         * setTableNumber
-         * Updates the restaurant's visible table number.
-         */
-        setTableNumber(tableNumber) {
+        setTableNumber(tableNumber: number) {
           set({ tableNumber });
         },
 
-        /**
-         * clearTableId
-         * Clears tableId but keeps cart items if you want.
-         */
         clearTableId() {
           set({ tableId: undefined });
         },
 
-        /**
-         * clearTableNumber
-         * Clears tableNumber but keeps the cart items.
-         */
         clearTableNumber() {
           set({ tableNumber: undefined });
         },
 
-        /**
-         * startOrderForTable
-         * Clears existing cart items, sets tableId and tableNumber.
-         */
-        startOrderForTable(tableId, tableNumber) {
+        startOrderForTable(tableId: string, tableNumber: number) {
           set({
             menus: [],
             tableId,
@@ -134,8 +129,12 @@ export const useCartStore = create<CartType & CartActionTypes>()(
         },
       }),
       {
-        name: "You&i_cart", // Key in storage
+        name: "You&i_cart",
         skipHydration: true,
+        // ✅ after hydration, normalize any legacy items
+        onRehydrateStorage: () => (state) => {
+          state?.syncCartPrices?.();
+        },
       }
     )
   )

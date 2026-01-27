@@ -1,51 +1,69 @@
-'use client'
+"use client";
 
 import React, { ChangeEvent, useCallback, useState } from "react";
-
 import { AiOutlineCloudUpload } from "react-icons/ai";
 
-type Props ={
-  handleCallBack: (file: File) => void;
+type Props = {
+  handleCallBack: (file: File) => void | Promise<void>;
   id?: string;
-}
+  maxMB?: number;
+  accept?: string;
+  title?: string;
+  description?: string;
+};
 
-const UploadImg = ({handleCallBack, id}:Props) => {
-  const [data, setData] = useState<{image: string | null}>({image: null});
-  const [file, setFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false); 
+const UploadImg = ({
+  handleCallBack,
+  id = "image-upload",
+  maxMB = 50,
+  accept = "image/*",
+  title = "Upload a new file",
+  description = "Accepted formats: .png, .jpg",
+}: Props) => {
+  const [data, setData] = useState<{ image: string | null }>({ image: null });
+  const [dragActive, setDragActive] = useState(false);
+
+  const readAsDataURL = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setData((prev) => ({ ...prev, image: e.target?.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleFile = useCallback(
+    (file: File) => {
+      const sizeMB = file.size / 1024 / 1024;
+      if (sizeMB > maxMB) {
+        // You can plug in a toast here if you use one.
+        console.warn(`File too big: ${sizeMB.toFixed(2)}MB (max ${maxMB}MB)`);
+        return;
+      }
+
+      // ✅ notify parent so it can upload to Supabase + store URL
+      void handleCallBack(file);
+
+      // ✅ local preview
+      readAsDataURL(file);
+    },
+    [handleCallBack, maxMB, readAsDataURL]
+  );
 
   const onChangePicture = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.currentTarget.files && event.currentTarget.files[0]
-      if (file) {
-        if (file.size / 1024 / 1024 > 3) {
-        //   toast.error('File size too big (max 3MB)')
-        } else {
-          handleCallBack(file)
-          setFile(file)
-          const reader = new FileReader()
-          reader.onload = (e) => {
-            setData((prev) => ({ ...prev, image: e.target?.result as string }))
-          }
-          reader.readAsDataURL(file)
-        }
-      }
+      const file = event.currentTarget.files && event.currentTarget.files[0];
+      if (file) handleFile(file);
     },
-    [handleCallBack]
-  )
-
-//   const [saving, setSaving] = useState(false)
-
-//   const saveDisabled = useMemo(() => {
-//     return !data.image || saving
-//   }, [data.image, saving])
+    [handleFile]
+  );
 
   return (
     <div>
       <div className="space-y-1 mb-4">
-        <h2 className="text-xl font-semibold">Upload a new file</h2>
-        <p className="text-sm text-gray-500">Accepted formats: .png, .jpg</p>
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <p className="text-sm text-gray-500">{description}</p>
       </div>
+
       <label
         htmlFor={id}
         className="group relative mt-2 flex h-56 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
@@ -73,23 +91,10 @@ const UploadImg = ({handleCallBack, id}:Props) => {
             setDragActive(false);
 
             const file = e.dataTransfer.files && e.dataTransfer.files[0];
-            if (file) {
-              if (file.size / 1024 / 1024 > 50) {
-                // toast.error("File size too big (max 50MB)");
-              } else {
-                setFile(file);
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                  setData((prev) => ({
-                    ...prev,
-                    image: e.target?.result as string,
-                  }));
-                };
-                reader.readAsDataURL(file);
-              }
-            }
+            if (file) handleFile(file);
           }}
         />
+
         <div
           className={`${
             dragActive ? "border-2 border-black" : ""
@@ -109,10 +114,11 @@ const UploadImg = ({handleCallBack, id}:Props) => {
             Drag and drop or click to upload.
           </p>
           <p className="mt-2 text-center text-sm text-gray-500">
-            Max file size: 50MB
+            Max file size: {maxMB}MB
           </p>
           <span className="sr-only">Photo upload</span>
         </div>
+
         {data.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -122,12 +128,13 @@ const UploadImg = ({handleCallBack, id}:Props) => {
           />
         )}
       </label>
+
       <div className="mt-1 flex rounded-md shadow-sm">
         <input
           id={id}
           name="image"
           type="file"
-          accept="image/*"
+          accept={accept}
           className="sr-only"
           onChange={onChangePicture}
         />

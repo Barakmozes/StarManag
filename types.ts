@@ -78,6 +78,7 @@ export type CartActionTypes = {
   setTableNumber: (tableNumber: number) => void;
   clearTableNumber: () => void;
   startOrderForTable: (tableId: string, tableNumber: number) => void;
+    syncCartPrices: () => void;
 };
 
 /**

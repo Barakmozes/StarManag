@@ -26,9 +26,9 @@ const OrderDelivered = () => {
                 <HiLocationMarker className="" />
               </div>
 
-              <h5 className=" ">DPS Resto</h5>
+              <h5 className=" ">barak rsp</h5>
               <p className="mb-1 text-sm font-normal leading-none ">
-                26 Dublin Street, X215, Darwin
+                26 ramot Street, X215, tlv
               </p>
             </li>
             <li className="mb-10 ml-6">
@@ -82,7 +82,7 @@ const OrderDelivered = () => {
                       +44 753 2399
                     </a>
                     <p className="mb-1 text-xs font-normal leading-none ">
-                      88 Bulwer St,Perth, Western Australia
+                      bar Bulwer St,tlv, West isr
                     </p>
                   </div>
                 </div>

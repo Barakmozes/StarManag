@@ -262,6 +262,8 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
               {zoneImage && (
                 <div className="mb-2">
                   <Image
+                   width={800}         // בחר מידות אינהרנטיות מתאימות
+                  height={600} 
                     src={zoneImage}
                     alt="Floor Plan Preview"
                     className="w-full h-auto max-h-48 object-contain border rounded"

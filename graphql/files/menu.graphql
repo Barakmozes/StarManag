@@ -7,6 +7,7 @@ mutation AddMenu(
   $shortDescr: String!
   $title: String!
   $sellingPrice: Float
+  $onPromo: Boolean!
 ) {
   addMenu(
     category: $category
@@ -17,6 +18,7 @@ mutation AddMenu(
     shortDescr: $shortDescr
     title: $title
     sellingPrice: $sellingPrice
+    onPromo: $onPromo
   ) {
     id
   }
@@ -32,6 +34,7 @@ mutation EditMenu(
   $shortDescr: String!
   $title: String!
   $sellingPrice: Float
+  $onPromo: Boolean!
 ) {
   editMenu(
     category: $category
@@ -43,6 +46,7 @@ mutation EditMenu(
     shortDescr: $shortDescr
     title: $title
     sellingPrice: $sellingPrice
+    onPromo: $onPromo
   ) {
     id
   }
