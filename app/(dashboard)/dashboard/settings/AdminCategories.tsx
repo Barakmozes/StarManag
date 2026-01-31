@@ -35,7 +35,8 @@ const AdminCategories = () => {
     requestPolicy: "cache-and-network",
   });
 
-  const categoriesAll = data?.getCategories ?? [];
+const categoriesAll = useMemo(() => data?.getCategories ?? [], [data?.getCategories]);
+
 
   // ✅ filter by URL search param (no server changes needed)
   const categories = useMemo(() => {

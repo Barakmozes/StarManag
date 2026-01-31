@@ -14,5 +14,7 @@ import "./Table"
 import "./TableUsage"
 import "./Waitlist"
 import "./Notification"
+import "./Dashboard";
+import "./Delivery";
 
 export const schema = builder.toSchema({})

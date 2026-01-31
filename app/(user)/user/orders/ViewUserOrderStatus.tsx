@@ -55,7 +55,7 @@ export const UserOrderCollected = () => {
           <div>
             <h6>Josie Macmillan</h6>
             <a href="tel:+44756235-89" className="text-xs">
-              +44 756 235-89
+               756 235-89
             </a>
           </div>
         </div>

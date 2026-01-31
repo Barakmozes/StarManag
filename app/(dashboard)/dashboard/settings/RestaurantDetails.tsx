@@ -1,13 +1,12 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useMutation, useQuery } from "@urql/next";
 import toast from "react-hot-toast";
-import { ReadonlyURLSearchParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { HiPlus } from "react-icons/hi2";
 
-import TableWrapper from "../Components/TableWrapper";
 import UploadImg from "../Components/UploadImg";
 import Modal from "@/app/components/Common/Modal";
 import { SupabaseImageDelete, SupabaseImageUpload } from "@/lib/supabaseStorage";
@@ -24,7 +23,9 @@ import {
   GetRestaurantsDocument,
   type GetRestaurantsQuery,
 } from "@/graphql/generated";
+
 import PanelWrapper from "../Components/PanelWrapper";
+
 
 // Same helper as category files (works whether you stored filename OR full public URL)
 const getSupabaseFileName = (urlOrPath: string) => {
@@ -45,67 +46,34 @@ const DEFAULT_OPEN_TIMES = [
   { day: "Saturday", open: "08:00", close: "23:00", closed: false },
 ];
 
-function normalizeStr(x: unknown) {
-  return (x ?? "").toString().toLowerCase().trim();
-}
-
-function firstPresent(sp: ReadonlyURLSearchParams, keys: readonly string[]) {
-  for (const k of keys) {
-    const v = sp.get(k);
-    if (v !== null) return v;
-  }
-  return null;
-}
-
-const SEARCH_KEYS = ["q", "search", "query"] as const;
-
 type RestaurantNode = NonNullable<GetRestaurantsQuery["getRestaurants"]>[number];
 
 const RestaurantDetails = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const qParam = (firstPresent(searchParams, SEARCH_KEYS) ?? "").trim();
-  const qNorm = useMemo(() => normalizeStr(qParam), [qParam]);
 
   const [{ data, fetching, error }, reexecuteQuery] = useQuery<GetRestaurantsQuery>({
     query: GetRestaurantsDocument,
     requestPolicy: "cache-and-network",
   });
 
-  const restaurantsAll = useMemo<RestaurantNode[]>(
-    () => data?.getRestaurants ?? [],
-    [data?.getRestaurants]
-  );
-
-  // ✅ Apply search filter (this is why search "didn't work": component ignored URL query)
-  const restaurants = useMemo<RestaurantNode[]>(() => {
-    if (!qNorm) return restaurantsAll;
-
-    return restaurantsAll.filter((r) => {
-      const name = normalizeStr(r.name);
-      const address = normalizeStr(r.address);
-      const id = normalizeStr(r.id);
-      return name.includes(qNorm) || address.includes(qNorm) || id.includes(qNorm);
-    });
-  }, [restaurantsAll, qNorm]);
+  // ✅ No search — always full list
+  const restaurants = useMemo<RestaurantNode[]>(() => data?.getRestaurants ?? [], [
+    data?.getRestaurants,
+  ]);
 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
 
-  // ✅ Keep selection valid against *filtered* list
+  // Keep selection valid (no search filtering)
   useEffect(() => {
     if (!restaurants.length) {
       setSelectedRestaurantId(null);
       return;
     }
-
     if (!selectedRestaurantId) {
       setSelectedRestaurantId(restaurants[0].id);
       return;
     }
-
-    const stillExists = restaurants.some((r) => r.id === selectedRestaurantId);
-    if (!stillExists) {
+    if (!restaurants.some((r) => r.id === selectedRestaurantId)) {
       setSelectedRestaurantId(restaurants[0].id);
     }
   }, [restaurants, selectedRestaurantId]);
@@ -123,7 +91,7 @@ const RestaurantDetails = () => {
   const [rating, setRating] = useState<number>(0);
   const [bannerImg, setBannerImg] = useState<string>("");
 
-  // Sync state when selected restaurant changes
+  // ✅ Sync state when selected restaurant changes (no eslint warning)
   useEffect(() => {
     if (!selectedRestaurant) return;
 
@@ -133,15 +101,7 @@ const RestaurantDetails = () => {
     setServiceFee(Number(selectedRestaurant.serviceFee ?? 0));
     setRating(Number(selectedRestaurant.rating ?? 0));
     setBannerImg(selectedRestaurant.bannerImg ?? "");
-  }, [
-    selectedRestaurant?.id,
-    selectedRestaurant?.name,
-    selectedRestaurant?.address,
-    selectedRestaurant?.deliveryFee,
-    selectedRestaurant?.serviceFee,
-    selectedRestaurant?.rating,
-    selectedRestaurant?.bannerImg,
-  ]);
+  }, [selectedRestaurant]);
 
   const [, editRestaurant] = useMutation<EditRestaurantMutation, EditRestaurantMutationVariables>(
     EditRestaurantDocument
@@ -168,10 +128,8 @@ const RestaurantDetails = () => {
       if (!nextUrl) throw new Error("Upload failed");
       setBannerImg(nextUrl);
 
-      // ✅ delete old only after new upload succeeded (prevents losing banner on failed upload)
-      if (old && old !== nextUrl) {
-        await deleteBannerSafely(old);
-      }
+      // delete old only after new upload succeeded
+      if (old && old !== nextUrl) await deleteBannerSafely(old);
 
       toast.success("Banner updated", { id: toastId, duration: 1200 });
     } catch (e: any) {
@@ -276,12 +234,11 @@ const RestaurantDetails = () => {
     }
   };
 
-  const noRestaurantsInDb = !fetching && !error && restaurantsAll.length === 0;
-  const noMatches = !fetching && !error && restaurantsAll.length > 0 && restaurants.length === 0 && !!qNorm;
+  const noRestaurantsInDb = !fetching && !error && restaurants.length === 0;
 
   return (
     <>
-      <PanelWrapper title="Restaurant Settings" >
+      <PanelWrapper title="Restaurant Settings">
         {fetching ? (
           <div className="py-6 text-center text-gray-500">Loading restaurant...</div>
         ) : error ? (
@@ -344,13 +301,8 @@ const RestaurantDetails = () => {
               </form>
             </Modal>
           </div>
-        ) : noMatches ? (
-          <div className="py-6 text-center text-gray-500">
-            No restaurants match your search.
-          </div>
         ) : (
           <>
-            {/* Restaurant selector */}
             {restaurants.length > 1 && (
               <div className="mb-4">
                 <label className="form-label" htmlFor="restaurantSelect">
@@ -371,7 +323,6 @@ const RestaurantDetails = () => {
               </div>
             )}
 
-            {/* Details form */}
             <form onSubmit={handleSaveRestaurantDetails}>
               <div className="rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
                 <div className="mb-5 flex items-center justify-between">
@@ -382,7 +333,6 @@ const RestaurantDetails = () => {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Banner */}
                   <div className="sm:col-span-2">
                     <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
                       <Image
@@ -397,7 +347,6 @@ const RestaurantDetails = () => {
                     </div>
                   </div>
 
-                  {/* Name */}
                   <div className="sm:col-span-2">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="name">
                       Name
@@ -411,7 +360,6 @@ const RestaurantDetails = () => {
                     />
                   </div>
 
-                  {/* Address */}
                   <div className="sm:col-span-2">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="address">
                       Address
@@ -425,7 +373,6 @@ const RestaurantDetails = () => {
                     />
                   </div>
 
-                  {/* Delivery Fee */}
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="deliveryFee">
                       Delivery Fee
@@ -445,7 +392,6 @@ const RestaurantDetails = () => {
                     </div>
                   </div>
 
-                  {/* Service Fee */}
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="serviceFee">
                       Service Fee
@@ -465,7 +411,6 @@ const RestaurantDetails = () => {
                     </div>
                   </div>
 
-                  {/* Rating */}
                   <div className="sm:col-span-2">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="rating">
                       Rating
@@ -489,10 +434,7 @@ const RestaurantDetails = () => {
                 </div>
               </div>
 
-              <UploadImg
-                handleCallBack={getBannerFile}
-                id={`restaurantBanner-${selectedRestaurant?.id ?? "x"}`}
-              />
+              <UploadImg handleCallBack={getBannerFile} id={`restaurantBanner-${selectedRestaurant?.id ?? "x"}`} />
 
               <button
                 type="submit"
@@ -504,7 +446,6 @@ const RestaurantDetails = () => {
               </button>
             </form>
 
-            {/* Opening hours section */}
             {selectedRestaurant?.id && (
               <div className="mt-6">
                 <OpeningHours restaurantId={selectedRestaurant.id} openTimes={selectedRestaurant.openTimes} />

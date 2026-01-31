@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { gql, useMutation } from "urql";
+import { gql, useMutation } from "@urql/next";;
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { GoChevronDown } from "react-icons/go";

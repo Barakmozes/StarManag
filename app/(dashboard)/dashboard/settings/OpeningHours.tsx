@@ -1,16 +1,17 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@urql/next";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-import TableWrapper from "../Components/TableWrapper";
-
 import {
   EditRestaurantDocument,
-  EditRestaurantMutation,
-  EditRestaurantMutationVariables,
+  type EditRestaurantMutation,
+  type EditRestaurantMutationVariables,
 } from "@/graphql/generated";
 import PanelWrapper from "../Components/PanelWrapper";
+
 
 type OpenDay = {
   day: string;
@@ -20,20 +21,20 @@ type OpenDay = {
 };
 
 const DEFAULT_OPEN_TIMES: OpenDay[] = [
-  { day: "Sunday", open: "09:00", close: "22:00", closed: false },
-  { day: "Monday", open: "09:00", close: "22:00", closed: false },
-  { day: "Tuesday", open: "09:00", close: "22:00", closed: false },
-  { day: "Wednesday", open: "09:00", close: "22:00", closed: false },
-  { day: "Thursday", open: "09:00", close: "22:00", closed: false },
-  { day: "Friday", open: "09:00", close: "23:00", closed: false },
-  { day: "Saturday", open: "09:00", close: "23:00", closed: false },
+  { day: "Sunday", open: "08:00", close: "22:00", closed: false },
+  { day: "Monday", open: "08:00", close: "22:00", closed: false },
+  { day: "Tuesday", open: "08:00", close: "22:00", closed: false },
+  { day: "Wednesday", open: "08:00", close: "22:00", closed: false },
+  { day: "Thursday", open: "08:00", close: "22:00", closed: false },
+  { day: "Friday", open: "08:00", close: "23:00", closed: false },
+  { day: "Saturday", open: "08:00", close: "23:00", closed: false },
 ];
 
-const normalizeOpenTimes = (raw: any): OpenDay[] => {
+const normalizeOpenTimes = (raw: unknown): OpenDay[] => {
   if (!raw) return DEFAULT_OPEN_TIMES;
 
-  // if stored as stringified JSON
-  let parsed = raw;
+  let parsed: unknown = raw;
+
   if (typeof raw === "string") {
     try {
       parsed = JSON.parse(raw);
@@ -42,10 +43,9 @@ const normalizeOpenTimes = (raw: any): OpenDay[] => {
     }
   }
 
-  // expected: array of { day, open, close, closed }
   if (Array.isArray(parsed)) {
     const ok = parsed.every(
-      (x) =>
+      (x: any) =>
         x &&
         typeof x.day === "string" &&
         typeof x.open === "string" &&
@@ -67,27 +67,25 @@ const OpeningHours = ({ restaurantId, openTimes }: Props) => {
   const router = useRouter();
 
   const normalized = useMemo(() => normalizeOpenTimes(openTimes), [openTimes]);
-
   const [days, setDays] = useState<OpenDay[]>(normalized);
 
+  // ✅ no warning (deps complete)
   useEffect(() => {
     setDays(normalized);
-  }, [restaurantId, normalized]);
+  }, [normalized]);
 
-  const [_, editRestaurant] = useMutation<
-    EditRestaurantMutation,
-    EditRestaurantMutationVariables
-  >(EditRestaurantDocument);
+  const [, editRestaurant] = useMutation<EditRestaurantMutation, EditRestaurantMutationVariables>(
+    EditRestaurantDocument
+  );
 
   const updateDay = (index: number, patch: Partial<OpenDay>) => {
-    setDays((prev) =>
-      prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
-    );
+    setDays((prev) => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)));
   };
 
   const handleSave = async () => {
     if (!restaurantId) return;
 
+    const toastId = toast.loading("Saving...");
     try {
       const res = await editRestaurant({
         editRestaurantId: restaurantId,
@@ -95,19 +93,19 @@ const OpeningHours = ({ restaurantId, openTimes }: Props) => {
       });
 
       if (res.data?.editRestaurant) {
-        toast.success("Opening hours saved", { duration: 1000 });
+        toast.success("Opening hours saved", { id: toastId, duration: 1200 });
         router.refresh();
       } else {
-        toast.error("An error occurred", { duration: 2000 });
+        toast.error("An error occurred", { id: toastId, duration: 2000 });
       }
     } catch (err) {
       console.error("Error saving opening hours:", err);
-      toast.error("An error occurred", { duration: 2000 });
+      toast.error("An error occurred", { id: toastId, duration: 2000 });
     }
   };
 
   return (
-    <PanelWrapper title="Opening Hours" >
+    <PanelWrapper title="Opening Hours">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-slate-500">
           <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100">

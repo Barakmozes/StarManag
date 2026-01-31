@@ -1,0 +1,49 @@
+query GetDeliveryOrders($first: Int, $after: ID, $search: String, $statusIn: [OrderStatus!]) {
+  getDeliveryOrders(first: $first, after: $after, search: $search, statusIn: $statusIn) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        orderNumber
+        status
+        orderDate
+        deliveryTime
+        deliveryAddress
+        userName
+        userEmail
+        userPhone
+        total
+        delivery {
+          id
+          orderNum
+          driverName
+          driverEmail
+          driverPhone
+        }
+      }
+    }
+  }
+}
+
+mutation AssignDriverToOrder($orderNumber: String!, $driverName: String!, $driverEmail: String!, $driverPhone: String!) {
+  assignDriverToOrder(
+    orderNumber: $orderNumber
+    driverName: $driverName
+    driverEmail: $driverEmail
+    driverPhone: $driverPhone
+  ) {
+    id
+    orderNum
+    driverName
+    driverEmail
+    driverPhone
+  }
+}
+
+mutation RemoveDriverFromOrder($orderNumber: String!) {
+  removeDriverFromOrder(orderNumber: $orderNumber)
+}

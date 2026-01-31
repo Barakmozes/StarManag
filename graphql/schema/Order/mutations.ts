@@ -5,76 +5,89 @@ import prisma from "@/lib/prisma";
 import { builder } from "@/graphql/builder";
 import { OrderStatus } from "./enum";
 
-/**
- * Mutation Fields for Order
- */
+function isAdminOrManager(role?: string | null) {
+  const r = String(role ?? "").toUpperCase();
+  return r === "ADMIN" || r === "MANAGER";
+}
+
 builder.mutationFields((t) => ({
-  /**
-   * addOrder
-   * Creates a new order if one does not already exist with the given orderNumber.
-   * Requires a user to be logged in.
-   */
   addOrder: t.prismaField({
     type: "Order",
     args: {
       orderNumber: t.arg.string({ required: true }),
       cart: t.arg({ type: "JSON", required: true }),
+
       userName: t.arg.string({ required: true }),
       userEmail: t.arg.string({ required: true }),
       userPhone: t.arg.string({ required: true }),
+
       paymentToken: t.arg.string(),
       deliveryAddress: t.arg.string({ required: true }),
       deliveryFee: t.arg.float({ required: true }),
       serviceFee: t.arg.float({ required: true }),
+
       note: t.arg.string(),
       discount: t.arg.float(),
       total: t.arg.float({ required: true }),
+
+      // ✅ new optional fields
+      items: t.arg({ type: "JSON" }),
+      preOrder: t.arg.boolean(),
+      pickupTime: t.arg({ type: "DateTime" }),
+      specialNotes: t.arg.string(),
+      tableId: t.arg.string(),
     },
     resolve: async (query, _parent, args, contextPromise) => {
       const context = await contextPromise;
 
-      // Must be logged in
-      const isLoggedIn = !context.user;
-      if (isLoggedIn) {
+      if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
 
-      // Check if an order with the same orderNumber already exists
+      // ✅ security: non-admin cannot create order for other email
+      if (!isAdminOrManager(context.user.role) && context.user.email) {
+        if (String(args.userEmail).toLowerCase() !== String(context.user.email).toLowerCase()) {
+          throw new GraphQLError("You can't create an order for another user");
+        }
+      }
+
       const existingOrder = await prisma.order.findFirst({
         ...query,
         where: { orderNumber: args.orderNumber },
       });
-      if (existingOrder) {
-        // If it exists, return it instead of creating a new one
-        return existingOrder;
-      }
+      if (existingOrder) return existingOrder;
 
-      // Otherwise, create a new order
       const newOrder = await prisma.order.create({
+        ...query,
         data: {
           orderNumber: args.orderNumber,
-          cart: args.cart,
+          cart: args.cart as any,
+
           userName: args.userName,
           userEmail: args.userEmail,
           userPhone: args.userPhone,
+
           paymentToken: args.paymentToken ?? undefined,
           deliveryAddress: args.deliveryAddress,
           deliveryFee: args.deliveryFee,
           serviceFee: args.serviceFee,
+
           note: args.note ?? undefined,
           discount: args.discount ?? undefined,
           total: args.total,
+
+          items: (args.items as any) ?? undefined,
+          preOrder: args.preOrder ?? undefined,
+          pickupTime: (args.pickupTime as any) ?? undefined,
+          specialNotes: args.specialNotes ?? undefined,
+          tableId: args.tableId ?? undefined,
         },
       });
+
       return newOrder;
     },
   }),
 
-  /**
-   * editOrder
-   * Updates the status (and optional deliveryTime) of an existing order by "id".
-   * Requires a user to be logged in.
-   */
   editOrder: t.prismaField({
     type: "Order",
     args: {
@@ -84,30 +97,23 @@ builder.mutationFields((t) => ({
     },
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
+      if (!context.user) throw new GraphQLError("You must be logged in");
 
-      // Must be logged in
-      if (!context.user) {
-        throw new GraphQLError("You must be logged in to perform this action");
+      // ✅ admin/manager only (dashboard behavior)
+      if (!isAdminOrManager(context.user.role)) {
+        throw new GraphQLError("You don't have permission to perform this action");
       }
 
-      // Update order
-      const updatedOrder = await prisma.order.update({
+      return prisma.order.update({
         where: { id: args.id },
         data: {
-          status: args.status,
-          deliveryTime: args.deliveryTime ?? undefined,
+          status: args.status as any,
+          deliveryTime: (args.deliveryTime as any) ?? undefined,
         },
       });
-      return updatedOrder;
     },
   }),
 
-  /**
-   * editOrderOnPayment
-   * Updates the payment information of an existing order by "id",
-   * setting it as paid and optionally updating the paymentToken.
-   * Requires a user to be logged in.
-   */
   editOrderOnPayment: t.prismaField({
     type: "Order",
     args: {
@@ -116,21 +122,30 @@ builder.mutationFields((t) => ({
     },
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
+      if (!context.user) throw new GraphQLError("You must be logged in");
 
-      // Must be logged in
-      if (!context.user) {
-        throw new GraphQLError("You must be logged in to perform this action");
+      const order = await prisma.order.findUnique({
+        where: { id: args.id },
+        select: { id: true, userEmail: true },
+      });
+      if (!order) throw new GraphQLError("Order not found");
+
+      // ✅ admin/manager OR owner
+      const isOwner =
+        context.user.email &&
+        String(order.userEmail).toLowerCase() === String(context.user.email).toLowerCase();
+
+      if (!isAdminOrManager(context.user.role) && !isOwner) {
+        throw new GraphQLError("You don't have permission to perform this action");
       }
 
-      // Mark order as paid, and optionally update paymentToken
-      const updatedOrder = await prisma.order.update({
+      return prisma.order.update({
         where: { id: args.id },
         data: {
           paymentToken: args.paymentToken ?? undefined,
           paid: true,
         },
       });
-      return updatedOrder;
     },
   }),
 }));

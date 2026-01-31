@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { useClient, type OperationResult } from "urql";
+import { useClient, type OperationResult } from "@urql/next";;
 import { useQuery } from "@urql/next";
 import { Menu, User } from "@prisma/client";
 

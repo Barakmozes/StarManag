@@ -9,6 +9,7 @@ import FavoriteModal from "./FavoriteModal";
 import { Menu, User } from "@prisma/client";
 import { useQuery } from "@urql/next";
 import { GetMenuUserFavoritesDocument, GetMenuUserFavoritesQuery, GetMenuUserFavoritesQueryVariables, GetUserFavoritesDocument, GetUserFavoritesQuery, GetUserFavoritesQueryVariables } from "@/graphql/generated";
+import Loading from "../loading";
 
 type Props = {
   user: User;
@@ -33,7 +34,9 @@ const FavoritesSection = ({ user }: Props) => {
   const Favorites = userFavorites?.getMenuUserFavorites;
 
   return (
+   
     <Container>
+ 
       <div className="mt-6 text-center">
         <h2 className="text-lg md:text-2xl lg:text-3xl  leading-tight tracking-tight text-gray-600 sm:text-4xl ">
           My Favorites
@@ -59,6 +62,7 @@ const FavoritesSection = ({ user }: Props) => {
           />
         ))}
       </section>
+       {fetching && !Favorites? <Loading /> : null}
     </Container>
   );
 };

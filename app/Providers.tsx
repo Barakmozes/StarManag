@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useMemo } from "react";
 import {
   UrqlProvider,
   ssrExchange,
@@ -7,33 +8,32 @@ import {
   fetchExchange,
   createClient,
 } from "@urql/next";
-import { useMemo } from "react";
 import AuthModal from "./components/Common/AuthModal";
 import { Toaster } from "react-hot-toast";
 
 type ProviderProps = {
   children: React.ReactNode;
-  graphqlApiKey: string;
+  graphqlApiKey?: string; // ✅ optional (won't break)
 };
 
-const Providers = ({ children, graphqlApiKey }: ProviderProps) => {
+const Providers = ({ children }: ProviderProps) => {
   const [client, ssr] = useMemo(() => {
     const graphql_api = process.env.NEXT_PUBLIC_GRAPHQL_API as string;
-    const ssr = ssrExchange();
+
+    // ✅ correct SSR exchange config
+    const ssr = ssrExchange({ isClient: typeof window !== "undefined" });
+
     const client = createClient({
       url: graphql_api,
       exchanges: [cacheExchange, ssr, fetchExchange],
-      // disable this in development for you to be able to access your sandbox
-
-      // fetchOptions: () => {
-      //   const apiKey = graphqlApiKey;
-
-      //   return {
-      //     headers: { authorization: apiKey ? `Bearer ${apiKey}` : "" },
-      //   };
-      // },
+      // אם תרצה להחזיר auth בעתיד:
+            // disable this in development for you to be able to access your sandbox
+      // fetchOptions: () => ({
+      //   headers: graphqlApiKey ? { authorization: `Bearer ${graphqlApiKey}` } : {},
+      // }),
     });
-    return [client, ssr];
+
+    return [client, ssr] as const;
   }, []);
 
   return (

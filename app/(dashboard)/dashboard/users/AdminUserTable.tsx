@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { gql, useMutation, useQuery } from "urql";
+import { gql, useMutation, useQuery } from "@urql/next";;
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { GoChevronDown } from "react-icons/go";
@@ -340,7 +340,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
     return () => clearTimeout(t);
   }, [qDraft, router, pathname, sp]);
 
-  const users = data?.getUsers ?? [];
+  const users = useMemo(() => data?.getUsers ?? [],[data?.getUsers]);
 
   const filteredSorted = useMemo(() => {
     let list = [...users];
@@ -518,7 +518,9 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
           </button>
 
           {/* For safety: only ADMIN can create users */}
-          <AddUserModal canAdd={currentUserRole === "ADMIN"} onCreated={refetch} />
+          
+          <AddUserModal  canAdd={currentUserRole === "ADMIN"} onCreated={refetch} /> (-damo)
+         
         </div>
       </div>
 

@@ -13,11 +13,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const graphqlApiKey = process.env.GRAPHQL_API_KEY as string;
-
+ // graphqlApiKey={graphqlApiKey}
   return (
     <html lang="en">
       <body>
-        <Providers graphqlApiKey={graphqlApiKey}>{children}</Providers>
+       
+        <Providers >{children}</Providers>
       </body>
     </html>
   );

@@ -1,7 +1,33 @@
 # graphql/files/notification.graphql
 
-query GetUserNotifications($userEmail: String!) {
-  getUserNotifications(userEmail: $userEmail) {
+query GetUserNotifications(
+  $userEmail: String!
+  $search: String
+  $status: NotificationStatus
+  $take: Int
+  $skip: Int
+) {
+  getUserNotifications(
+    userEmail: $userEmail
+    search: $search
+    status: $status
+    take: $take
+    skip: $skip
+  ) {
+    id
+    type
+    message
+    status
+    priority
+    createdAt
+    updatedAt
+  }
+}
+
+# dropdown: badge אמיתי + 5 אחרונות בקריאה אחת
+query GetNotificationsDropdown($userEmail: String!) {
+  getUnreadNotificationsCount(userEmail: $userEmail)
+  getUserNotifications(userEmail: $userEmail, take: 5) {
     id
     type
     message
@@ -16,6 +42,56 @@ mutation MarkNotificationAsRead($id: String!) {
   markNotificationAsRead(id: $id) {
     id
     status
+    updatedAt
+  }
+}
+
+mutation MarkAllNotificationsAsRead($userEmail: String!, $search: String) {
+  markAllNotificationsAsRead(userEmail: $userEmail, search: $search)
+}
+
+mutation UpdateNotification(
+  $id: String!
+  $message: String
+  $status: NotificationStatus
+  $priority: NotificationPriority
+) {
+  updateNotification(id: $id, message: $message, status: $status, priority: $priority) {
+    id
+    message
+    status
+    priority
+    updatedAt
+  }
+}
+
+mutation DeleteNotification($id: String!) {
+  deleteNotification(id: $id) {
+    id
+  }
+}
+
+mutation AddNotification(
+  $userEmail: String!
+  $type: String!
+  $message: String!
+  $priority: NotificationPriority
+  $status: NotificationStatus
+) {
+  addNotification(
+    userEmail: $userEmail
+    type: $type
+    message: $message
+    priority: $priority
+    status: $status
+  ) {
+    id
+    userEmail
+    type
+    message
+    status
+    priority
+    createdAt
     updatedAt
   }
 }

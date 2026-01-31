@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { ReadonlyURLSearchParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { useClient, useQuery, type OperationResult } from "urql";
+import { useClient, useQuery, type OperationResult } from "@urql/next";;
 import gql from "graphql-tag";
 import { HiOutlineSearch, HiOutlineUpload } from "react-icons/hi";
 import { HiChevronDown } from "react-icons/hi2";

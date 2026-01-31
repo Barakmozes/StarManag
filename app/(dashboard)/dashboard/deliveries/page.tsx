@@ -1,18 +1,10 @@
+import Container from "@/app/components/Common/Container";
+import DeliveriesTable from "./DeliveriesTable";
 
-
-import Container from '@/app/components/Common/Container'
-import DeliveriesTable from './DeliveriesTable'
-
-
-const AdminDeliveries = () => {
+export default function DeliveriesPage() {
   return (
     <Container>
-
-      <DeliveriesTable/>
+      <DeliveriesTable />
     </Container>
-
-   
-  )
+  );
 }
-
-export default AdminDeliveries

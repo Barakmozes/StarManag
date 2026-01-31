@@ -1,8 +1,9 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -273,7 +274,15 @@ model Order {
 
   // Indexes
   @@index([userEmail])
-  @@index([tableId])
+ 
+    // Indexes (Dashboard + Analytics)
+  @@index([orderDate, status], map: "order_orderDate_status_idx")
+  @@index([userEmail, orderDate], map: "order_userEmail_orderDate_idx")
+  @@index([status, orderDate], map: "order_status_orderDate_idx")
+
+  // Existing
+  @@index([tableId], map: "order_tableId_idx")
+
 }
 
 model Delivery {

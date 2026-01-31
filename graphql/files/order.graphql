@@ -1,5 +1,11 @@
-query GetOrders($first: Int, $after: ID) {
-  getOrders(first: $first, after: $after) {
+query GetOrders(
+  $first: Int
+  $after: ID
+  $search: String
+  $statusIn: [OrderStatus!]
+  $paid: Boolean
+) {
+  getOrders(first: $first, after: $after, search: $search, statusIn: $statusIn, paid: $paid) {
     pageInfo {
       endCursor
       hasNextPage
@@ -7,23 +13,34 @@ query GetOrders($first: Int, $after: ID) {
     edges {
       cursor
       node {
-        cart
+        id
+        orderNumber
+        orderDate
+        deliveryTime
+        pickupTime
+
+        userName
+        userEmail
+        userPhone
+
+        paymentToken
+        paid
+
         deliveryAddress
         deliveryFee
-        deliveryTime
-        discount
-        id
-        note
-        orderDate
-        orderNumber
-        paid
-        paymentToken
         serviceFee
-        status
+        discount
         total
-        userEmail
-        userName
-        userPhone
+
+        status
+        note
+        specialNotes
+
+        preOrder
+        tableId
+
+        cart
+        items
       }
     }
   }
@@ -42,6 +59,12 @@ mutation AddOrder(
   $discount: Float
   $note: String
   $paymentToken: String
+
+  $items: JSON
+  $preOrder: Boolean
+  $pickupTime: DateTime
+  $specialNotes: String
+  $tableId: String
 ) {
   addOrder(
     cart: $cart
@@ -56,25 +79,24 @@ mutation AddOrder(
     discount: $discount
     note: $note
     paymentToken: $paymentToken
+
+    items: $items
+    preOrder: $preOrder
+    pickupTime: $pickupTime
+    specialNotes: $specialNotes
+    tableId: $tableId
   ) {
     id
   }
 }
 
-mutation EditOrderOnPayment(
-  $editOrderOnPaymentId: String!
-  $paymentToken: String
-) {
+mutation EditOrderOnPayment($editOrderOnPaymentId: String!, $paymentToken: String) {
   editOrderOnPayment(id: $editOrderOnPaymentId, paymentToken: $paymentToken) {
     id
   }
 }
 
-mutation EditOrder(
-  $editOrderId: String!
-  $status: OrderStatus!
-  $deliveryTime: DateTime
-) {
+mutation EditOrder($editOrderId: String!, $status: OrderStatus!, $deliveryTime: DateTime) {
   editOrder(id: $editOrderId, status: $status, deliveryTime: $deliveryTime) {
     id
   }

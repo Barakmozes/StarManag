@@ -57,6 +57,69 @@ export type Category = {
   title: Scalars['String']['output'];
 };
 
+export type DashboardKpis = {
+  __typename?: 'DashboardKpis';
+  avgOrderValue: Scalars['Float']['output'];
+  canceledOrders: Scalars['Int']['output'];
+  categoriesCount: Scalars['Int']['output'];
+  completedOrders: Scalars['Int']['output'];
+  grossRevenue: Scalars['Float']['output'];
+  menusCount: Scalars['Int']['output'];
+  newCustomers: Scalars['Int']['output'];
+  ordersCount: Scalars['Int']['output'];
+  tablesCount: Scalars['Int']['output'];
+  uniqueCustomers: Scalars['Int']['output'];
+  usersCount: Scalars['Int']['output'];
+};
+
+export type DashboardKpisCompare = {
+  __typename?: 'DashboardKpisCompare';
+  current: DashboardKpis;
+  currentFrom: Scalars['DateTime']['output'];
+  currentTo: Scalars['DateTime']['output'];
+  previous: DashboardKpis;
+  previousFrom: Scalars['DateTime']['output'];
+  previousTo: Scalars['DateTime']['output'];
+};
+
+export type DashboardRevenueCompare = {
+  __typename?: 'DashboardRevenueCompare';
+  currentFrom: Scalars['DateTime']['output'];
+  currentTo: Scalars['DateTime']['output'];
+  points: Array<DashboardRevenueComparePoint>;
+  previousFrom: Scalars['DateTime']['output'];
+  previousTo: Scalars['DateTime']['output'];
+};
+
+export type DashboardRevenueComparePoint = {
+  __typename?: 'DashboardRevenueComparePoint';
+  bucket: Scalars['DateTime']['output'];
+  orders: Scalars['Int']['output'];
+  previousBucket?: Maybe<Scalars['DateTime']['output']>;
+  previousOrders: Scalars['Int']['output'];
+  previousRevenue: Scalars['Float']['output'];
+  revenue: Scalars['Float']['output'];
+};
+
+export type DashboardRevenuePoint = {
+  __typename?: 'DashboardRevenuePoint';
+  bucket: Scalars['DateTime']['output'];
+  orders: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+};
+
+export type Delivery = {
+  __typename?: 'Delivery';
+  createdAt: Scalars['DateTime']['output'];
+  driverEmail: Scalars['String']['output'];
+  driverName: Scalars['String']['output'];
+  driverPhone: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  order: Order;
+  orderNum: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type Favorite = {
   __typename?: 'Favorite';
   id: Scalars['String']['output'];
@@ -105,6 +168,7 @@ export type Mutation = {
   addTable: Table;
   addTableUsage: TableUsage;
   addWaitlistEntry: Waitlist;
+  assignDriverToOrder: Delivery;
   callWaitlistEntry: Waitlist;
   cancelReservation: Reservation;
   cancelWaitlistEntry: Waitlist;
@@ -130,8 +194,12 @@ export type Mutation = {
   editTable: Table;
   editUserRole: User;
   incrementUsageCount: TableUsage;
+  markAllNotificationsAsRead: Scalars['Int']['output'];
+  markDeliveryDelivered: Order;
+  markDeliveryReady: Order;
   markNotificationAsRead: Notification;
   movePositionTable: Table;
+  removeDriverFromOrder: Scalars['Boolean']['output'];
   removeFavorite: Favorite;
   removeWaitlistEntry: Waitlist;
   seatWaitlistEntry: Waitlist;
@@ -199,10 +267,15 @@ export type MutationAddOrderArgs = {
   deliveryAddress: Scalars['String']['input'];
   deliveryFee: Scalars['Float']['input'];
   discount?: InputMaybe<Scalars['Float']['input']>;
+  items?: InputMaybe<Scalars['JSON']['input']>;
   note?: InputMaybe<Scalars['String']['input']>;
   orderNumber: Scalars['String']['input'];
   paymentToken?: InputMaybe<Scalars['String']['input']>;
+  pickupTime?: InputMaybe<Scalars['DateTime']['input']>;
+  preOrder?: InputMaybe<Scalars['Boolean']['input']>;
   serviceFee: Scalars['Float']['input'];
+  specialNotes?: InputMaybe<Scalars['String']['input']>;
+  tableId?: InputMaybe<Scalars['String']['input']>;
   total: Scalars['Float']['input'];
   userEmail: Scalars['String']['input'];
   userName: Scalars['String']['input'];
@@ -275,6 +348,14 @@ export type MutationAddWaitlistEntryArgs = {
   numOfDiners: Scalars['Int']['input'];
   priority?: InputMaybe<Scalars['Int']['input']>;
   userEmail: Scalars['String']['input'];
+};
+
+
+export type MutationAssignDriverToOrderArgs = {
+  driverEmail: Scalars['String']['input'];
+  driverName: Scalars['String']['input'];
+  driverPhone: Scalars['String']['input'];
+  orderNumber: Scalars['String']['input'];
 };
 
 
@@ -445,6 +526,22 @@ export type MutationIncrementUsageCountArgs = {
 };
 
 
+export type MutationMarkAllNotificationsAsReadArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type MutationMarkDeliveryDeliveredArgs = {
+  orderNumber: Scalars['String']['input'];
+};
+
+
+export type MutationMarkDeliveryReadyArgs = {
+  orderNumber: Scalars['String']['input'];
+};
+
+
 export type MutationMarkNotificationAsReadArgs = {
   id: Scalars['String']['input'];
 };
@@ -453,6 +550,11 @@ export type MutationMarkNotificationAsReadArgs = {
 export type MutationMovePositionTableArgs = {
   id: Scalars['String']['input'];
   position: Scalars['JSON']['input'];
+};
+
+
+export type MutationRemoveDriverFromOrderArgs = {
+  orderNumber: Scalars['String']['input'];
 };
 
 
@@ -526,14 +628,12 @@ export type Notification = {
   userEmail: Scalars['String']['output'];
 };
 
-/** The priority of a notification */
 export enum NotificationPriority {
   High = 'HIGH',
   Low = 'LOW',
   Normal = 'NORMAL'
 }
 
-/** The status of a notification */
 export enum NotificationStatus {
   Read = 'READ',
   Unread = 'UNREAD'
@@ -543,17 +643,22 @@ export type Order = {
   __typename?: 'Order';
   cart: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
+  delivery?: Maybe<Delivery>;
   deliveryAddress: Scalars['String']['output'];
   deliveryFee: Scalars['Float']['output'];
   deliveryTime?: Maybe<Scalars['DateTime']['output']>;
   discount?: Maybe<Scalars['Float']['output']>;
   id: Scalars['String']['output'];
+  items?: Maybe<Scalars['JSON']['output']>;
   note?: Maybe<Scalars['String']['output']>;
   orderDate: Scalars['DateTime']['output'];
   orderNumber: Scalars['String']['output'];
   paid: Scalars['Boolean']['output'];
   paymentToken?: Maybe<Scalars['String']['output']>;
+  pickupTime?: Maybe<Scalars['DateTime']['output']>;
+  preOrder: Scalars['Boolean']['output'];
   serviceFee: Scalars['Float']['output'];
+  specialNotes?: Maybe<Scalars['String']['output']>;
   status: OrderStatus;
   table?: Maybe<Table>;
   tableId?: Maybe<Scalars['String']['output']>;
@@ -605,6 +710,11 @@ export type Query = {
   getCategories: Array<Category>;
   getCategory: Category;
   getChildAreas: Array<Area>;
+  getDashboardKpis: DashboardKpis;
+  getDashboardKpisCompare: DashboardKpisCompare;
+  getDashboardRevenue: Array<DashboardRevenuePoint>;
+  getDashboardRevenueCompare: DashboardRevenueCompare;
+  getDeliveryOrders: QueryGetDeliveryOrdersConnection;
   getFavorites: Array<Favorite>;
   getGridConfig: GridConfig;
   getGridConfigByArea?: Maybe<GridConfig>;
@@ -629,6 +739,7 @@ export type Query = {
   getTableUsage: TableUsage;
   getTableUsageByTable?: Maybe<TableUsage>;
   getTables: Array<Table>;
+  getUnreadNotificationsCount: Scalars['Int']['output'];
   getUser: User;
   getUserFavorites: Favorite;
   getUserNotifications: Array<Notification>;
@@ -658,6 +769,42 @@ export type QueryGetCategoryArgs = {
 
 export type QueryGetChildAreasArgs = {
   parentId: Scalars['String']['input'];
+};
+
+
+export type QueryGetDashboardKpisArgs = {
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetDashboardKpisCompareArgs = {
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetDashboardRevenueArgs = {
+  from: Scalars['DateTime']['input'];
+  groupBy: RevenueGroupBy;
+  to: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetDashboardRevenueCompareArgs = {
+  from: Scalars['DateTime']['input'];
+  groupBy: RevenueGroupBy;
+  to: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetDeliveryOrdersArgs = {
+  after?: InputMaybe<Scalars['ID']['input']>;
+  before?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  statusIn?: InputMaybe<Array<OrderStatus>>;
 };
 
 
@@ -695,6 +842,15 @@ export type QueryGetNotificationArgs = {
 };
 
 
+export type QueryGetNotificationsArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<NotificationStatus>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryGetOrderArgs = {
   id: Scalars['String']['input'];
 };
@@ -704,7 +860,14 @@ export type QueryGetOrdersArgs = {
   after?: InputMaybe<Scalars['ID']['input']>;
   before?: InputMaybe<Scalars['ID']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  from?: InputMaybe<Scalars['DateTime']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  paid?: InputMaybe<Scalars['Boolean']['input']>;
+  preOrder?: InputMaybe<Scalars['Boolean']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  statusIn?: InputMaybe<Array<OrderStatus>>;
+  tableId?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 
@@ -759,6 +922,11 @@ export type QueryGetTableUsageByTableArgs = {
 };
 
 
+export type QueryGetUnreadNotificationsCountArgs = {
+  userEmail: Scalars['String']['input'];
+};
+
+
 export type QueryGetUserArgs = {
   email: Scalars['String']['input'];
 };
@@ -770,6 +938,10 @@ export type QueryGetUserFavoritesArgs = {
 
 
 export type QueryGetUserNotificationsArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<NotificationStatus>;
+  take?: InputMaybe<Scalars['Int']['input']>;
   userEmail: Scalars['String']['input'];
 };
 
@@ -791,6 +963,18 @@ export type QueryGetWaitlistArgs = {
 
 export type QuerySearchRestaurantsArgs = {
   keyword: Scalars['String']['input'];
+};
+
+export type QueryGetDeliveryOrdersConnection = {
+  __typename?: 'QueryGetDeliveryOrdersConnection';
+  edges: Array<Maybe<QueryGetDeliveryOrdersConnectionEdge>>;
+  pageInfo: PageInfo;
+};
+
+export type QueryGetDeliveryOrdersConnectionEdge = {
+  __typename?: 'QueryGetDeliveryOrdersConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: Order;
 };
 
 export type QueryGetMenusConnection = {
@@ -856,6 +1040,12 @@ export type Restaurant = {
   serviceFee: Scalars['Float']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
+
+export enum RevenueGroupBy {
+  Day = 'DAY',
+  Month = 'MONTH',
+  Week = 'WEEK'
+}
 
 /** User roles in the system */
 export enum Role {
@@ -1033,6 +1223,33 @@ export type DeleteCategoryMutationVariables = Exact<{
 
 export type DeleteCategoryMutation = { __typename?: 'Mutation', deleteCategory: { __typename?: 'Category', id: string } };
 
+export type GetDeliveryOrdersQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  statusIn?: InputMaybe<Array<OrderStatus> | OrderStatus>;
+}>;
+
+
+export type GetDeliveryOrdersQuery = { __typename?: 'Query', getDeliveryOrders: { __typename?: 'QueryGetDeliveryOrdersConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetDeliveryOrdersConnectionEdge', cursor: string, node: { __typename?: 'Order', id: string, orderNumber: string, status: OrderStatus, orderDate: any, deliveryTime?: any | null, deliveryAddress: string, userName: string, userEmail: string, userPhone: string, total: number, delivery?: { __typename?: 'Delivery', id: string, orderNum: string, driverName: string, driverEmail: string, driverPhone: string } | null } } | null> } };
+
+export type AssignDriverToOrderMutationVariables = Exact<{
+  orderNumber: Scalars['String']['input'];
+  driverName: Scalars['String']['input'];
+  driverEmail: Scalars['String']['input'];
+  driverPhone: Scalars['String']['input'];
+}>;
+
+
+export type AssignDriverToOrderMutation = { __typename?: 'Mutation', assignDriverToOrder: { __typename?: 'Delivery', id: string, orderNum: string, driverName: string, driverEmail: string, driverPhone: string } };
+
+export type RemoveDriverFromOrderMutationVariables = Exact<{
+  orderNumber: Scalars['String']['input'];
+}>;
+
+
+export type RemoveDriverFromOrderMutation = { __typename?: 'Mutation', removeDriverFromOrder: boolean };
+
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
 }>;
@@ -1112,10 +1329,21 @@ export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavor
 
 export type GetUserNotificationsQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<NotificationStatus>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
 export type GetUserNotificationsQuery = { __typename?: 'Query', getUserNotifications: Array<{ __typename?: 'Notification', id: string, type: string, message: string, status: NotificationStatus, priority: NotificationPriority, createdAt: any, updatedAt: any }> };
+
+export type GetNotificationsDropdownQueryVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+}>;
+
+
+export type GetNotificationsDropdownQuery = { __typename?: 'Query', getUnreadNotificationsCount: number, getUserNotifications: Array<{ __typename?: 'Notification', id: string, type: string, message: string, status: NotificationStatus, priority: NotificationPriority, createdAt: any, updatedAt: any }> };
 
 export type MarkNotificationAsReadMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -1124,13 +1352,52 @@ export type MarkNotificationAsReadMutationVariables = Exact<{
 
 export type MarkNotificationAsReadMutation = { __typename?: 'Mutation', markNotificationAsRead: { __typename?: 'Notification', id: string, status: NotificationStatus, updatedAt: any } };
 
-export type GetOrdersQueryVariables = Exact<{
-  first?: InputMaybe<Scalars['Int']['input']>;
-  after?: InputMaybe<Scalars['ID']['input']>;
+export type MarkAllNotificationsAsReadMutationVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetOrdersQuery = { __typename?: 'Query', getOrders: { __typename?: 'QueryGetOrdersConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetOrdersConnectionEdge', cursor: string, node: { __typename?: 'Order', cart: any, deliveryAddress: string, deliveryFee: number, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userEmail: string, userName: string, userPhone: string } } | null> } };
+export type MarkAllNotificationsAsReadMutation = { __typename?: 'Mutation', markAllNotificationsAsRead: number };
+
+export type UpdateNotificationMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<NotificationStatus>;
+  priority?: InputMaybe<NotificationPriority>;
+}>;
+
+
+export type UpdateNotificationMutation = { __typename?: 'Mutation', updateNotification: { __typename?: 'Notification', id: string, message: string, status: NotificationStatus, priority: NotificationPriority, updatedAt: any } };
+
+export type DeleteNotificationMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DeleteNotificationMutation = { __typename?: 'Mutation', deleteNotification: { __typename?: 'Notification', id: string } };
+
+export type AddNotificationMutationVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  priority?: InputMaybe<NotificationPriority>;
+  status?: InputMaybe<NotificationStatus>;
+}>;
+
+
+export type AddNotificationMutation = { __typename?: 'Mutation', addNotification: { __typename?: 'Notification', id: string, userEmail: string, type: string, message: string, status: NotificationStatus, priority: NotificationPriority, createdAt: any, updatedAt: any } };
+
+export type GetOrdersQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  statusIn?: InputMaybe<Array<OrderStatus> | OrderStatus>;
+  paid?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetOrdersQuery = { __typename?: 'Query', getOrders: { __typename?: 'QueryGetOrdersConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetOrdersConnectionEdge', cursor: string, node: { __typename?: 'Order', id: string, orderNumber: string, orderDate: any, deliveryTime?: any | null, pickupTime?: any | null, userName: string, userEmail: string, userPhone: string, paymentToken?: string | null, paid: boolean, deliveryAddress: string, deliveryFee: number, serviceFee: number, discount?: number | null, total: number, status: OrderStatus, note?: string | null, specialNotes?: string | null, preOrder: boolean, tableId?: string | null, cart: any, items?: any | null } } | null> } };
 
 export type AddOrderMutationVariables = Exact<{
   cart: Scalars['JSON']['input'];
@@ -1145,6 +1412,11 @@ export type AddOrderMutationVariables = Exact<{
   discount?: InputMaybe<Scalars['Float']['input']>;
   note?: InputMaybe<Scalars['String']['input']>;
   paymentToken?: InputMaybe<Scalars['String']['input']>;
+  items?: InputMaybe<Scalars['JSON']['input']>;
+  preOrder?: InputMaybe<Scalars['Boolean']['input']>;
+  pickupTime?: InputMaybe<Scalars['DateTime']['input']>;
+  specialNotes?: InputMaybe<Scalars['String']['input']>;
+  tableId?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1348,6 +1620,40 @@ export type EditProfileMutationVariables = Exact<{
 
 export type EditProfileMutation = { __typename?: 'Mutation', editProfile: { __typename?: 'Profile', id: string } };
 
+export type GetDashboardKpisQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetDashboardKpisQuery = { __typename?: 'Query', getDashboardKpis: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number } };
+
+export type GetDashboardRevenueQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  groupBy: RevenueGroupBy;
+}>;
+
+
+export type GetDashboardRevenueQuery = { __typename?: 'Query', getDashboardRevenue: Array<{ __typename?: 'DashboardRevenuePoint', bucket: any, revenue: number, orders: number }> };
+
+export type GetDashboardKpisCompareQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetDashboardKpisCompareQuery = { __typename?: 'Query', getDashboardKpisCompare: { __typename?: 'DashboardKpisCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, current: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number }, previous: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number } } };
+
+export type GetDashboardRevenueCompareQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  groupBy: RevenueGroupBy;
+}>;
+
+
+export type GetDashboardRevenueCompareQuery = { __typename?: 'Query', getDashboardRevenueCompare: { __typename?: 'DashboardRevenueCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, points: Array<{ __typename?: 'DashboardRevenueComparePoint', bucket: any, revenue: number, orders: number, previousBucket?: any | null, previousRevenue: number, previousOrders: number }> } };
+
 
 export const GetAreaDocument = gql`
     query GetArea($getAreaId: String!) {
@@ -1515,6 +1821,76 @@ export const DeleteCategoryDocument = gql`
 export function useDeleteCategoryMutation() {
   return Urql.useMutation<DeleteCategoryMutation, DeleteCategoryMutationVariables>(DeleteCategoryDocument);
 };
+export const GetDeliveryOrdersDocument = gql`
+    query GetDeliveryOrders($first: Int, $after: ID, $search: String, $statusIn: [OrderStatus!]) {
+  getDeliveryOrders(
+    first: $first
+    after: $after
+    search: $search
+    statusIn: $statusIn
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        orderNumber
+        status
+        orderDate
+        deliveryTime
+        deliveryAddress
+        userName
+        userEmail
+        userPhone
+        total
+        delivery {
+          id
+          orderNum
+          driverName
+          driverEmail
+          driverPhone
+        }
+      }
+    }
+  }
+}
+    `;
+
+export function useGetDeliveryOrdersQuery(options?: Omit<Urql.UseQueryArgs<GetDeliveryOrdersQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDeliveryOrdersQuery, GetDeliveryOrdersQueryVariables>({ query: GetDeliveryOrdersDocument, ...options });
+};
+export const AssignDriverToOrderDocument = gql`
+    mutation AssignDriverToOrder($orderNumber: String!, $driverName: String!, $driverEmail: String!, $driverPhone: String!) {
+  assignDriverToOrder(
+    orderNumber: $orderNumber
+    driverName: $driverName
+    driverEmail: $driverEmail
+    driverPhone: $driverPhone
+  ) {
+    id
+    orderNum
+    driverName
+    driverEmail
+    driverPhone
+  }
+}
+    `;
+
+export function useAssignDriverToOrderMutation() {
+  return Urql.useMutation<AssignDriverToOrderMutation, AssignDriverToOrderMutationVariables>(AssignDriverToOrderDocument);
+};
+export const RemoveDriverFromOrderDocument = gql`
+    mutation RemoveDriverFromOrder($orderNumber: String!) {
+  removeDriverFromOrder(orderNumber: $orderNumber)
+}
+    `;
+
+export function useRemoveDriverFromOrderMutation() {
+  return Urql.useMutation<RemoveDriverFromOrderMutation, RemoveDriverFromOrderMutationVariables>(RemoveDriverFromOrderDocument);
+};
 export const GetUserFavoritesDocument = gql`
     query GetUserFavorites($userEmail: String!) {
   getUserFavorites(userEmail: $userEmail) {
@@ -1656,8 +2032,14 @@ export function useGetMenuUserFavoritesQuery(options: Omit<Urql.UseQueryArgs<Get
   return Urql.useQuery<GetMenuUserFavoritesQuery, GetMenuUserFavoritesQueryVariables>({ query: GetMenuUserFavoritesDocument, ...options });
 };
 export const GetUserNotificationsDocument = gql`
-    query GetUserNotifications($userEmail: String!) {
-  getUserNotifications(userEmail: $userEmail) {
+    query GetUserNotifications($userEmail: String!, $search: String, $status: NotificationStatus, $take: Int, $skip: Int) {
+  getUserNotifications(
+    userEmail: $userEmail
+    search: $search
+    status: $status
+    take: $take
+    skip: $skip
+  ) {
     id
     type
     message
@@ -1672,6 +2054,24 @@ export const GetUserNotificationsDocument = gql`
 export function useGetUserNotificationsQuery(options: Omit<Urql.UseQueryArgs<GetUserNotificationsQueryVariables>, 'query'>) {
   return Urql.useQuery<GetUserNotificationsQuery, GetUserNotificationsQueryVariables>({ query: GetUserNotificationsDocument, ...options });
 };
+export const GetNotificationsDropdownDocument = gql`
+    query GetNotificationsDropdown($userEmail: String!) {
+  getUnreadNotificationsCount(userEmail: $userEmail)
+  getUserNotifications(userEmail: $userEmail, take: 5) {
+    id
+    type
+    message
+    status
+    priority
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetNotificationsDropdownQuery(options: Omit<Urql.UseQueryArgs<GetNotificationsDropdownQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetNotificationsDropdownQuery, GetNotificationsDropdownQueryVariables>({ query: GetNotificationsDropdownDocument, ...options });
+};
 export const MarkNotificationAsReadDocument = gql`
     mutation MarkNotificationAsRead($id: String!) {
   markNotificationAsRead(id: $id) {
@@ -1685,9 +2085,79 @@ export const MarkNotificationAsReadDocument = gql`
 export function useMarkNotificationAsReadMutation() {
   return Urql.useMutation<MarkNotificationAsReadMutation, MarkNotificationAsReadMutationVariables>(MarkNotificationAsReadDocument);
 };
+export const MarkAllNotificationsAsReadDocument = gql`
+    mutation MarkAllNotificationsAsRead($userEmail: String!, $search: String) {
+  markAllNotificationsAsRead(userEmail: $userEmail, search: $search)
+}
+    `;
+
+export function useMarkAllNotificationsAsReadMutation() {
+  return Urql.useMutation<MarkAllNotificationsAsReadMutation, MarkAllNotificationsAsReadMutationVariables>(MarkAllNotificationsAsReadDocument);
+};
+export const UpdateNotificationDocument = gql`
+    mutation UpdateNotification($id: String!, $message: String, $status: NotificationStatus, $priority: NotificationPriority) {
+  updateNotification(
+    id: $id
+    message: $message
+    status: $status
+    priority: $priority
+  ) {
+    id
+    message
+    status
+    priority
+    updatedAt
+  }
+}
+    `;
+
+export function useUpdateNotificationMutation() {
+  return Urql.useMutation<UpdateNotificationMutation, UpdateNotificationMutationVariables>(UpdateNotificationDocument);
+};
+export const DeleteNotificationDocument = gql`
+    mutation DeleteNotification($id: String!) {
+  deleteNotification(id: $id) {
+    id
+  }
+}
+    `;
+
+export function useDeleteNotificationMutation() {
+  return Urql.useMutation<DeleteNotificationMutation, DeleteNotificationMutationVariables>(DeleteNotificationDocument);
+};
+export const AddNotificationDocument = gql`
+    mutation AddNotification($userEmail: String!, $type: String!, $message: String!, $priority: NotificationPriority, $status: NotificationStatus) {
+  addNotification(
+    userEmail: $userEmail
+    type: $type
+    message: $message
+    priority: $priority
+    status: $status
+  ) {
+    id
+    userEmail
+    type
+    message
+    status
+    priority
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useAddNotificationMutation() {
+  return Urql.useMutation<AddNotificationMutation, AddNotificationMutationVariables>(AddNotificationDocument);
+};
 export const GetOrdersDocument = gql`
-    query GetOrders($first: Int, $after: ID) {
-  getOrders(first: $first, after: $after) {
+    query GetOrders($first: Int, $after: ID, $search: String, $statusIn: [OrderStatus!], $paid: Boolean) {
+  getOrders(
+    first: $first
+    after: $after
+    search: $search
+    statusIn: $statusIn
+    paid: $paid
+  ) {
     pageInfo {
       endCursor
       hasNextPage
@@ -1695,23 +2165,28 @@ export const GetOrdersDocument = gql`
     edges {
       cursor
       node {
-        cart
+        id
+        orderNumber
+        orderDate
+        deliveryTime
+        pickupTime
+        userName
+        userEmail
+        userPhone
+        paymentToken
+        paid
         deliveryAddress
         deliveryFee
-        deliveryTime
-        discount
-        id
-        note
-        orderDate
-        orderNumber
-        paid
-        paymentToken
         serviceFee
-        status
+        discount
         total
-        userEmail
-        userName
-        userPhone
+        status
+        note
+        specialNotes
+        preOrder
+        tableId
+        cart
+        items
       }
     }
   }
@@ -1722,7 +2197,7 @@ export function useGetOrdersQuery(options?: Omit<Urql.UseQueryArgs<GetOrdersQuer
   return Urql.useQuery<GetOrdersQuery, GetOrdersQueryVariables>({ query: GetOrdersDocument, ...options });
 };
 export const AddOrderDocument = gql`
-    mutation AddOrder($cart: JSON!, $deliveryAddress: String!, $deliveryFee: Float!, $orderNumber: String!, $serviceFee: Float!, $total: Float!, $userEmail: String!, $userName: String!, $userPhone: String!, $discount: Float, $note: String, $paymentToken: String) {
+    mutation AddOrder($cart: JSON!, $deliveryAddress: String!, $deliveryFee: Float!, $orderNumber: String!, $serviceFee: Float!, $total: Float!, $userEmail: String!, $userName: String!, $userPhone: String!, $discount: Float, $note: String, $paymentToken: String, $items: JSON, $preOrder: Boolean, $pickupTime: DateTime, $specialNotes: String, $tableId: String) {
   addOrder(
     cart: $cart
     deliveryAddress: $deliveryAddress
@@ -1736,6 +2211,11 @@ export const AddOrderDocument = gql`
     discount: $discount
     note: $note
     paymentToken: $paymentToken
+    items: $items
+    preOrder: $preOrder
+    pickupTime: $pickupTime
+    specialNotes: $specialNotes
+    tableId: $tableId
   ) {
     id
   }
@@ -2159,4 +2639,100 @@ export const EditProfileDocument = gql`
 
 export function useEditProfileMutation() {
   return Urql.useMutation<EditProfileMutation, EditProfileMutationVariables>(EditProfileDocument);
+};
+export const GetDashboardKpisDocument = gql`
+    query GetDashboardKpis($from: DateTime!, $to: DateTime!) {
+  getDashboardKpis(from: $from, to: $to) {
+    grossRevenue
+    ordersCount
+    completedOrders
+    canceledOrders
+    avgOrderValue
+    menusCount
+    categoriesCount
+    tablesCount
+    usersCount
+    uniqueCustomers
+    newCustomers
+  }
+}
+    `;
+
+export function useGetDashboardKpisQuery(options: Omit<Urql.UseQueryArgs<GetDashboardKpisQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardKpisQuery, GetDashboardKpisQueryVariables>({ query: GetDashboardKpisDocument, ...options });
+};
+export const GetDashboardRevenueDocument = gql`
+    query GetDashboardRevenue($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
+  getDashboardRevenue(from: $from, to: $to, groupBy: $groupBy) {
+    bucket
+    revenue
+    orders
+  }
+}
+    `;
+
+export function useGetDashboardRevenueQuery(options: Omit<Urql.UseQueryArgs<GetDashboardRevenueQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardRevenueQuery, GetDashboardRevenueQueryVariables>({ query: GetDashboardRevenueDocument, ...options });
+};
+export const GetDashboardKpisCompareDocument = gql`
+    query GetDashboardKpisCompare($from: DateTime!, $to: DateTime!) {
+  getDashboardKpisCompare(from: $from, to: $to) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    current {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+      uniqueCustomers
+      newCustomers
+    }
+    previous {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+      uniqueCustomers
+      newCustomers
+    }
+  }
+}
+    `;
+
+export function useGetDashboardKpisCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardKpisCompareQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardKpisCompareQuery, GetDashboardKpisCompareQueryVariables>({ query: GetDashboardKpisCompareDocument, ...options });
+};
+export const GetDashboardRevenueCompareDocument = gql`
+    query GetDashboardRevenueCompare($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
+  getDashboardRevenueCompare(from: $from, to: $to, groupBy: $groupBy) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    points {
+      bucket
+      revenue
+      orders
+      previousBucket
+      previousRevenue
+      previousOrders
+    }
+  }
+}
+    `;
+
+export function useGetDashboardRevenueCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardRevenueCompareQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardRevenueCompareQuery, GetDashboardRevenueCompareQueryVariables>({ query: GetDashboardRevenueCompareDocument, ...options });
 };
