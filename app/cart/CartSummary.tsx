@@ -270,6 +270,23 @@ const CartSummary = ({ user }: Props) => {
           </div>
         </div>
       </>
+             {/* PayPlus test card */}
+          <div className="space-y-2">
+             <h3 className="font-semibold text-slate-800">כרטיס לבדיקה
+            </h3>
+            <h3 className="font-semibold text-slate-800">PayPlus test card .
+            </h3>
+            <p className="text-slate-600">
+              Use the following card details only for testing purchases via PayPlus (test/sandbox):
+                            השתמש בכרטיס זה כדי לבדוק תשלום להזמנה
+            </p>
+
+            <div className="rounded-md bg-slate-100 p-3 text-xs font-mono text-slate-700 space-y-1">
+              <div>Card number: 5326140280779844</div>
+              <div>Validity: 05 / 2026</div>
+              <div>CVV (3 digits): 000</div>
+            </div>
+          </div>
     </div>
   );
 };

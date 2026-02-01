@@ -57,12 +57,14 @@ type CategoryOption = {
    * IMPORTANT:
    * Your current Menu query returns Menu.category as a STRING (legacy),
    * so we use Category.title to match it.
-   *
-   * If/when your Menu nodes include categoryId or Category { id },
-   * you can switch this to `filterValue: c.id`.
    */
   filterValue: string | "all";
+  /** Precomputed: remote image? */
+  isRemote: boolean;
 };
+
+const isNonEmptyString = (val: unknown): val is string =>
+  typeof val === "string" && val.trim().length > 0;
 
 function isRemoteUrl(src: string) {
   return /^https?:\/\//i.test(src);
@@ -86,10 +88,113 @@ function buildNextUrl(pathname: string, currentQuery: string, nextCategory: stri
   return qs ? `${pathname}?${qs}` : pathname;
 }
 
+/**
+ * Build fallback categories once (static data) to avoid rework on every render.
+ * Keeps your existing "design" and mapping behavior intact.
+ */
+const FALLBACK_CATEGORIES: CategoryOption[] = (() => {
+  const list = (categoriesData as any[])
+    .filter((c) => isNonEmptyString(c?.title))
+    .map((c) => {
+      // Support multiple possible field names without breaking existing data shape
+      const rawImg =
+        (c?.imageSrc as string | undefined) ??
+        (c?.img as string | undefined) ??
+        (c?.image as string | undefined) ??
+        "";
+
+      const img = normalizeImgSrc(rawImg);
+      return {
+        id: String(c?.id ?? c?.title),
+        title: String(c.title),
+        img,
+        filterValue: String(c.title),
+        isRemote: isRemoteUrl(img),
+      } satisfies CategoryOption;
+    });
+
+  return list;
+})();
+
+const ALL_OPTION: CategoryOption = (() => {
+  const img = normalizeImgSrc("/img/categories/fast-food.png");
+  return {
+    id: "all",
+    title: "All",
+    img,
+    filterValue: "all",
+    isRemote: isRemoteUrl(img),
+  };
+})();
+
+/**
+ * Memoized chip so changing the active category doesn't force all chips to rerender.
+ * (Only the previously-active and newly-active chips will update.)
+ */
+const CategoryChip = React.memo(function CategoryChip({
+  option,
+  size = "sm",
+  isActive,
+  onSelect,
+}: {
+  option: CategoryOption;
+  size?: "sm" | "md";
+  isActive: boolean;
+  onSelect: (filterValue: CategoryOption["filterValue"], titleForToast?: string) => void;
+}) {
+  const base = size === "md" ? "h-20 w-20" : "h-16 w-16";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(option.filterValue, option.title)}
+      aria-pressed={isActive}
+      className={[
+        "flex flex-col items-center justify-center shrink-0 overflow-hidden rounded-full p-3 transition",
+        base,
+        isActive
+          ? "bg-green-100 ring-2 ring-green-500"
+          : "hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+      ].join(" ")}
+    >
+      <div className="h-10 w-10 flex items-center justify-center">
+        {option.img ? (
+          option.isRemote ? (
+            <img
+              src={option.img}
+              alt={`${option.title} category`}
+              className="h-10 w-10 object-contain"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <Image
+              src={option.img}
+              width={40}
+              height={40}
+              alt={`${option.title} category`}
+              className="h-10 w-10 object-contain"
+            />
+          )
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-slate-200" aria-hidden="true" />
+        )}
+      </div>
+
+      <div className="whitespace-nowrap text-xs mt-1">
+        <span className={isActive ? "font-semibold text-green-800" : "text-gray-700"}>
+          {option.title}
+        </span>
+      </div>
+    </button>
+  );
+});
+
 const Categories = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString(); // important: stable primitive dependency
 
   const [isAllModalOpen, setIsAllModalOpen] = useState(false);
 
@@ -103,6 +208,7 @@ const Categories = () => {
 
   const [{ data, fetching, error }, refetch] = useQuery<GetCategoriesForHomeQuery>({
     query: GetCategoriesForHomeDocument,
+    // Keeps UI fast (cached first if available) while still updating in the background.
     requestPolicy: "cache-and-network",
   });
 
@@ -117,8 +223,6 @@ const Categories = () => {
   /**
    * Source-of-truth = URL param.
    * Keep the store aligned with ?category=...
-   *
-   * The ref prevents store updates "fighting" a click before the URL updates.
    */
   const lastUrlCategoryRef = useRef<string | null>(null);
   useEffect(() => {
@@ -138,60 +242,57 @@ const Categories = () => {
   }, [error]);
 
   const categories: CategoryOption[] = useMemo(() => {
-  const hasTitle = (t: unknown): t is string =>
-    typeof t === "string" && t.trim().length > 0;
+    const dbCats: CategoryOption[] = (data?.getCategories ?? [])
+      .filter((c): c is NonNullable<typeof c> => !!c && isNonEmptyString(c.title))
+      .map((c) => {
+        const img = normalizeImgSrc(c.img ?? "");
+        return {
+          id: c.id,
+          title: c.title,
+          desc: c.desc ?? undefined,
+          img,
+          filterValue: c.title,
+          isRemote: isRemoteUrl(img),
+        };
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
 
-  const dbCats: CategoryOption[] = (data?.getCategories ?? [])
-    .filter((c): c is NonNullable<typeof c> => !!c && hasTitle(c.title))
-    .map((c) => ({
-      id: c.id,
-      title: c.title, // ✅ string
-      desc: c.desc ?? undefined,
-      img: normalizeImgSrc(c.img ?? ""),
-      filterValue: c.title, // ✅ string
-    }))
-    .sort((a, b) => a.title.localeCompare(b.title));
+    const list = dbCats.length ? dbCats : FALLBACK_CATEGORIES;
 
-  const fallbackCats: CategoryOption[] = categoriesData
-    .filter((c): c is (typeof categoriesData)[number] & { title: string } =>
-      hasTitle(c.title)
-    )
-    .map((c) => ({
-      id: String(c.id),
-      title: c.title, // ✅ string
-      img: normalizeImgSrc((c as any).imageSrc ?? ""),
-      filterValue: c.title, // ✅ string
-    }));
-
-  const list = dbCats.length ? dbCats : fallbackCats;
-
-  return [
-    {
-      id: "all",
-      title: "All",
-      img: normalizeImgSrc("/img/categories/fast-food.png"),
-      filterValue: "all",
-    },
-    ...list,
-  ];
-}, [data?.getCategories]);
-
+    return [ALL_OPTION, ...list];
+  }, [data?.getCategories]);
 
   const setCategoryInUrl = useCallback(
     (next: string | null) => {
-      const nextUrl = buildNextUrl(pathname, searchParams.toString(), next);
+      const nextUrl = buildNextUrl(pathname, searchParamsString, next);
 
-      // Matches your project style: url mutations + router.refresh
+      // IMPORTANT perf win: `router.refresh()` is redundant after `router.replace()` navigation
+      // and causes extra work/network. Keeping only replace makes filtering much snappier.
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
-        router.refresh();
       });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParamsString]
   );
+
+  // Keep a ref of the active value so onSelectCategory stays stable (helps memoized chips)
+  const activeValue = selectedCategoryId ?? "all";
+  const activeValueRef = useRef(activeValue);
+  useEffect(() => {
+    activeValueRef.current = activeValue;
+  }, [activeValue]);
 
   const onSelectCategory = useCallback(
     (filterValue: CategoryOption["filterValue"], titleForToast?: string) => {
+      const currentActive = activeValueRef.current ?? "all";
+      const nextActive = filterValue === "all" ? "all" : filterValue;
+
+      // If user re-clicks the already active filter, avoid extra router work/toasts.
+      if (nextActive === currentActive) {
+        setIsAllModalOpen(false);
+        return;
+      }
+
       if (filterValue === "all") {
         clearCategory();
         setCategoryInUrl(null);
@@ -204,119 +305,58 @@ const Categories = () => {
 
       // Close modal if open (nice UX on mobile)
       setIsAllModalOpen(false);
-
-      // Optional: if you add an id to Menu section, you can scroll to it
-      // document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
     },
     [clearCategory, setCategory, setCategoryInUrl]
   );
 
-  const activeValue = selectedCategoryId ?? "all";
-
-  const CategoryChip = ({
-    option,
-    size = "sm",
-  }: {
-    option: CategoryOption;
-    size?: "sm" | "md";
-  }) => {
-    const isActive =
-      option.filterValue === "all"
-        ? activeValue === "all"
-        : activeValue === option.filterValue;
-
-    const base = size === "md" ? "h-20 w-20" : "h-16 w-16";
-
-    return (
-      <button
-        type="button"
-        onClick={() => onSelectCategory(option.filterValue, option.title)}
-        aria-pressed={isActive}
-        className={[
-          "flex flex-col items-center justify-center shrink-0 overflow-hidden rounded-full p-3 transition",
-          base,
-          isActive
-            ? "bg-green-100 ring-2 ring-green-500"
-            : "hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
-        ].join(" ")}
-      >
-        <div className="h-10 w-10 flex items-center justify-center">
-          {option.img ? (
-            isRemoteUrl(option.img) ? (
-              <img
-                src={option.img}
-                alt={`${option.title} category`}
-                className="h-10 w-10 object-contain"
-                loading="lazy"
-              />
-            ) : (
-              <Image
-                src={option.img}
-                width={40}
-                height={40}
-                alt={`${option.title} category`}
-                className="h-10 w-10 object-contain"
-              />
-            )
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-slate-200" aria-hidden="true" />
-          )}
-        </div>
-
-        <div className="whitespace-nowrap text-xs mt-1">
-          <span className={isActive ? "font-semibold text-green-800" : "text-gray-700"}>
-            {option.title}
-          </span>
-        </div>
-      </button>
-    );
-  };
+  const shouldShowSkeleton =
+    fetching && (!data?.getCategories || data.getCategories.length === 0);
 
   return (
     <section id="menuSection" className="my-16">
       <div className="max-w-2xl mx-auto my-5 text-center relative">
-  <h2 className="text-3xl leading-tight tracking-tight text-gray-600 sm:text-4xl">
-    Categories
-  </h2>
+        <h2 className="text-3xl leading-tight tracking-tight text-gray-600 sm:text-4xl">
+          Categories
+        </h2>
 
-  {/* subtle actions + status (top-right) */}
-  <div className="absolute -top-1 right-0 flex items-center gap-2">
-    <button
-      type="button"
-      onClick={() => setIsAllModalOpen(true)}
-      className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
+        {/* subtle actions + status (top-right) */}
+        <div className="absolute -top-1 right-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAllModalOpen(true)}
+            className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
                  decoration-gray-200 hover:decoration-gray-400 transition"
-    >
-      Browse all
-    </button>
+          >
+            Browse all
+          </button>
 
-    {activeValue !== "all" && (
-      <>
-        <span className="text-gray-300">•</span>
+          {activeValue !== "all" && (
+            <>
+              <span className="text-gray-300">•</span>
 
-        <button
-          type="button"
-          onClick={() => onSelectCategory("all", "All")}
-          className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
+              <button
+                type="button"
+                onClick={() => onSelectCategory("all", "All")}
+                className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
                      decoration-gray-200 hover:decoration-gray-400 transition"
-        >
-          Clear filter
-        </button>
+              >
+                Clear filter
+              </button>
 
-        <span className="text-gray-300">•</span>
+              <span className="text-gray-300">•</span>
 
-        <span className="text-[11px] text-gray-400 whitespace-nowrap">
-          Showing: <span className="font-semibold text-gray-600">{activeValue}</span>
-        </span>
-      </>
-    )}
-  </div>
-</div>
-
+              <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                Showing:{" "}
+                <span className="font-semibold text-gray-600">{activeValue}</span>
+              </span>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Horizontal categories row */}
       <div className="flex flex-row items-center md:justify-center justify-between mt-12 md:gap-12 overflow-x-auto">
-        {fetching && (!data?.getCategories || data.getCategories.length === 0) ? (
+        {shouldShowSkeleton ? (
           <>
             {Array.from({ length: 10 }).map((_, idx) => (
               <div
@@ -330,7 +370,21 @@ const Categories = () => {
             ))}
           </>
         ) : (
-          categories.map((cat) => <CategoryChip key={cat.id} option={cat} />)
+          categories.map((cat) => {
+            const isActive =
+              cat.filterValue === "all"
+                ? activeValue === "all"
+                : activeValue === cat.filterValue;
+
+            return (
+              <CategoryChip
+                key={cat.id}
+                option={cat}
+                isActive={isActive}
+                onSelect={onSelectCategory}
+              />
+            );
+          })
         )}
       </div>
 
@@ -372,9 +426,22 @@ const Categories = () => {
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-            {categories.map((cat) => (
-              <CategoryChip key={`modal-${cat.id}`} option={cat} size="md" />
-            ))}
+            {categories.map((cat) => {
+              const isActive =
+                cat.filterValue === "all"
+                  ? activeValue === "all"
+                  : activeValue === cat.filterValue;
+
+              return (
+                <CategoryChip
+                  key={`modal-${cat.id}`}
+                  option={cat}
+                  size="md"
+                  isActive={isActive}
+                  onSelect={onSelectCategory}
+                />
+              );
+            })}
           </div>
         </div>
       </Modal>

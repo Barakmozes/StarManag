@@ -119,6 +119,7 @@ export default function HeroSection() {
   ))}
 </h1>
 
+
           <div className="flex items-center mt-1">
             <HiStar className="text-yellow-400 w-5 h-5" />
             <span className="ml-1 text-black">4.5 rating</span>

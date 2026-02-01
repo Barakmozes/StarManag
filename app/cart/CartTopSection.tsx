@@ -28,6 +28,7 @@ const CartTopSection = () => {
           <HiOutlineChevronLeft /> <span>Back to Menu</span>{" "}
         </Link>
       </div>
+      
     </div>
   );
 };

@@ -16,25 +16,25 @@ type ProviderProps = {
   graphqlApiKey?: string; // ✅ optional (won't break)
 };
 
-const Providers = ({ children }: ProviderProps) => {
+const Providers = ({ children, graphqlApiKey }: ProviderProps) => {
   const [client, ssr] = useMemo(() => {
     const graphql_api = process.env.NEXT_PUBLIC_GRAPHQL_API as string;
-
-    // ✅ correct SSR exchange config
-    const ssr = ssrExchange({ isClient: typeof window !== "undefined" });
-
+    const ssr = ssrExchange();
     const client = createClient({
       url: graphql_api,
       exchanges: [cacheExchange, ssr, fetchExchange],
-      // אם תרצה להחזיר auth בעתיד:
-            // disable this in development for you to be able to access your sandbox
-      // fetchOptions: () => ({
-      //   headers: graphqlApiKey ? { authorization: `Bearer ${graphqlApiKey}` } : {},
-      // }),
-    });
+      // disable this in development for you to be able to access your sandbox
 
-    return [client, ssr] as const;
-  }, []);
+      fetchOptions: () => {
+        const apiKey = graphqlApiKey;
+
+        return {
+          headers: { authorization: apiKey ? `Bearer ${apiKey}` : "" },
+        };
+      },
+    });
+    return [client, ssr];
+  }, [graphqlApiKey]);
 
   return (
     <UrqlProvider client={client} ssr={ssr}>

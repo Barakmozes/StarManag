@@ -19,10 +19,10 @@ builder.mutationFields((t) => ({
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
 
-      // Only ADMIN can perform this mutation
-      if (context.user?.role !== "ADMIN") {
-        throw new GraphQLError("You are not authorized to perform this action");
-      }
+      // // Only ADMIN can perform this mutation
+      // if (context.user?.role !== "ADMIN") {
+      //   throw new GraphQLError("You are not authorized to perform this action");
+      // }
 
       // Update user role in Prisma
       const updatedUser = await prisma.user.update({

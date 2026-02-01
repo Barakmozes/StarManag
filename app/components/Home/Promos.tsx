@@ -6,6 +6,7 @@ import React, {
   Suspense,
   startTransition,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -30,6 +31,7 @@ import ModernWaveHeading from "./PromoHeading";
 const PROMO_PARAM = "promo";
 const CATEGORY_PARAM = "category";
 const PAGE_SIZE = 24;
+const PROMO_ROW_COUNT = 3;
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -44,7 +46,11 @@ function buildNextUrl(
   return qs ? `${pathname}?${qs}` : pathname;
 }
 
-function isPromo(menu: { onPromo: boolean; price: number; sellingPrice?: number | null }) {
+function isPromo(menu: {
+  onPromo: boolean;
+  price: number;
+  sellingPrice?: number | null;
+}) {
   const hasValidDiscount =
     typeof menu.sellingPrice === "number" &&
     menu.sellingPrice > 0 &&
@@ -56,6 +62,13 @@ function isPromo(menu: { onPromo: boolean; price: number; sellingPrice?: number 
 function getPercentOff(price: number, sellingPrice?: number | null) {
   if (!sellingPrice || sellingPrice <= 0 || sellingPrice >= price) return null;
   return Math.round(((price - sellingPrice) / price) * 100);
+}
+
+function getEffectivePrice(price: number, sellingPrice?: number | null) {
+  if (typeof sellingPrice === "number" && sellingPrice > 0 && sellingPrice < price) {
+    return sellingPrice;
+  }
+  return price;
 }
 
 function money(n: number) {
@@ -77,27 +90,27 @@ type PromoShape = {
   price: number;
 };
 
+type PromoMenu = MenuNode & {
+  _effectivePrice: number;
+  _percentOff: number;
+  _lcTitle: string;
+  _lcCategory: string;
+};
+
 /* ------------------------------ UI cards (keep design) ------------------------------ */
 /**
- * ✅ We keep your design: <PromoCard promo={promo} />
+ * ✅ Keep your design: <PromoCard promo={promo} />
  * We only map DB menu -> PromoShape.
  */
-function menuToPromo(menu: MenuNode): PromoShape {
-  const pct = getPercentOff(menu.price, menu.sellingPrice) ?? 0;
-
-  const effectivePrice =
-    typeof menu.sellingPrice === "number" && menu.sellingPrice < menu.price
-      ? menu.sellingPrice
-      : menu.price;
-
+function menuToPromo(menu: PromoMenu): PromoShape {
   return {
     id: menu.id,
     title: menu.title,
     img: menu.image,
     salesQ: 0,
     likesN: 0,
-    PercentOff: pct,
-    price: effectivePrice,
+    PercentOff: menu._percentOff,
+    price: menu._effectivePrice,
   };
 }
 
@@ -108,61 +121,110 @@ function PromosInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Convert once per render (cheaper + stable deps for callbacks)
+  const searchParamsString = searchParams.toString();
+
   const promoParam = searchParams.get(PROMO_PARAM);
 
   // URL-controlled modals
   const isBrowseAllOpen = promoParam === "all";
-  const selectedPromoId = promoParam && promoParam !== "all" ? promoParam : null;
+  const selectedPromoId =
+    promoParam && promoParam !== "all" ? promoParam : null;
 
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
 
   const [variables, setVariables] = useState<GetMenusQueryVariables>({
     first: PAGE_SIZE,
     after: null,
   });
 
+  /**
+   * ⚡ Faster default:
+   * - "cache-first" prevents unnecessary duplicate refetches if some other section already queried menus.
+   * - Manual "Refresh" uses network-only.
+   */
   const [{ data, fetching, error }, reexecuteQuery] = useQuery<
     GetMenusQuery,
     GetMenusQueryVariables
   >({
     query: GetMenusDocument,
     variables,
-    requestPolicy: "cache-and-network",
+    requestPolicy: "cache-first",
   });
 
-  // Accumulate pages into one list (browse-all can load more)
-  const [allMenus, setAllMenus] = useState<MenuNode[]>([]);
-  useEffect(() => {
-    const nodes =
-      data?.getMenus?.edges?.flatMap((e) => (e?.node ? [e.node] : [])) ?? [];
-
-    if (!nodes.length) return;
-
-    setAllMenus((prev) => {
-      const map = new Map<string, MenuNode>();
-      for (const m of prev) map.set(m.id, m);
-      for (const m of nodes) map.set(m.id, m);
-      return Array.from(map.values());
-    });
-  }, [data?.getMenus?.edges]);
-
   const pageInfo = data?.getMenus?.pageInfo;
+
+  /**
+   * Accumulate pages efficiently:
+   * - Use a Map ref so we don't rebuild a Map from prev state every time.
+   * - Only update state (and trigger re-render) when something actually changes.
+   */
+  const menusByIdRef = useRef<Map<string, MenuNode>>(new Map());
+  const [allMenus, setAllMenus] = useState<MenuNode[]>([]);
+
+  useEffect(() => {
+    const edges = data?.getMenus?.edges;
+    if (!edges?.length) return;
+
+    const map = menusByIdRef.current;
+    let changed = false;
+
+    for (const edge of edges) {
+      const node = edge?.node;
+      if (!node) continue;
+
+      const prev = map.get(node.id);
+      // Update if new ID or (rarely) changed reference
+      if (!prev || prev !== node) {
+        map.set(node.id, node);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      // Preserve Map insertion order; build array once per meaningful update
+      setAllMenus(Array.from(map.values()));
+    }
+  }, [data?.getMenus?.edges]);
 
   // toast error once
   const hasShownErrorToastRef = useRef(false);
   useEffect(() => {
     if (!error || hasShownErrorToastRef.current) return;
     hasShownErrorToastRef.current = true;
-    toast.error("Failed to load promotions. Please try again.", { duration: 5000 });
+    toast.error("Failed to load promotions. Please try again.", {
+      duration: 5000,
+    });
   }, [error]);
 
-  const promoMenus = useMemo(() => {
-    const promos = allMenus.filter(isPromo);
+  /**
+   * Derived promo list:
+   * - Precompute percent/effective price + lowercased fields once
+   * - Sorting only once when menus change
+   */
+  const promoMenus = useMemo<PromoMenu[]>(() => {
+    if (!allMenus.length) return [];
+
+    const promos: PromoMenu[] = [];
+
+    for (const m of allMenus) {
+      if (!isPromo(m)) continue;
+
+      const percentOff = getPercentOff(m.price, m.sellingPrice) ?? 0;
+      const effectivePrice = getEffectivePrice(m.price, m.sellingPrice);
+
+      promos.push({
+        ...m,
+        _percentOff: percentOff,
+        _effectivePrice: effectivePrice,
+        _lcTitle: m.title.toLowerCase(),
+        _lcCategory: m.category.toLowerCase(),
+      });
+    }
 
     promos.sort((a, b) => {
-      const aPct = getPercentOff(a.price, a.sellingPrice) ?? 0;
-      const bPct = getPercentOff(b.price, b.sellingPrice) ?? 0;
-      if (bPct !== aPct) return bPct - aPct;
+      if (b._percentOff !== a._percentOff) return b._percentOff - a._percentOff;
       return a.title.localeCompare(b.title);
     });
 
@@ -170,26 +232,37 @@ function PromosInner() {
   }, [allMenus]);
 
   // ✅ keep your original look: show only 3 promo cards in the row
-  const promosForRow = useMemo(() => promoMenus.slice(0, 3), [promoMenus]);
+  const promosForRow = useMemo(
+    () => promoMenus.slice(0, PROMO_ROW_COUNT),
+    [promoMenus]
+  );
 
+  // O(1) lookup via Map ref (recomputed when menus change)
   const selectedMenu = useMemo(() => {
     if (!selectedPromoId) return null;
-    return allMenus.find((m) => m.id === selectedPromoId) ?? null;
+    return menusByIdRef.current.get(selectedPromoId) ?? null;
   }, [allMenus, selectedPromoId]);
 
   const setPromoParam = useCallback(
     (value: string | null) => {
-      const nextUrl = buildNextUrl(pathname, searchParams.toString(), (p) => {
+      const nextUrl = buildNextUrl(pathname, searchParamsString, (p) => {
         if (!value) p.delete(PROMO_PARAM);
         else p.set(PROMO_PARAM, value);
       });
 
+      // Avoid unnecessary navigations
+      const currentUrl = searchParamsString
+        ? `${pathname}?${searchParamsString}`
+        : pathname;
+      if (nextUrl === currentUrl) return;
+
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
-        router.refresh();
+        // ✅ Intentionally removed router.refresh() for speed:
+        // promo param only controls client UI (modals), no server refresh needed.
       });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParamsString]
   );
 
   const openBrowseAll = useCallback(() => {
@@ -197,7 +270,7 @@ function PromosInner() {
   }, [setPromoParam]);
 
   const openPromo = useCallback(
-    (menu: MenuNode) => {
+    (menu: Pick<MenuNode, "id">) => {
       setPromoParam(menu.id);
     },
     [setPromoParam]
@@ -209,41 +282,42 @@ function PromosInner() {
   }, [setPromoParam]);
 
   const onLoadMore = useCallback(() => {
+    if (fetching) return;
     if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return;
 
-    setVariables((prev) => ({
-      ...prev,
-      after: pageInfo.endCursor as string,
-    }));
-  }, [pageInfo?.endCursor, pageInfo?.hasNextPage]);
+    const nextCursor = pageInfo.endCursor as string;
+
+    setVariables((prev) => {
+      if (prev.after === nextCursor) return prev;
+      return { ...prev, after: nextCursor };
+    });
+  }, [fetching, pageInfo?.endCursor, pageInfo?.hasNextPage]);
 
   const filteredPromos = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
     if (!q) return promoMenus;
 
-    return promoMenus.filter((m) => {
-      const t = m.title.toLowerCase();
-      const c = m.category.toLowerCase();
-      return t.includes(q) || c.includes(q);
-    });
-  }, [promoMenus, search]);
+    return promoMenus.filter((m) => m._lcTitle.includes(q) || m._lcCategory.includes(q));
+  }, [promoMenus, deferredSearch]);
 
   const refreshPromos = useCallback(() => {
+    if (fetching) return;
     hasShownErrorToastRef.current = false;
     toast.success("Refreshing promotions…", { duration: 1200 });
     reexecuteQuery({ requestPolicy: "network-only" });
-  }, [reexecuteQuery]);
+  }, [fetching, reexecuteQuery]);
 
   const showInMenuByCategory = useCallback(
     (category: string) => {
-      const nextUrl = buildNextUrl(pathname, searchParams.toString(), (p) => {
+      const nextUrl = buildNextUrl(pathname, searchParamsString, (p) => {
         p.set(CATEGORY_PARAM, category);
         p.delete(PROMO_PARAM);
       });
 
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
-        router.refresh();
+        // ✅ No router.refresh() here for speed.
+        // If you ever need a forced server re-render, add it back.
       });
 
       setTimeout(() => {
@@ -253,27 +327,44 @@ function PromosInner() {
         });
       }, 50);
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParamsString]
   );
 
-  /* ------------------------------ RENDER (same design as your static) ------------------------------ */
+  const selectedPercentOff = useMemo(() => {
+    if (!selectedMenu) return null;
+    return getPercentOff(selectedMenu.price, selectedMenu.sellingPrice);
+  }, [selectedMenu]);
 
-  const promoCards = useMemo(() => promosForRow.map(menuToPromo), [promosForRow]);
+  const selectedEffectivePrice = useMemo(() => {
+    if (!selectedMenu) return 0;
+    return getEffectivePrice(selectedMenu.price, selectedMenu.sellingPrice);
+  }, [selectedMenu]);
+
+  const selectedHasDiscount = useMemo(() => {
+    if (!selectedMenu) return false;
+    return (
+      typeof selectedMenu.sellingPrice === "number" &&
+      selectedMenu.sellingPrice > 0 &&
+      selectedMenu.sellingPrice < selectedMenu.price
+    );
+  }, [selectedMenu]);
+
+  /* ------------------------------ RENDER (same design as your static) ------------------------------ */
 
   return (
     <>
       {/* ✅ keep your original design EXACTLY */}
       <div className="max-w-2xl mx-auto my-5 text-center">
-        <ModernWaveHeading/>
+        <ModernWaveHeading />
       </div>
 
       <section
         className="flex flex-row items-center py-8 gap-4 md:justify-center 
     justify-between my-12 overflow-x-auto"
       >
-        {fetching && promoCards.length === 0 ? (
+        {fetching && promosForRow.length === 0 ? (
           <DataLoading />
-        ) : promoCards.length === 0 ? (
+        ) : promosForRow.length === 0 ? (
           // keep layout simple, no design shift
           <div className="w-full flex flex-col items-center justify-center gap-2 py-10">
             <p className="text-sm text-gray-500">
@@ -288,12 +379,12 @@ function PromosInner() {
             </button>
           </div>
         ) : (
-          promoCards.map((promo) => {
-            const menu = promosForRow.find((m) => m.id === promo.id);
+          promosForRow.map((menu) => {
+            const promo = menuToPromo(menu);
             return (
               <div
                 key={promo.id}
-                onClick={() => menu && openPromo(menu)}
+                onClick={() => openPromo(menu)}
                 className="cursor-pointer"
               >
                 <PromoCard promo={promo} />
@@ -311,7 +402,9 @@ function PromosInner() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-800">Promotions</h3>
-              <p className="text-sm text-gray-500">Browse all deals currently available.</p>
+              <p className="text-sm text-gray-500">
+                Browse all deals currently available.
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -379,19 +472,14 @@ function PromosInner() {
                         width={88}
                         height={88}
                         alt={m.title}
+                        sizes="80px"
                         className="h-20 w-20 rounded object-cover"
                       />
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{m.title}</p>
                         <p className="text-xs text-gray-500">{m.category}</p>
                         <p className="mt-2 text-sm text-red-600 font-semibold">
-                          {(() => {
-                            const effective =
-                              typeof m.sellingPrice === "number" && m.sellingPrice < m.price
-                                ? m.sellingPrice
-                                : m.price;
-                            return money(effective);
-                          })()}
+                          {money(m._effectivePrice)}
                         </p>
                       </div>
                     </div>
@@ -406,6 +494,7 @@ function PromosInner() {
               <button
                 type="button"
                 onClick={onLoadMore}
+                disabled={fetching}
                 className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 Load more
@@ -419,7 +508,9 @@ function PromosInner() {
       <Modal isOpen={Boolean(selectedPromoId)} closeModal={closeModals}>
         {!selectedMenu ? (
           <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800">Promotion not found</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Promotion not found
+            </h3>
             <p className="mt-2 text-sm text-gray-500">
               This promotion may have expired or the link is incorrect.
             </p>
@@ -448,43 +539,32 @@ function PromosInner() {
                 width={720}
                 height={420}
                 alt={selectedMenu.title}
+                sizes="(max-width: 768px) 100vw, 720px"
                 className="h-56 w-full object-cover rounded-t-lg"
               />
               <div className="absolute top-3 right-3 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white">
-                {(() => {
-                  const pct = getPercentOff(selectedMenu.price, selectedMenu.sellingPrice);
-                  return pct ? `${pct}% Off` : "Promo";
-                })()}
+                {selectedPercentOff ? `${selectedPercentOff}% Off` : "Promo"}
               </div>
             </div>
 
             <div className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{selectedMenu.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {selectedMenu.title}
+                  </h3>
                   <p className="text-sm text-gray-500">{selectedMenu.shortDescr}</p>
                 </div>
 
                 <div className="text-right">
-                  {(() => {
-                    const effective =
-                      typeof selectedMenu.sellingPrice === "number" &&
-                      selectedMenu.sellingPrice < selectedMenu.price
-                        ? selectedMenu.sellingPrice
-                        : selectedMenu.price;
-
-                    return (
-                      <>
-                        <p className="text-red-600 font-semibold">{money(effective)}</p>
-                        {typeof selectedMenu.sellingPrice === "number" &&
-                          selectedMenu.sellingPrice < selectedMenu.price && (
-                            <p className="text-xs text-gray-400 line-through">
-                              {money(selectedMenu.price)}
-                            </p>
-                          )}
-                      </>
-                    );
-                  })()}
+                  <p className="text-red-600 font-semibold">
+                    {money(selectedEffectivePrice)}
+                  </p>
+                  {selectedHasDiscount && (
+                    <p className="text-xs text-gray-400 line-through">
+                      {money(selectedMenu.price)}
+                    </p>
+                  )}
                 </div>
               </div>
 

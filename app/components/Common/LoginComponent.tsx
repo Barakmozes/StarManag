@@ -36,7 +36,7 @@ const LoginComponent = () => {
                 <FcGoogle className="h-6 w-6 mr-3 " />
               )}
               {provider.name === "Facebook" && (
-                <BsFacebook className="h-6 w-6 mr-3 text-blue-600" />
+                <BsFacebook className="h-6 w-6 mr-3 text-blue-600 " />
               )}
               Continue with {provider.name}
             </button>
