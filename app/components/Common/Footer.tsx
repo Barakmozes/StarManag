@@ -136,7 +136,7 @@ const Footer = () => {
                   <li>
                     <a
                       className="text-slate-300 hover:text-white"
-                      href="https://github.com/Barakmozes/StarManag"
+                      href=""
                       target="_blank"
                       rel="noreferrer"
                     >
