@@ -3,7 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "DPS Resto YT",
+title: "StarManag – מערכת ניהול מסעדות חכמה ומשלוחי אוכל",
   description: "food delivery app",
 };
 
