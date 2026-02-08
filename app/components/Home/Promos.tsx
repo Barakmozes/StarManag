@@ -46,18 +46,10 @@ function buildNextUrl(
   return qs ? `${pathname}?${qs}` : pathname;
 }
 
-function isPromo(menu: {
-  onPromo: boolean;
-  price: number;
-  sellingPrice?: number | null;
-}) {
-  const hasValidDiscount =
-    typeof menu.sellingPrice === "number" &&
-    menu.sellingPrice > 0 &&
-    menu.sellingPrice < menu.price;
-
-  return menu.onPromo || hasValidDiscount;
+function isPromo(menu: { onPromo?: boolean | null }) {
+  return menu.onPromo === true;
 }
+
 
 function getPercentOff(price: number, sellingPrice?: number | null) {
   if (!sellingPrice || sellingPrice <= 0 || sellingPrice >= price) return null;
@@ -88,6 +80,8 @@ type PromoShape = {
   likesN: number;
   PercentOff: number;
   price: number;
+  oldPrice?: number | null; // המחיר הישן (למחיקה)
+
 };
 
 type PromoMenu = MenuNode & {
@@ -103,6 +97,11 @@ type PromoMenu = MenuNode & {
  * We only map DB menu -> PromoShape.
  */
 function menuToPromo(menu: PromoMenu): PromoShape {
+  const hasDiscount =
+    typeof menu.sellingPrice === "number" &&
+    menu.sellingPrice > 0 &&
+    menu.sellingPrice < menu.price;
+
   return {
     id: menu.id,
     title: menu.title,
@@ -111,6 +110,7 @@ function menuToPromo(menu: PromoMenu): PromoShape {
     likesN: 0,
     PercentOff: menu._percentOff,
     price: menu._effectivePrice,
+    oldPrice: hasDiscount ? menu.price : null,
   };
 }
 

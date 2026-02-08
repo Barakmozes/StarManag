@@ -101,12 +101,12 @@ const Header = ({ user }: HeaderProps) => {
   }, [user?.role]);
 
   const [{ fetching: switchingRole }, editUserRole] = useMutation(EDIT_USER_ROLE);
-
+const identifier = user?.id ?? user?.email;
 const saveRole = async () => {
-  if (!user?.id) {
-    toast.error("Missing user.id in session. Fix getCurrentUser() to return DB user.");
-    return;
-  }
+if (!identifier) {
+  toast.error("Missing user identifier (id/email)");
+  return;
+}
 
   // אם לא באמת השתנה תפקיד - לא צריך לעשות כלום
   const currentRole = user.role as unknown as Role;
@@ -117,7 +117,7 @@ const saveRole = async () => {
   }
 
   try {
-    const res = await editUserRole({ id: user.id, role: roleDraft });
+    const res = await editUserRole({ id: identifier, role: roleDraft });
     if (res.error) throw res.error;
 
     toast.success(`Role updated: התחבר שוב בתור: ${roleDraft}`);

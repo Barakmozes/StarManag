@@ -22,6 +22,7 @@ export type PromoTypes = {
   likesN: number;
   PercentOff: number;
   price: number;
+    oldPrice?: number | null; // המחיר הישן (למחיקה)
 };
 
 export type CustomCategory = {

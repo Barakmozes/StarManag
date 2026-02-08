@@ -95,7 +95,7 @@ builder.mutationFields((t) => ({
           shortDescr: args.shortDescr,
           longDescr: args.longDescr,
           price: args.price,
-          sellingPrice: args.sellingPrice ?? undefined,
+          sellingPrice: args.sellingPrice === undefined ? undefined : args.sellingPrice,
           image: args.image,
           category: args.category,
           prepType: args.prepType,

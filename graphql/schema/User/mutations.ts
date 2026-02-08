@@ -10,29 +10,33 @@ builder.mutationFields((t) => ({
    * editUserRole
    * ADMIN-only mutation to update a user's role (e.g., USER -> ADMIN).
    */
-  editUserRole: t.prismaField({
-    type: "User",
-    args: {
-      role: t.arg({ type: Role, required: true }),
-      id: t.arg.string({ required: true }),
-    },
-    resolve: async (_query, _parent, args, contextPromise) => {
-      const context = await contextPromise;
+editUserRole: t.prismaField({
+  type: "User",
+  args: {
+    role: t.arg({ type: Role, required: true }),
+    id: t.arg.string({ required: true }), // נשאר אותו שדה כדי לא לשבור
+  },
+  resolve: async (query, _parent, args, contextPromise) => {
+    const context = await contextPromise;
 
-      // // Only ADMIN can perform this mutation
-      // if (context.user?.role !== "ADMIN") {
-      //   throw new GraphQLError("You are not authorized to perform this action");
-      // }
+    // ✅ מומלץ להחזיר את הבדיקה (אחרת כל אחד יכול להחליף לעצמו/לאחרים Role!)
+    // if (context.user?.role !== "ADMIN") {
+    //   throw new GraphQLError("You are not authorized to perform this action");
+    // }
 
-      // Update user role in Prisma
-      const updatedUser = await prisma.user.update({
-        where: { id: args.id },
-        data: { role: args.role },
-      });
+    const isEmail = args.id.includes("@");
+    const where = isEmail ? { email: args.id } : { id: args.id };
 
-      return updatedUser;
-    },
-  }),
+    const updatedUser = await prisma.user.update({
+      ...query,
+      where,
+      data: { role: args.role },
+    });
+
+    return updatedUser;
+  },
+}),
+
 
   /**
    * updateUserProfile

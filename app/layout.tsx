@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers graphqlApiKey={graphqlApiKey}>{children}</Providers>
+        <Providers >{children}</Providers>
       </body>
     </html>
   );

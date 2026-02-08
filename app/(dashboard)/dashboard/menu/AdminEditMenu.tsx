@@ -148,22 +148,25 @@ const AdminEditMenu = ({ menu }: Props) => {
       toast.error("Please add at least one preparation type", { duration: 2500 });
       return;
     }
+const normalized = sellingPrice.trim().replace(",", ".");
+const selling =   normalized === "" ? null : Number(normalized);
 
-    const selling =
-      sellingPrice.trim() === "" ? null : Number(sellingPrice.trim());
-
-    if (selling !== null) {
-      if (!Number.isFinite(selling) || selling <= 0) {
-        toast.error("Selling price must be a valid number", { duration: 2500 });
-        return;
-      }
-      if (selling >= price) {
-        toast.error("Selling price must be lower than the regular price", {
-          duration: 2500,
-        });
-        return;
-      }
-    }
+if (selling !== null) {
+  if (!Number.isFinite(selling) || selling <= 0) {
+    toast.error("Selling price must be a valid number", { duration: 2500 });
+    return;
+  }
+  if (!Number.isFinite(price) || price <= 0) {
+    toast.error("Price must be greater than 0", { duration: 2500 });
+    return;
+  }
+  if (selling >= price) {
+    toast.error("Selling price must be lower than the regular price", {
+      duration: 2500,
+    });
+    return;
+  }
+}
 
     const toastId = toast.loading("Saving changes...");
     try {
@@ -178,7 +181,7 @@ const AdminEditMenu = ({ menu }: Props) => {
         price,
         sellingPrice: selling, // ✅ null clears
         onPromo,              // ✅ NEW
-      } as any); // <- remove after codegen updates
+      } ); // <- remove after codegen updates
 
       if (res.data?.editMenu?.id) {
         toast.success("Menu Edited Successfully", { id: toastId, duration: 1200 });
@@ -191,7 +194,9 @@ const AdminEditMenu = ({ menu }: Props) => {
       toast.error("An error occurred", { id: toastId, duration: 2000 });
     }
   };
-
+  const handleResetPromo = () => {
+    setSellingPrice("");
+  };
   return (
     <>
       <button type="button" onClick={openModal} className="inline-flex">
@@ -252,6 +257,13 @@ const AdminEditMenu = ({ menu }: Props) => {
             </div>
 
             <div>
+                   <button
+                  type="button"
+                  onClick={handleResetPromo}
+                  className="text-xs text-gray-600 hover:text-gray-900 underline"
+                >
+                  Reset
+                </button>
               <label htmlFor="sellingPrice" className="form-label">
                 Selling Price (optional)
               </label>

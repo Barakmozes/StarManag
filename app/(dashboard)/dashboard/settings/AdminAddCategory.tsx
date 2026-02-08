@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import Modal from "@/app/components/Common/Modal";
 import UploadImg from "../Components/UploadImg";
 import { SupabaseImageUpload } from "@/lib/supabaseStorage";
-
+// import { categoriesData } from "@/data/categories-data";
 import {
   AddCategoryDocument,
   AddCategoryMutation,
@@ -71,6 +71,28 @@ const AdminAddCategory = () => {
     }
   };
 
+//   const seedCategories = async () => {
+//   try {
+//     for (const c of categoriesData) {
+//       const title = c.title?.trim();
+//       if (!title) continue; // אצלך יש פריט שחסר לו title
+
+//       await addCategory({
+//         title,
+//         desc: c.desc,
+//         img: c.imageSrc, // ✅ מיפוי: imageSrc -> img
+//       });
+//     }
+
+//     toast.success("כל הקטגוריות נוספו בהצלחה");
+//     router.refresh();
+//   } catch (err) {
+//     toast.error("שגיאה בהוספת קטגוריות");
+//     console.error(err);
+//   }
+// };
+
+
   return (
     <>
       <button
@@ -82,6 +104,13 @@ const AdminAddCategory = () => {
         <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
         Add Category
       </button>
+{/* <button
+  type="button"
+  onClick={seedCategories}
+  className="bg-slate-200 text-gray-600 px-4 py-2 rounded-lg hover:bg-green-200 hover:text-green-700"
+>
+  Seed Categories
+</button> */}
 
       <Modal isOpen={isOpen} title="Add Category" closeModal={closeModal}>
         <form onSubmit={handleAddCategory}>
