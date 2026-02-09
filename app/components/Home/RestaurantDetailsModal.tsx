@@ -302,6 +302,33 @@ const RestaurantDetailsModal = ({
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
   }, [restaurant?.address]);
 
+
+// ואייז אפליקצה 
+
+  const wazeUrl = useMemo(() => {
+    const name = restaurant?.name?.trim();
+    const addr = restaurant?.address?.trim();
+
+    // חיפוש הכי טוב: שם + כתובת (אם אין כתובת, לפחות שם)
+    const q = [name, addr].filter(Boolean).join(" ");
+    if (!q) return null;
+
+    // Universal Link (מומלץ): יפתח אפליקציה במובייל אם מותקנת, אחרת ווב
+    return `https://waze.com/ul?q=${encodeURIComponent(q)}&navigate=yes`;
+  }, [restaurant?.name, restaurant?.address]);
+
+  const openWaze = useCallback(() => {
+    if (!wazeUrl) return;
+
+    // במובייל עדיף באותו טאב כדי שה-OS יפתח את האפליקציה בצורה הכי אמינה
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) window.location.href = wazeUrl;
+    else window.open(wazeUrl, "_blank", "noopener,noreferrer");
+  }, [wazeUrl]);
+
+
+
+
   const openModal = () => {
     // Ensure latest data when opening
     reexecuteQuery({ requestPolicy: "network-only" });
@@ -470,6 +497,15 @@ const RestaurantDetailsModal = ({
                   >
                     Copy address
                   </button>
+                    {wazeUrl && (
+                      <button
+                        type="button"
+                        onClick={openWaze}
+                        className="text-sm text-green-700 underline underline-offset-2"
+                      >
+                        Open in Waze
+                      </button>
+                    )}
 
                   {mapsUrl && (
                     <a
