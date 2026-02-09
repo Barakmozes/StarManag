@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { Disclosure } from "@headlessui/react";
 import { HiChevronDown, HiClock, HiMapPin, HiStar } from "react-icons/hi2";
 import { gql } from "graphql-tag";
+import { FaWaze } from "react-icons/fa";
 
 import Modal from "../Common/Modal";
 import type { Restaurant } from "@/graphql/generated";
@@ -486,7 +487,19 @@ const RestaurantDetailsModal = ({
               <div className="flex-1">
                 <p className="text-gray-800">
                   {restaurant.address ? restaurant.address : "No address set"}
+                                 {wazeUrl && (
+                <button
+                  type="button"
+                  onClick={openWaze}
+                  className="inline-flex items-center justify-center ml-3 w-9 h-9 rounded-md bg-slate-100 hover:bg-slate-200"
+                  aria-label={`Open ${restaurant?.name ?? "restaurant"} in Waze`}
+                  title="Open in Waze"
+                >
+                  <FaWaze size={20} />
+                </button>
+              )}
                 </p>
+                
 
                 <div className="mt-2 flex flex-wrap gap-3">
                   <button
@@ -497,15 +510,7 @@ const RestaurantDetailsModal = ({
                   >
                     Copy address
                   </button>
-                    {wazeUrl && (
-                      <button
-                        type="button"
-                        onClick={openWaze}
-                        className="text-sm text-green-700 underline underline-offset-2"
-                      >
-                        Open in Waze
-                      </button>
-                    )}
+             
 
                   {mapsUrl && (
                     <a
