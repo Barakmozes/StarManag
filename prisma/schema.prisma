@@ -143,8 +143,7 @@ model Profile {
   email String  @unique
 
   // Relation
-  user User @relation(fields: [email], references: [email])
-
+user User @relation(fields: [email], references: [email], onDelete: Cascade)
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -245,7 +244,7 @@ model Order {
   deliveryTime    DateTime?   @default(now())
   userName        String
   userEmail       String
-  user            User        @relation(fields: [userEmail], references: [email])
+  user    User    @relation(fields: [userEmail], references: [email], onDelete: Cascade)
   userPhone       String  @default("")
   paymentToken    String?
   paid            Boolean     @default(false)
@@ -292,7 +291,7 @@ model Delivery {
   driverPhone String
 
   orderNum String @unique
-  order    Order  @relation(fields: [orderNum], references: [orderNumber])
+  order    Order  @relation(fields: [orderNum], references: [orderNumber], onDelete: Cascade)
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -302,7 +301,7 @@ model Delivery {
 model Favorite {
   id        String   @id @default(cuid())
   userEmail String   @unique
-  user      User     @relation(fields: [userEmail], references: [email])
+  user      User     @relation(fields: [userEmail], references: [email], onDelete: Cascade)
   menu      String[]
 
   // Timestamps
@@ -416,8 +415,10 @@ model Reservation {
   createdBy Role
 
   // Optionally store which user created it, also by email
-  createdByUserEmail String?
-  createdByUser      User?   @relation("CreatorOfReservation", fields: [createdByUserEmail], references: [email])
+createdByUserEmail String?
+  // עדכן את השורה הזו ל-SetNull או Cascade
+  // SetNull עדיף כאן כדי שההזמנה תישאר גם אם המנהל שמחק אותה כבר לא במערכת
+  createdByUser      User?   @relation("CreatorOfReservation", fields: [createdByUserEmail], references: [email], onDelete: SetNull)
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -433,11 +434,11 @@ model Waitlist {
   id        String @id @default(cuid())
   // user on the waitlist
   userEmail String
-  user      User   @relation(fields: [userEmail], references: [email])
+  user      User   @relation(fields: [userEmail], references: [email], onDelete: Cascade)
 
   // which area
   areaId String
-  area   Area   @relation(fields: [areaId], references: [id])
+  area      Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)
 
   numOfDiners Int
   status      WaitlistStatus @default(WAITING)
