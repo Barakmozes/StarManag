@@ -265,7 +265,10 @@ const RestaurantDetailsModal = ({
     toast.error("Failed to load restaurant details", { duration: 2500 });
   }, [error?.message]);
 
-  const restaurants = data?.getRestaurants ?? [];
+const restaurantsFromData = data?.getRestaurants;
+
+const restaurants = useMemo(() => restaurantsFromData ?? [], [restaurantsFromData]);
+
 
   const selectedId =
     searchParams.get(RESTAURANT_ID_PARAM) ?? restaurantId ?? (restaurants[0]?.id ?? null);
