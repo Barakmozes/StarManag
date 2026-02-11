@@ -37,50 +37,61 @@ const AdminMenuTable = () => {
   return (
     <TableWrapper title={"All Menus"}>
       <Suspense fallback={DataLoading()}>
-        <table className="w-full text-left text-slate-500">
-          <thead className="text-xs overflow-x-auto whitespace-nowrap text-slate-700 uppercase bg-slate-100">
-            <tr>
-              <th scope="col" className="px-6 py-3">
-                <input
-                  className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                  type="checkbox"
-                />
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Product
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Title
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Category
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Price
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Pre-View
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Edit
-              </th>
-              <th scope="col" className="px-6 py-3">
-                Delete
-              </th>
-            </tr>
-          </thead>
+        <div className="w-full">
+          {/* Mobile affordance for dense tables */}
+          <p className="md:hidden text-xs text-slate-500 px-1 pb-2">
+            Tip: swipe horizontally if you need to see more.
+          </p>
 
-          {pageVariables.map((variables, i) => (
-            <AdminFetchedMenus
-              key={"" + variables.after}
-              variables={variables}
-              isAdminLastPage={i === pageVariables.length - 1}
-              onLoadMore={(after) =>
-                setPageVariables([...pageVariables, { after, first: pageSize }])
-              }
-            />
-          ))}
-        </table>
+          <div className="w-full overflow-x-auto pb-2">
+            <table className="w-full text-left text-slate-500">
+              <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100">
+                <tr>
+                  {/* Keep selection UI on desktop; hide on mobile to prevent crowding */}
+                  <th scope="col" className="hidden md:table-cell px-3 sm:px-6 py-3">
+                    <input
+                      className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                      type="checkbox"
+                      aria-label="Select all menus"
+                    />
+                  </th>
+
+                  <th scope="col" className="px-3 sm:px-6 py-3">
+                    Product
+                  </th>
+                  <th scope="col" className="px-3 sm:px-6 py-3">
+                    Title
+                  </th>
+                  <th scope="col" className="px-3 sm:px-6 py-3">
+                    Category
+                  </th>
+                  <th scope="col" className="px-3 sm:px-6 py-3">
+                    Price
+                  </th>
+
+                  {/* Combine actions into one column to reduce width on mobile */}
+                  <th
+                    scope="col"
+                    className="px-3 sm:px-6 py-3 text-right sm:text-left"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              {pageVariables.map((variables, i) => (
+                <AdminFetchedMenus
+                  key={"" + variables.after}
+                  variables={variables}
+                  isAdminLastPage={i === pageVariables.length - 1}
+                  onLoadMore={(after) =>
+                    setPageVariables([...pageVariables, { after, first: pageSize }])
+                  }
+                />
+              ))}
+            </table>
+          </div>
+        </div>
       </Suspense>
     </TableWrapper>
   );

@@ -18,6 +18,7 @@ export type NotificationDTO = {
   updatedAt: string;
 };
 
+
 export type NotificationFilters = {
   q: string;
   status: "ALL" | "READ" | "UNREAD";
@@ -122,19 +123,19 @@ function ToastStack({
   };
 
   return (
-    <div className="fixed top-4 right-4 z-[60] space-y-2">
+    <div className="fixed inset-x-4 top-4 z-[60] space-y-2 sm:inset-x-auto sm:right-4 sm:left-auto">
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`shadow-xl rounded-md px-4 py-3 text-white text-sm w-[320px] ${kindClass(
+          className={`shadow-xl rounded-md px-4 py-3 text-white text-sm w-full max-w-sm ${kindClass(
             t.kind
           )}`}
         >
           <div className="flex items-start gap-3">
-            <p className="flex-1 leading-5">{t.message}</p>
+            <p className="flex-1 leading-5 break-words">{t.message}</p>
             <button
               onClick={() => onDismiss(t.id)}
-              className="text-white/90 hover:text-white"
+              className="h-11 w-11 -mr-2 -mt-2 inline-flex items-center justify-center rounded-md text-white/90 hover:text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               aria-label="Close toast"
               type="button"
             >
@@ -217,11 +218,7 @@ export default function NotificationsList({
     const next: NotificationFilters = { q: search.trim(), status: activeTab, take };
 
     // אם אין שינוי מול ה-filters הנוכחיים מהשרת – לא עושים replace
-    if (
-      next.q === filters.q &&
-      next.status === filters.status &&
-      next.take === filters.take
-    ) {
+    if (next.q === filters.q && next.status === filters.status && next.take === filters.take) {
       return;
     }
 
@@ -352,7 +349,7 @@ export default function NotificationsList({
             <button
               onClick={() => setIsMarkAllConfirmOpen(true)}
               disabled={isBusy || unreadCount === 0}
-              className={`px-4 py-2 rounded-md transition ${
+              className={`w-full sm:w-auto min-h-11 px-4 py-2 rounded-md transition ${
                 isBusy || unreadCount === 0
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                   : "text-green-700 hover:bg-green-100"
@@ -366,9 +363,9 @@ export default function NotificationsList({
 
         {/* Tabs + Search */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 md:px-6 py-3 border-b">
-          <div className="flex justify-center md:justify-start space-x-3">
+          <div className="flex flex-wrap justify-center md:justify-start gap-2">
             <button
-              className={`px-2 py-1 rounded-md ${
+              className={`min-h-11 px-4 py-2 rounded-md text-sm ${
                 activeTab === "ALL"
                   ? "border-b-2 border-green-600 text-green-700 bg-green-50"
                   : "hover:bg-slate-50"
@@ -380,7 +377,7 @@ export default function NotificationsList({
             </button>
 
             <button
-              className={`px-2 py-1 rounded-md ${
+              className={`min-h-11 px-4 py-2 rounded-md text-sm ${
                 activeTab === "READ"
                   ? "border-b-2 border-green-600 text-green-700 bg-green-50"
                   : "hover:bg-slate-50"
@@ -392,7 +389,7 @@ export default function NotificationsList({
             </button>
 
             <button
-              className={`px-2 py-1 rounded-md ${
+              className={`min-h-11 px-4 py-2 rounded-md text-sm ${
                 activeTab === "UNREAD"
                   ? "border-b-2 border-green-600 text-green-700 bg-green-50"
                   : "hover:bg-slate-50"
@@ -409,13 +406,13 @@ export default function NotificationsList({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search notifications..."
-              className="w-full md:w-80 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+              className="w-full md:w-80 min-h-11 border rounded-md px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-green-200"
             />
           </div>
         </div>
 
         {/* List */}
-        <div className="p-4 md:p-6 max-h-[70vh] space-y-3 overflow-y-auto scrollbar-hide">
+        <div className="p-4 md:p-6 max-h-[calc(100dvh-220px)] md:max-h-[70vh] space-y-3 overflow-y-auto scrollbar-hide pb-[calc(env(safe-area-inset-bottom)+16px)]">
           {notifications.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-slate-500">No notifications found.</p>
@@ -427,7 +424,7 @@ export default function NotificationsList({
               return (
                 <div
                   key={n.id}
-                  className="flex items-start gap-3"
+                  className="flex items-start gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                   role="button"
                   tabIndex={0}
                   onClick={() => openDetails(n)}
@@ -435,16 +432,15 @@ export default function NotificationsList({
                     if (e.key === "Enter" || e.key === " ") openDetails(n);
                   }}
                 >
-                  <button
-                    className={`p-2 text-white rounded-full ${theme.bg}`}
-                    type="button"
-                    aria-label="Notification icon"
+                  <div
+                    className={`h-11 w-11 shrink-0 flex items-center justify-center text-white rounded-full ${theme.bg}`}
+                    aria-hidden="true"
                   >
                     {theme.icon}
-                  </button>
+                  </div>
 
                   <div
-                    className={`flex flex-col flex-1 p-3 rounded-md cursor-pointer transition ${
+                    className={`flex flex-col flex-1 min-w-0 p-3 rounded-md cursor-pointer transition ${
                       n.status === "UNREAD"
                         ? "bg-slate-100 text-green-800 hover:bg-green-100"
                         : "hover:bg-slate-50"
@@ -452,7 +448,7 @@ export default function NotificationsList({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <h3
-                        className={`text-sm md:text-base ${
+                        className={`text-sm md:text-base truncate ${
                           n.status === "UNREAD" ? "font-semibold" : ""
                         }`}
                       >
@@ -460,7 +456,7 @@ export default function NotificationsList({
                       </h3>
 
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ${priorityBadge(
+                        className={`shrink-0 text-[11px] px-2 py-0.5 rounded-full ${priorityBadge(
                           n.priority
                         )}`}
                       >
@@ -468,8 +464,8 @@ export default function NotificationsList({
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center gap-3 mt-1">
-                      <p className="text-sm text-slate-700 truncate">{n.message}</p>
+                    <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                      <p className="text-sm text-slate-700 break-words sm:truncate">{n.message}</p>
                       <p className="text-xs text-slate-500 whitespace-nowrap">
                         {formatDateTime(n.createdAt)}
                       </p>
@@ -483,14 +479,14 @@ export default function NotificationsList({
                             markOneRead(n.id);
                           }}
                           disabled={isBusy}
-                          className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-md transition ${
+                          className={`inline-flex items-center gap-2 text-sm px-4 py-2 min-h-11 rounded-md transition ${
                             isBusy
                               ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                               : "bg-green-600 text-white hover:bg-green-700"
                           }`}
                           type="button"
                         >
-                          <HiOutlineCheckCircle className="w-4 h-4" />
+                          <HiOutlineCheckCircle className="w-5 h-5" />
                           Mark as read
                         </button>
                       </div>
@@ -505,7 +501,7 @@ export default function NotificationsList({
             <div className="flex justify-center pt-4">
               <button
                 onClick={loadMore}
-                className="px-4 py-2 rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300"
+                className="min-h-11 w-full sm:w-auto px-4 py-2 rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                 type="button"
               >
                 Load more
@@ -518,6 +514,7 @@ export default function NotificationsList({
         <Transition appear show={isDetailsOpen} as={Fragment}>
           <Dialog as="div" className="relative z-50" onClose={closeDetails}>
             <Transition.Child
+          
               as={Fragment}
               enter="ease-out duration-200"
               enterFrom="opacity-0"
@@ -540,10 +537,10 @@ export default function NotificationsList({
                   leaveFrom="opacity-100 scale-100"
                   leaveTo="opacity-0 scale-95"
                 >
-                  <Dialog.Panel className="w-full max-w-lg overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+                  <Dialog.Panel className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl pb-[calc(env(safe-area-inset-bottom)+16px)]">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <Dialog.Title className="text-lg font-semibold">
+                      <div className="min-w-0">
+                        <Dialog.Title className="text-lg font-semibold truncate">
                           {selected?.type ?? "Notification"}
                         </Dialog.Title>
                         <p className="text-xs text-slate-500 mt-1">
@@ -553,7 +550,7 @@ export default function NotificationsList({
 
                       <button
                         onClick={closeDetails}
-                        className="text-slate-500 hover:text-slate-700"
+                        className="h-11 w-11 inline-flex items-center justify-center rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                         type="button"
                         aria-label="Close modal"
                       >
@@ -562,7 +559,7 @@ export default function NotificationsList({
                     </div>
 
                     <div className="mt-4">
-                      <div className="flex items-center gap-2 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
                         <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">
                           Status: {selected?.status}
                         </span>
@@ -575,18 +572,18 @@ export default function NotificationsList({
                         </span>
                       </div>
 
-                      <p className="mt-4 text-sm text-slate-700 whitespace-pre-wrap">
+                      <p className="mt-4 text-sm text-slate-700 whitespace-pre-wrap break-words">
                         {selected?.message ?? ""}
                       </p>
                     </div>
 
-                    <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div className="flex gap-2">
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         {selected?.status === "UNREAD" ? (
                           <button
                             onClick={() => selected && markOneRead(selected.id)}
                             disabled={isBusy}
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm ${
+                            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 min-h-11 rounded-md text-sm ${
                               isBusy
                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                 : "bg-green-600 text-white hover:bg-green-700"
@@ -600,7 +597,7 @@ export default function NotificationsList({
                           <button
                             onClick={() => selected && markOneUnread(selected.id)}
                             disabled={isBusy}
-                            className={`px-4 py-2 rounded-md text-sm ${
+                            className={`w-full sm:w-auto px-4 py-2 min-h-11 rounded-md text-sm ${
                               isBusy
                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                 : "bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -612,11 +609,11 @@ export default function NotificationsList({
                         )}
                       </div>
 
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <button
                           onClick={() => setIsDeleteConfirmOpen(true)}
                           disabled={isBusy}
-                          className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm ${
+                          className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 min-h-11 rounded-md text-sm ${
                             isBusy
                               ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                               : "bg-red-600 text-white hover:bg-red-700"
@@ -659,7 +656,7 @@ export default function NotificationsList({
                               leaveFrom="opacity-100 scale-100"
                               leaveTo="opacity-0 scale-95"
                             >
-                              <Dialog.Panel className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+                              <Dialog.Panel className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl pb-[calc(env(safe-area-inset-bottom)+16px)]">
                                 <Dialog.Title className="text-lg font-semibold">
                                   Delete notification?
                                 </Dialog.Title>
@@ -668,11 +665,11 @@ export default function NotificationsList({
                                   הפעולה הזו תמחק את ההתראה לצמיתות.
                                 </p>
 
-                                <div className="mt-6 flex justify-end gap-2">
+                                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                   <button
                                     onClick={() => setIsDeleteConfirmOpen(false)}
                                     disabled={isBusy}
-                                    className="px-4 py-2 rounded-md text-sm bg-slate-200 text-slate-700 hover:bg-slate-300"
+                                    className="w-full sm:w-auto min-h-11 px-4 py-2 rounded-md text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                                     type="button"
                                   >
                                     Cancel
@@ -681,11 +678,11 @@ export default function NotificationsList({
                                   <button
                                     onClick={confirmDelete}
                                     disabled={isBusy}
-                                    className={`px-4 py-2 rounded-md text-sm ${
+                                    className={`w-full sm:w-auto min-h-11 px-4 py-2 rounded-md text-sm ${
                                       isBusy
                                         ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                         : "bg-red-600 text-white hover:bg-red-700"
-                                    }`}
+                                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500`}
                                     type="button"
                                   >
                                     {deletingOne ? "Deleting..." : "Delete"}
@@ -734,14 +731,12 @@ export default function NotificationsList({
                   leaveFrom="opacity-100 scale-100"
                   leaveTo="opacity-0 scale-95"
                 >
-                  <Dialog.Panel className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+                  <Dialog.Panel className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl pb-[calc(env(safe-area-inset-bottom)+16px)]">
                     <div className="flex items-start justify-between gap-3">
-                      <Dialog.Title className="text-lg font-semibold">
-                        Mark all as read?
-                      </Dialog.Title>
+                      <Dialog.Title className="text-lg font-semibold">Mark all as read?</Dialog.Title>
                       <button
                         onClick={() => setIsMarkAllConfirmOpen(false)}
-                        className="text-slate-500 hover:text-slate-700"
+                        className="h-11 w-11 inline-flex items-center justify-center rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                         type="button"
                         aria-label="Close"
                       >
@@ -753,11 +748,11 @@ export default function NotificationsList({
                       יסמן את כל ההתראות הבלתי נקראות כנקראו (בהתאם לחיפוש הנוכחי אם קיים).
                     </p>
 
-                    <div className="mt-6 flex justify-end gap-2">
+                    <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <button
                         onClick={() => setIsMarkAllConfirmOpen(false)}
                         disabled={isBusy}
-                        className="px-4 py-2 rounded-md text-sm bg-slate-200 text-slate-700 hover:bg-slate-300"
+                        className="w-full sm:w-auto min-h-11 px-4 py-2 rounded-md text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                         type="button"
                       >
                         Cancel
@@ -766,11 +761,11 @@ export default function NotificationsList({
                       <button
                         onClick={confirmMarkAll}
                         disabled={isBusy}
-                        className={`px-4 py-2 rounded-md text-sm ${
+                        className={`w-full sm:w-auto min-h-11 px-4 py-2 rounded-md text-sm ${
                           isBusy
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                             : "bg-green-600 text-white hover:bg-green-700"
-                        }`}
+                        } focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500`}
                         type="button"
                       >
                         {markingAll ? "Marking..." : "Confirm"}

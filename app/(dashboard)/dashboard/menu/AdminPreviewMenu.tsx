@@ -29,61 +29,75 @@ const AdminPreviewMenu = ({ menu }: Props) => {
 
   return (
     <>
-      <HiOutlineEye onClick={openModal} className="cursor-pointer h-6 w-6 text-slate-700" />
+      <button
+        type="button"
+        onClick={openModal}
+        className="inline-flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-md hover:bg-slate-100 transition"
+        aria-label={`Preview ${menu.title}`}
+      >
+        <HiOutlineEye className="h-6 w-6 text-slate-700" />
+      </button>
 
       <Modal isOpen={isOpen} closeModal={closeModal} title={menu.title}>
-        <div className="relative">
-          <Image
-            src={menu.image}
-            alt={menu.title}
-            width={360}
-            height={200}
-            className="h-56 w-full object-cover rounded-t-lg"
-          />
-        </div>
-
-        <div className="my-2">
-          <h3 className="font-semibold text-gray-600">Price:</h3>
-          {menu.sellingPrice ? (
-            <div className="flex items-center gap-2">
-              <p className="text-slate-400 line-through">${menu.price}</p>
-              <p className="text-green-600 font-semibold">${menu.sellingPrice}</p>
-            </div>
-          ) : (
-            <p className="text-green-600 font-semibold">${menu.price}</p>
-          )}
-        </div>
-
-        <div className="my-2">
-          <h3 className="font-semibold text-gray-600">Long Description:</h3>
-          <p className="text-sm text-gray-400">{menu.longDescr || "-"}</p>
-        </div>
-
-        <div className="my-2">
-          <h3 className="font-semibold text-gray-600">Short Description:</h3>
-          <p className="text-sm text-gray-400">{menu.shortDescr}</p>
-        </div>
-
-        <div className="my-4">
-          <h3 className="font-semibold text-gray-600">Category:</h3>
-          <p className="text-gray-500">{menu.category}</p>
-        </div>
-
-        {menu.prepType?.length ? (
-          <div className="my-4">
-            <h3 className="font-semibold text-gray-600">Preparation Types:</h3>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {menu.prepType.map((p) => (
-                <span
-                  key={p}
-                  className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded"
-                >
-                  {p}
-                </span>
-              ))}
-            </div>
+        {/* Mobile-safe modal wrapper */}
+        <div className="w-[min(100vw-2rem,40rem)] max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <div className="relative">
+            <Image
+              src={menu.image}
+              alt={menu.title}
+              width={960}
+              height={540}
+              className="h-48 sm:h-56 w-full object-cover rounded-t-lg"
+            />
           </div>
-        ) : null}
+
+          <div className="p-3 sm:p-4">
+            <div className="my-2">
+              <h3 className="font-semibold text-gray-600">Price:</h3>
+              {menu.sellingPrice ? (
+                <div className="flex items-center gap-2">
+                  <p className="text-slate-400 line-through">${menu.price}</p>
+                  <p className="text-green-600 font-semibold">${menu.sellingPrice}</p>
+                </div>
+              ) : (
+                <p className="text-green-600 font-semibold">${menu.price}</p>
+              )}
+            </div>
+
+            <div className="my-2">
+              <h3 className="font-semibold text-gray-600">Long Description:</h3>
+              <p className="text-sm text-gray-400 break-words">
+                {menu.longDescr || "-"}
+              </p>
+            </div>
+
+            <div className="my-2">
+              <h3 className="font-semibold text-gray-600">Short Description:</h3>
+              <p className="text-sm text-gray-400 break-words">{menu.shortDescr}</p>
+            </div>
+
+            <div className="my-4">
+              <h3 className="font-semibold text-gray-600">Category:</h3>
+              <p className="text-gray-500 break-words">{menu.category}</p>
+            </div>
+
+            {menu.prepType?.length ? (
+              <div className="my-4">
+                <h3 className="font-semibold text-gray-600">Preparation Types:</h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {menu.prepType.map((p) => (
+                    <span
+                      key={p}
+                      className="bg-green-100 text-green-700 text-xs font-medium px-3 py-1 rounded"
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </Modal>
     </>
   );

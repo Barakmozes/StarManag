@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { HiOutlineTrash } from "react-icons/hi2";
 import { useMutation } from "@urql/next";
@@ -35,10 +37,9 @@ const AdminDeleteCategory = ({ category }: Props) => {
 
   const deleteCategoryId = category.id;
 
-  const [_, deleteCategory] = useMutation<
-    DeleteCategoryMutation,
-    DeleteCategoryMutationVariables
-  >(DeleteCategoryDocument);
+  const [, deleteCategory] = useMutation<DeleteCategoryMutation, DeleteCategoryMutationVariables>(
+    DeleteCategoryDocument
+  );
 
   const deleteOldCategoryImg = async () => {
     const file = category.img;
@@ -66,45 +67,50 @@ const AdminDeleteCategory = ({ category }: Props) => {
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      toast.error(
-        "Delete failed. If this category has menus attached, remove/move them first.",
-        { duration: 3000 }
-      );
+      toast.error("Delete failed. If this category has menus attached, remove/move them first.", {
+        duration: 3000,
+      });
     }
   };
 
   return (
     <>
-      <HiOutlineTrash
+      <button
+        type="button"
         onClick={openModal}
-        className="cursor-pointer h-6 w-6 text-red-600"
-      />
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+        aria-label={`Delete category ${category.title}`}
+        title="Delete"
+      >
+        <HiOutlineTrash className="h-6 w-6 text-red-600" />
+      </button>
 
       <Modal isOpen={isOpen} title={category.title} closeModal={closeModal}>
-        <div className="text-center">
-          <HiOutlineTrash className="mx-auto mb-4 text-gray-400 w-12 h-12" />
-          <h3 className="mb-5 text-lg font-normal text-gray-500">
-            Are you sure you want to delete this category?
-          </h3>
+        {/* Mobile-safe: prevent overflow + safe-area bottom padding */}
+        <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
+          <div className="text-center">
+            <HiOutlineTrash className="mx-auto mb-4 text-gray-400 w-12 h-12" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500">
+              Are you sure you want to delete this category?
+            </h3>
 
-          <div className="flex justify-center gap-4">
-            <button
-              type="button"
-              onClick={handleDeleteCategory}
-              className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300
-              font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center"
-            >
-              Yes, I&apos;m sure
-            </button>
+            <div className="flex flex-col-reverse sm:flex-row justify-center gap-2 sm:gap-4">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="w-full sm:w-auto min-h-11 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900"
+              >
+                No, cancel
+              </button>
 
-            <button
-              type="button"
-              onClick={closeModal}
-              className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200
-              rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900"
-            >
-              No, cancel
-            </button>
+              <button
+                type="button"
+                onClick={handleDeleteCategory}
+                className="w-full sm:w-auto min-h-11 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center justify-center px-5 py-2.5 text-center"
+              >
+                Yes, I&apos;m sure
+              </button>
+            </div>
           </div>
         </div>
       </Modal>

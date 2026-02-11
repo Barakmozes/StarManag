@@ -50,7 +50,6 @@ function isPromo(menu: { onPromo?: boolean | null }) {
   return menu.onPromo === true;
 }
 
-
 function getPercentOff(price: number, sellingPrice?: number | null) {
   if (!sellingPrice || sellingPrice <= 0 || sellingPrice >= price) return null;
   return Math.round(((price - sellingPrice) / price) * 100);
@@ -81,7 +80,6 @@ type PromoShape = {
   PercentOff: number;
   price: number;
   oldPrice?: number | null; // המחיר הישן (למחיקה)
-
 };
 
 type PromoMenu = MenuNode & {
@@ -128,8 +126,7 @@ function PromosInner() {
 
   // URL-controlled modals
   const isBrowseAllOpen = promoParam === "all";
-  const selectedPromoId =
-    promoParam && promoParam !== "all" ? promoParam : null;
+  const selectedPromoId = promoParam && promoParam !== "all" ? promoParam : null;
 
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -232,10 +229,7 @@ function PromosInner() {
   }, [allMenus]);
 
   // ✅ keep your original look: show only 3 promo cards in the row
-  const promosForRow = useMemo(
-    () => promoMenus.slice(0, PROMO_ROW_COUNT),
-    [promoMenus]
-  );
+  const promosForRow = useMemo(() => promoMenus.slice(0, PROMO_ROW_COUNT), [promoMenus]);
 
   // O(1) lookup via Map ref (recomputed when menus change)
   const selectedMenu = useMemo(() => {
@@ -251,14 +245,11 @@ function PromosInner() {
       });
 
       // Avoid unnecessary navigations
-      const currentUrl = searchParamsString
-        ? `${pathname}?${searchParamsString}`
-        : pathname;
+      const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
       if (nextUrl === currentUrl) return;
 
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
-        // ✅ Intentionally removed router.refresh() for speed:
         // promo param only controls client UI (modals), no server refresh needed.
       });
     },
@@ -316,8 +307,6 @@ function PromosInner() {
 
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
-        // ✅ No router.refresh() here for speed.
-        // If you ever need a forced server re-render, add it back.
       });
 
       setTimeout(() => {
@@ -349,69 +338,96 @@ function PromosInner() {
     );
   }, [selectedMenu]);
 
-  /* ------------------------------ RENDER (same design as your static) ------------------------------ */
+  /* ------------------------------ RENDER ------------------------------ */
 
   return (
     <>
-      {/* ✅ keep your original design EXACTLY */}
-      <div className="max-w-2xl mx-auto my-5 text-center">
-        <ModernWaveHeading />
-      </div>
-
-      <section
-        className="flex flex-row items-center py-8 gap-4 md:justify-center 
-    justify-between my-12 overflow-x-auto"
-      >
-        {fetching && promosForRow.length === 0 ? (
-          <DataLoading />
-        ) : promosForRow.length === 0 ? (
-          // keep layout simple, no design shift
-          <div className="w-full flex flex-col items-center justify-center gap-2 py-10">
-            <p className="text-sm text-gray-500">
-              No promotions are available right now.
-            </p>
-            <button
-              type="button"
-              onClick={refreshPromos}
-              className="rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-            >
-              Retry
-            </button>
+      {/* Compact + professional on mobile, keep original heading on sm+ */}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        {/* Mobile header (compact, doesn’t waste vertical space) */}
+        <div className="sm:hidden flex items-end justify-between gap-3 pt-4">
+          <div className="min-w-0">
+            <ModernWaveHeading />
+            <p className="mt-0.5 text-xs text-gray-500">Best deals right now</p>
           </div>
-        ) : (
-          promosForRow.map((menu) => {
-            const promo = menuToPromo(menu);
-            return (
-              <div
-                key={promo.id}
-                onClick={() => openPromo(menu)}
-                className="cursor-pointer"
+
+          <button
+            type="button"
+            onClick={openBrowseAll}
+            className="min-h-11 shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+          >
+            View all
+          </button>
+        </div>
+
+        {/* Desktop heading (keep your original design) */}
+        <div className="hidden sm:block max-w-2xl mx-auto mt-6 mb-2 text-center">
+          <ModernWaveHeading />
+        </div>
+
+        {/* Promo row: compact padding + smooth horizontal scroll + snap */}
+        <section
+          className="-mx-4 sm:-mx-6 mt-3 mb-6 sm:mt-6 sm:mb-10 flex flex-row items-stretch justify-start gap-3 sm:gap-6 overflow-x-auto px-4 sm:px-6 pt-2 sm:pt-4 pb-2 sm:pb-3 snap-x snap-proximity scroll-px-4 sm:scroll-px-6 overscroll-x-contain scrollbar-hide [-webkit-overflow-scrolling:touch]"
+          aria-label="Promotions"
+        >
+          {fetching && promosForRow.length === 0 ? (
+            <div className="w-full flex justify-center py-2">
+              <DataLoading />
+            </div>
+          ) : promosForRow.length === 0 ? (
+            <div className="w-full flex flex-col items-center justify-center gap-3 py-6">
+              <p className="text-sm text-gray-500">No promotions are available right now.</p>
+              <button
+                type="button"
+                onClick={refreshPromos}
+                className="min-h-11 rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
-                <PromoCard promo={promo} />
-              </div>
-            );
-          })
-        )}
-      </section>
+                Retry
+              </button>
+            </div>
+          ) : (
+            promosForRow.map((menu) => {
+              const promo = menuToPromo(menu);
+              return (
+                <div
+                  key={promo.id}
+                  onClick={() => openPromo(menu)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openPromo(menu);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className="cursor-pointer shrink-0 snap-start focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 rounded-lg"
+                >
+                  <PromoCard promo={promo} />
+                </div>
+              );
+            })
+          )}
+        </section>
+      </div>
 
       {/* ✅ MODALS exist, but they do not change the main design unless opened */}
 
       {/* Browse all promos modal */}
       <Modal isOpen={isBrowseAllOpen} closeModal={closeModals}>
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-4">
+        <div className="p-3 sm:p-4 max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+20px)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Promotions</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800">Promotions</h3>
+              <p className="text-xs sm:text-sm text-gray-500">
                 Browse all deals currently available.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <button
                 type="button"
                 onClick={refreshPromos}
-                className="rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                className="min-h-11 w-full sm:w-auto rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 Refresh
               </button>
@@ -419,29 +435,29 @@ function PromosInner() {
               <button
                 type="button"
                 onClick={closeModals}
-                className="rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                className="min-h-11 w-full sm:w-auto rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 Close
               </button>
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search promos (title or category)…"
-              className="w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+              className="w-full min-h-11 rounded border border-gray-200 bg-white px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
             {fetching && filteredPromos.length === 0 ? (
               <>
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div
                     key={`promo-grid-skel-${idx}`}
-                    className="h-40 rounded-lg bg-slate-200 animate-pulse"
+                    className="h-36 sm:h-40 rounded-lg bg-slate-200 animate-pulse"
                     aria-hidden="true"
                   />
                 ))}
@@ -452,7 +468,7 @@ function PromosInner() {
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="rounded bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                  className="min-h-11 rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                 >
                   Clear search
                 </button>
@@ -463,22 +479,22 @@ function PromosInner() {
                   key={`grid-${m.id}`}
                   type="button"
                   onClick={() => openPromo(m)}
-                  className="text-left"
+                  className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 rounded-lg"
                 >
                   <div className="rounded-lg border border-gray-100 p-3 hover:bg-green-50 transition">
                     <div className="flex gap-3">
                       <Image
                         src={m.image}
-                        width={88}
-                        height={88}
+                        width={72}
+                        height={72}
                         alt={m.title}
-                        sizes="80px"
-                        className="h-20 w-20 rounded object-cover"
+                        sizes="72px"
+                        className="h-16 w-16 sm:h-20 sm:w-20 rounded object-cover"
                       />
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800">{m.title}</p>
-                        <p className="text-xs text-gray-500">{m.category}</p>
-                        <p className="mt-2 text-sm text-red-600 font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800 truncate">{m.title}</p>
+                        <p className="text-xs text-gray-500 truncate">{m.category}</p>
+                        <p className="mt-1.5 text-sm text-red-600 font-semibold">
                           {money(m._effectivePrice)}
                         </p>
                       </div>
@@ -495,7 +511,7 @@ function PromosInner() {
                 type="button"
                 onClick={onLoadMore}
                 disabled={fetching}
-                className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                className="min-h-11 w-full sm:w-auto rounded bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-60"
               >
                 Load more
               </button>
@@ -506,112 +522,112 @@ function PromosInner() {
 
       {/* Promo details modal */}
       <Modal isOpen={Boolean(selectedPromoId)} closeModal={closeModals}>
-        {!selectedMenu ? (
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Promotion not found
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              This promotion may have expired or the link is incorrect.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={closeModals}
-                className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={openBrowseAll}
-                className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500"
-              >
-                Browse all deals
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="relative">
-              <Image
-                src={selectedMenu.image}
-                width={720}
-                height={420}
-                alt={selectedMenu.title}
-                sizes="(max-width: 768px) 100vw, 720px"
-                className="h-56 w-full object-cover rounded-t-lg"
-              />
-              <div className="absolute top-3 right-3 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white">
-                {selectedPercentOff ? `${selectedPercentOff}% Off` : "Promo"}
-              </div>
-            </div>
-
-            <div className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {selectedMenu.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">{selectedMenu.shortDescr}</p>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-red-600 font-semibold">
-                    {money(selectedEffectivePrice)}
-                  </p>
-                  {selectedHasDiscount && (
-                    <p className="text-xs text-gray-400 line-through">
-                      {money(selectedMenu.price)}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {selectedMenu.longDescr && (
-                <p className="text-sm text-gray-500">{selectedMenu.longDescr}</p>
-              )}
-
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                  {selectedMenu.category}
-                </span>
-                {selectedMenu.onPromo && (
-                  <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700">
-                    On Promo
-                  </span>
-                )}
-              </div>
-
-              <div className="pt-2 flex flex-col gap-2">
+        <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+20px)]">
+          {!selectedMenu ? (
+            <div className="p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                Promotion not found
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                This promotion may have expired or the link is incorrect.
+              </p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
-                  className="form-button"
-                  onClick={() => showInMenuByCategory(selectedMenu.category)}
+                  onClick={closeModals}
+                  className="min-h-11 w-full sm:w-auto rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                 >
-                  Order from Menu
+                  Close
                 </button>
+                <button
+                  type="button"
+                  onClick={openBrowseAll}
+                  className="min-h-11 w-full sm:w-auto rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                >
+                  Browse all deals
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="relative">
+                <Image
+                  src={selectedMenu.image}
+                  width={720}
+                  height={420}
+                  alt={selectedMenu.title}
+                  sizes="(max-width: 768px) 100vw, 720px"
+                  className="h-40 sm:h-56 w-full object-cover rounded-t-lg"
+                />
+                <div className="absolute top-3 right-3 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                  {selectedPercentOff ? `${selectedPercentOff}% Off` : "Promo"}
+                </div>
+              </div>
 
-                <div className="flex gap-2">
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">
+                      {selectedMenu.title}
+                    </h3>
+                    <p className="text-sm text-gray-500">{selectedMenu.shortDescr}</p>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <p className="text-red-600 font-semibold">{money(selectedEffectivePrice)}</p>
+                    {selectedHasDiscount && (
+                      <p className="text-xs text-gray-400 line-through">
+                        {money(selectedMenu.price)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedMenu.longDescr && (
+                  <p className="text-sm text-gray-500 break-words">{selectedMenu.longDescr}</p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                    {selectedMenu.category}
+                  </span>
+                  {selectedMenu.onPromo && (
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700">
+                      On Promo
+                    </span>
+                  )}
+                </div>
+
+                <div className="pt-1 sm:pt-2 flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={openBrowseAll}
-                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 w-full"
+                    className="form-button w-full min-h-11"
+                    onClick={() => showInMenuByCategory(selectedMenu.category)}
                   >
-                    Browse all deals
+                    Order from Menu
                   </button>
-                  <button
-                    type="button"
-                    onClick={refreshPromos}
-                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 w-full"
-                  >
-                    Refresh
-                  </button>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={openBrowseAll}
+                      className="min-h-11 rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                    >
+                      Browse all deals
+                    </button>
+                    <button
+                      type="button"
+                      onClick={refreshPromos}
+                      className="min-h-11 rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                    >
+                      Refresh
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </Modal>
     </>
   );

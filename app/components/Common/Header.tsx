@@ -160,18 +160,52 @@ if (!identifier) {
           {!["WAITER", "MANAGER"].includes(user?.role) && <LocationBtn />}
         </div>
 
-        <div className="flex flex-col border-t ">
-          {user?.role === "ADMIN" && (
-            <div className="mt-5">
-              <Link
-                href="/dashboard"
-                className="bg-green-600  text-white text-center hover:bg-green-200  hover:text-green-700  p-3 rounded "
-              >
-                Go to Dashboard
-              </Link>
-            </div>
-          )}
+   {/* Admin Dashboard link (desktop only, header-native style) */}
+{/* Admin Dashboard link + cute tooltip (desktop only) */}
+{user?.role === "ADMIN" && (
+  <div className="hidden md:flex ml-auto items-center mr-4">
+    <div className="relative group">
+      <Link
+        href="/dashboard"
+        className="
+          inline-flex items-center justify-center
+          rounded-full bg-slate-200 px-4 py-2
+          text-sm font-semibold text-slate-700
+          shadow-sm transition
+          hover:bg-green-200 hover:text-green-700
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500
+        "
+        aria-label="Go to Dashboard"
+      >
+        Dashboard
+      </Link>
+
+      {/* Tooltip */}
+      <div
+        className="
+          pointer-events-none absolute right-0 top-full z-50 mt-2 w-64
+          rounded-xl bg-white/90 p-3 text-xs text-slate-700
+          shadow-lg ring-1 ring-slate-200 backdrop-blur
+          opacity-0 translate-y-1 transition duration-200
+          group-hover:opacity-100 group-hover:translate-y-0
+          group-focus-within:opacity-100 group-focus-within:translate-y-0
+        "
+      >
+        {/* little arrow */}
+        <div className="absolute -top-1 right-5 h-2 w-2 rotate-45 bg-white/90 ring-1 ring-slate-200" />
+
+        <div className="space-y-1">
+          <p className="font-semibold text-slate-800">✨ -Let's try the dashboard- <br />בוא ננסה את הדשבורד</p>
+          <p className="text-slate-600">
+            ניהול תפריטים, הזמנות ותפקידים—בלחיצה אחת. מומלץ להיכנס ולהתנסות 
+          </p>
         </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
         {/* Center Area - Display Zones for Desktop */}
         {["WAITER", "MANAGER"].includes(user?.role) &&
           (fetching ? (
@@ -225,30 +259,47 @@ if (!identifier) {
         {/* Right Area */}
         <div className="hidden md:flex items-center justify-end space-x-4">
           
-          {/* Role switch button + small explanation (kept subtle to not change design) */}
-          {user ? (
-            <div className="flex items-center gap-3">
-              
-              <p className="hidden xl:block text-xs text-slate-400 leading-tight max-w-[240px]">
-                Use this to enter a different role (Admin/Manager/Waiter…) and see
-                different screens & flows.
-              </p>
-             
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-slate-200 text-gray-500 px-4 py-1 rounded-full hover:bg-green-200 hover:text-green-600"
-                onClick={() => setIsRoleModalOpen(true)}
-                aria-label="Switch your role"
-              >
-                <HiOutlinePencilSquare className="h-5 w-5" />
-                <span className="hidden lg:inline">Switch Role</span>
-              </button>
+       {/* Role switch button + tooltip on hover */}
+{user ? (
+  <div className="flex items-center gap-3">
+    <div className="relative group">
+      <button
+        type="button"
+        className="flex items-center gap-2 bg-slate-200 text-gray-500 px-4 py-1 rounded-full hover:bg-green-200 hover:text-green-600"
+        onClick={() => setIsRoleModalOpen(true)}
+        aria-label="Switch your role"
+      >
+        <HiOutlinePencilSquare className="h-5 w-5" />
+        <span className="hidden lg:inline">Switch Role</span>
+      </button>
 
-                  <p className="hidden xl:block text-xs text-slate-400 leading-tight max-w-[240px]">
-              השתמש בכפתור זה כדי להחליף לתפקיד אחר (מנהל/מנהל/מלצר...) ולראות מסכים וזרימות שונות.
-              </p>
-            </div>
-          ) : null}
+      {/* Tooltip (shows only on hover/focus) */}
+      <div
+        className="
+          pointer-events-none hidden xl:block
+          absolute left-1/2 top-full z-50 mt-2 w-[300px] -translate-x-1/2
+          rounded-xl bg-white/90 p-3 text-xs text-slate-700
+          shadow-lg ring-1 ring-slate-200 backdrop-blur
+          opacity-0 translate-y-1 transition duration-200
+          group-hover:opacity-100 group-hover:translate-y-0
+          group-focus-within:opacity-100 group-focus-within:translate-y-0
+        "
+      >
+        <p className="leading-snug text-slate-600">
+          Use this to enter a different role (Admin/Manager/Waiter…) and see
+          different screens & flows.
+        </p>
+
+        <div className="mt-2 border-t border-slate-200/70 pt-2" dir="rtl">
+          <p className="leading-snug text-slate-600 text-right">
+            השתמש בכפתור זה כדי להחליף לתפקיד אחר (מנהל/מנהל/מלצר...) ולראות מסכים וזרימות שונות.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+) : null}
+
 
           {/* Shopping Cart */}
           <Link
@@ -278,6 +329,7 @@ if (!identifier) {
             </button>
           )}
         </div>
+        
       </header>
 
       {/* ----------------------------- About modal ----------------------------- */}

@@ -17,7 +17,13 @@ const Footer = () => {
           <div className="md:col-span-4">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-white p-2 shadow-sm">
-                <Image src="/img/logo.png" alt="StarManag" width={40} height={40} priority />
+                <Image
+                  src="/img/logo.png"
+                  alt="StarManag"
+                  width={40}
+                  height={40}
+                  priority
+                />
               </div>
               <div>
                 <p className="text-lg font-semibold leading-tight">StarManag</p>
@@ -28,8 +34,8 @@ const Footer = () => {
             </div>
 
             <p className="mt-5 text-sm leading-6 text-slate-300">
-              Manage menus, orders, deliveries, and staff with a clean dashboard and a smooth user
-              experience.
+              Manage menus, orders, deliveries, and staff with a clean dashboard
+              and a smooth user experience.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -50,11 +56,17 @@ const Footer = () => {
             <div className="mt-6 text-sm text-slate-400">
               <p>
                 Need support?{" "}
-                <Link href="/help" className="font-medium text-slate-200 hover:underline">
+                <Link
+                  href="/help"
+                  className="font-medium text-slate-200 hover:underline"
+                >
                   Help Center
                 </Link>{" "}
                 or{" "}
-                <Link href="/contact-us" className="font-medium text-slate-200 hover:underline">
+                <Link
+                  href="/contact-us"
+                  className="font-medium text-slate-200 hover:underline"
+                >
                   Contact Us
                 </Link>
                 .
@@ -65,9 +77,10 @@ const Footer = () => {
           {/* Link columns */}
           <div className="md:col-span-8">
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-              {/* Product */}
               <div>
-                <h3 className="text-sm font-semibold tracking-wide text-white">PRODUCT</h3>
+                <h3 className="text-sm font-semibold tracking-wide text-white">
+                  PRODUCT
+                </h3>
                 <ul className="mt-4 space-y-2 text-sm">
                   <li>
                     <Link className="text-slate-300 hover:text-white" href="/">
@@ -75,92 +88,116 @@ const Footer = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/cart">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/cart"
+                    >
                       Cart
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/user/favorites">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/user/favorites"
+                    >
                       Favorites
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/user">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/user"
+                    >
                       My Account
                     </Link>
                   </li>
                 </ul>
               </div>
 
-              {/* Support */}
               <div>
-                <h3 className="text-sm font-semibold tracking-wide text-white">SUPPORT</h3>
+                <h3 className="text-sm font-semibold tracking-wide text-white">
+                  SUPPORT
+                </h3>
                 <ul className="mt-4 space-y-2 text-sm">
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/help">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/help"
+                    >
                       Help Center
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/faqs">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/faqs"
+                    >
                       FAQs
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/shipping">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/shipping"
+                    >
                       Shipping & Delivery
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/contact-us">
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/contact-us"
+                    >
                       Contact Us
                     </Link>
                   </li>
                 </ul>
               </div>
 
-              {/* Legal */}
-              <div>
-                <h3 className="text-sm font-semibold tracking-wide text-white">LEGAL</h3>
+              <div className="col-span-2 sm:col-span-1">
+                <h3 className="text-sm font-semibold tracking-wide text-white">
+                  COMPANY
+                </h3>
                 <ul className="mt-4 space-y-2 text-sm">
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/terms-of-use">
-                      Terms of Use
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="text-slate-300 hover:text-white" href="/privacy">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <a
+                    <Link
                       className="text-slate-300 hover:text-white"
-                      href=""
-                      target="_blank"
-                      rel="noreferrer"
+                      href="/about"
                     >
-                      GitHub Repo
-                    </a>
+                      About
+                    </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-300 hover:text-white" href="/login">
-                      Login
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/privacy"
+                    >
+                      Privacy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/terms-of-use"
+                    >
+                      Terms
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      className="text-slate-300 hover:text-white"
+                      href="/dashboard"
+                    >
+                      Admin Dashboard
                     </Link>
                   </li>
                 </ul>
-              </div>
-            </div>
 
-            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-slate-300">
-                Tip: If you’re a manager/admin, you can manage categories, menus, and restaurant
-                settings from the{" "}
-                <Link href="/dashboard/settings" className="font-medium text-white hover:underline">
-                  Settings
-                </Link>{" "}
-                screen.
-              </p>
+                <p className="mt-6 text-xs leading-5 text-slate-400">
+                  Built with Next.js 14, GraphQL (Pothos), Prisma & Supabase —
+                  deployed on Vercel.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -194,7 +231,10 @@ const Footer = () => {
       <FooterMobile />
 
       {/* Spacer so the fixed mobile nav doesn't cover the last content */}
-      <div className="h-24 md:hidden" />
+      <div
+        className="h-[calc(6rem+env(safe-area-inset-bottom))] md:hidden"
+        aria-hidden="true"
+      />
     </footer>
   );
 };

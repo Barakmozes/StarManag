@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useClient, useQuery } from "@urql/next";
@@ -23,9 +16,7 @@ import {
 
 /* ------------------------------ helpers ------------------------------ */
 
-type MenuNode = NonNullable<
-  NonNullable<GetMenusQuery["getMenus"]["edges"][number]>["node"]
->;
+type MenuNode = NonNullable<NonNullable<GetMenusQuery["getMenus"]["edges"][number]>["node"]>;
 
 type PriceKey = "all" | "0-5" | "6-10" | "11-15" | "15+";
 
@@ -38,7 +29,7 @@ const PAGE_SIZE = 4;
 const FILTER_BATCH = 60; // moderate page size for fewer round trips
 const MAX_SCAN = 10000; // max menus scanned in filter mode (safety)
 
-const SKELETON_ITEMS = Array.from({ length: 10 });
+const SKELETON_ITEMS = Array.from({ length: 8 });
 
 function normalizeStr(x: unknown) {
   return (x ?? "").toString().toLowerCase().trim();
@@ -77,23 +68,29 @@ function matchesMenu(node: MenuNode, qNorm: string, category: string, price: Pri
   );
 }
 
-/* ------------------------------ shared skeleton (same UI) ------------------------------ */
+/* ------------------------------ shared skeleton (responsive) ------------------------------ */
 
 const MenuSkeleton = React.memo(function MenuSkeleton() {
   return (
-    <div className="flex flex-row items-center md:justify-center justify-between mt-12 md:gap-12 overflow-x-auto">
-      <DataLoading />
-      {SKELETON_ITEMS.map((_, idx) => (
-        <div
-          key={`cat-skel-${idx}`}
-          className="flex flex-col rounded-full h-16 w-16 items-center justify-center p-3 shrink-0 overflow-hidden bg-transparent"
-          aria-hidden="true"
-        >
-          <div className="h-56 w-56 rounded-full bg-slate-200 animate-pulse" />
-          <div className="mt-1 h-3 w-12 rounded bg-slate-200 animate-pulse" />
-        </div>
-      ))}
-      <DataLoading />
+    <div className="mt-8 w-full">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        {SKELETON_ITEMS.map((_, idx) => (
+          <div
+            key={`menu-skel-${idx}`}
+            className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm"
+            aria-hidden="true"
+          >
+            <div className="h-40 w-full rounded bg-slate-200 animate-pulse" />
+            <div className="mt-3 h-4 w-3/4 rounded bg-slate-200 animate-pulse" />
+            <div className="mt-2 h-3 w-1/2 rounded bg-slate-200 animate-pulse" />
+            <div className="mt-4 h-11 w-full rounded bg-slate-200 animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex justify-center">
+        <DataLoading />
+      </div>
     </div>
   );
 });
@@ -161,8 +158,8 @@ const FetchedMenus = React.memo(function FetchedMenus({
       {!menus || menus.length === 0 ? (
         <MenuSkeleton />
       ) : (
-        <div className="mb-24 space-y-5">
-          <div className=" mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  ">
+        <div className="mb-16 sm:mb-24 space-y-5 w-full">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {menus.map((MenuEdge) => (
               <MenuModal
                 key={MenuEdge?.node?.id}
@@ -173,13 +170,14 @@ const FetchedMenus = React.memo(function FetchedMenus({
           </div>
 
           {isLastPage && hasNextPage && endCursor && (
-            <button
-              onClick={() => onLoadMore(endCursor)}
-              className="bg-green-600 text-white text-center
-      hover:bg-green-200  hover:text-green-700  p-3 rounded  focus:outline-none "
-            >
-              LoadMore
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => onLoadMore(endCursor)}
+                className="min-h-11 w-full sm:w-auto rounded bg-green-600 px-6 py-3 text-center text-sm font-medium text-white hover:bg-green-200 hover:text-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 transition"
+              >
+                LoadMore
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -410,25 +408,22 @@ const FilteredMenus = React.memo(function FilteredMenus({
       {!slice || slice.length === 0 ? (
         <MenuSkeleton />
       ) : (
-        <div className="mb-24 space-y-5">
-          <div className=" mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  ">
+        <div className="mb-16 sm:mb-24 space-y-5 w-full">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {slice.map((node) => (
-              <MenuModal
-                key={node.id}
-                menu={node as unknown as Menu}
-                user={user as User}
-              />
+              <MenuModal key={node.id} menu={node as unknown as Menu} user={user as User} />
             ))}
           </div>
 
           {hasMore && (
-            <button
-              onClick={() => setVisible((v) => v + PAGE_SIZE)}
-              className="bg-green-600 text-white text-center
-      hover:bg-green-200  hover:text-green-700  p-3 rounded  focus:outline-none "
-            >
-              LoadMore
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                className="min-h-11 w-full sm:w-auto rounded bg-green-600 px-6 py-3 text-center text-sm font-medium text-white hover:bg-green-200 hover:text-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 transition"
+              >
+                LoadMore
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -438,7 +433,7 @@ const FilteredMenus = React.memo(function FilteredMenus({
   );
 });
 
-/* ------------------------------ main section (same UI) ------------------------------ */
+/* ------------------------------ main section (responsive wrapper) ------------------------------ */
 
 type MenuSectionProps = {
   user: User;
@@ -471,11 +466,13 @@ const MenuSectionContent = ({ user }: MenuSectionProps) => {
   }, []);
 
   return (
-    <section className="mb-24 flex flex-col items-center md:justify-center">
-      <div className="text-center">
-        <h2 className="text-3xl  leading-tight tracking-tight text-gray-600 sm:text-4xl ">
-          Menu
-        </h2>
+    <section className="mb-24 w-full">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-3xl leading-tight tracking-tight text-gray-600 sm:text-4xl">
+            Menu
+          </h2>
+        </div>
 
         {filtersActive ? (
           <FilteredMenus

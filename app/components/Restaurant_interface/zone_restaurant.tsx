@@ -46,11 +46,11 @@ const ZoneRestaurant = () => {
     pause: true,
   });
 
-
   // GraphQL mutation to update table position in DB
   const [updateManyResult, updateManyTables] = useMutation(
     UpdateManyTablesDocument
   );
+
   // 2) Zustand store references
   const {
     tables,
@@ -66,36 +66,40 @@ const ZoneRestaurant = () => {
   // 3) Local UI state: showAllTables toggles the "all areas" view
   const [showAllTables, setShowAllTables] = useState(false);
   const [showAllTablesable, setshowAllTablesable] = useState(false);
-  
+
+  // Mobile-only: collapse/expand controls to avoid overflow
+  const [isMobileControlsOpen, setIsMobileControlsOpen] = useState(false);
+
   // When an area is selected in the store, we hide the "show all" view
   useEffect(() => {
     if (selectedArea) {
       setShowAllTables(false);
       setshowAllTablesable(false);
+      setIsMobileControlsOpen(false);
     }
   }, [selectedArea]);
 
-// On first load or any refetch, populate local store
-useEffect(() => {
-  if (data?.getTables?.length) {
-    const tablesFromServer: Table[] = data.getTables;
+  // On first load or any refetch, populate local store
+  useEffect(() => {
+    if (data?.getTables?.length) {
+      const tablesFromServer: Table[] = data.getTables;
 
-    setTables(
-      tablesFromServer.map((t) => ({
-        id: t.id,
-        tableNumber: t.tableNumber,
-        areaId: t.areaId,
-        position: t.position as { x: number; y: number },
-        dirty: false,
-        diners: t.diners,
-        reserved: t.reserved,
-        specialRequests: t.specialRequests,
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-      }))
-    );
-  }
-}, [data, setTables]);
+      setTables(
+        tablesFromServer.map((t) => ({
+          id: t.id,
+          tableNumber: t.tableNumber,
+          areaId: t.areaId,
+          position: t.position as { x: number; y: number },
+          dirty: false,
+          diners: t.diners,
+          reserved: t.reserved,
+          specialRequests: t.specialRequests,
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
+        }))
+      );
+    }
+  }, [data, setTables]);
 
   // The locally updated tables
   const localTables = tables;
@@ -110,12 +114,14 @@ useEffect(() => {
     clearSelectedArea();
     setShowAllTables(true);
     setshowAllTablesable(false);
+    setIsMobileControlsOpen(false);
   };
 
   const handleShowAllTablesable = () => {
     clearSelectedArea();
     setShowAllTables(false);
     setshowAllTablesable(true);
+    setIsMobileControlsOpen(false);
   };
 
   const handleClearScreen = () => {
@@ -123,6 +129,7 @@ useEffect(() => {
     clearSelectedArea();
     setshowAllTablesable(false);
     setShowAllTables(false);
+    setIsMobileControlsOpen(false);
   };
 
   const handleSaveChanges = async () => {
@@ -144,7 +151,7 @@ useEffect(() => {
         position: t.position,
         areaId: t.areaId,
         // If you need to update reserved/diners as well, include them
-        reserved: t.reserved
+        reserved: t.reserved,
       }));
 
       // Send the mutation request
@@ -170,141 +177,177 @@ useEffect(() => {
 
   // 4) Rendering
   return (
-    
     <DndProvider backend={HTML5Backend}>
-      <div className="px-6 bg-gray-50 min-h-screen">
+      <div className="bg-gray-50 min-h-screen px-3 sm:px-6 pb-6 overflow-x-hidden">
         {/* Header Section */}
-        <div className="flex items-center justify-around bg-white px-2 rounded-lg shadow-md mb-2">
-          <h2 className="text-xl font-bold text-gray-800">Restaurant Zones</h2>
-          <div className="flex gap-4">
-          <button
-              onClick={handleClearScreen}
-              className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
-              aria-label="Clear Screen"
+        <div className="pt-3 sm:pt-0">
+          <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+                  Restaurant Zones
+                </h2>
+                {error && (
+                  <p className="mt-1 text-sm text-red-600 break-words">
+                    Something went wrong: {error.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Mobile-only controls toggle */}
+              <button
+                type="button"
+                onClick={() => setIsMobileControlsOpen((s) => !s)}
+                className="sm:hidden inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gray-100 px-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 transition"
+                aria-expanded={isMobileControlsOpen}
+                aria-controls="zone-controls"
+              >
+                {isMobileControlsOpen ? "Hide Controls" : "Controls"}
+              </button>
+            </div>
+
+            <div
+              id="zone-controls"
+              className={`mt-3 ${
+                isMobileControlsOpen ? "grid" : "hidden"
+              } grid-cols-1 gap-2 sm:mt-0 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2`}
             >
-              Clear Screen
-            </button>
-            <button
-              onClick={handleShowAllTables}
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
-              Show All Tables
-            </button>
-            <button
-              onClick={handleShowAllTablesable}
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
-              Show All Tables available
-            </button>
-            <button
-              onClick={handleShowAllTablesable}
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
-              Show All Tables not pay
-            </button>
-            <button
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
+              <button
+                type="button"
+                onClick={handleClearScreen}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
+                aria-label="Clear Screen"
+              >
+                Clear Screen
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShowAllTables}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+                aria-label="Show All Tables"
+              >
+                Show All Tables
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShowAllTablesable}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+                aria-label="Show All Tables available"
+              >
+                Show All Tables available
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShowAllTablesable}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
+                aria-label="Show All Tables not pay"
+              >
+                Show All Tables not pay
+              </button>
+
+              {/* Zone CRUD */}
               <AddZoneForm />
-            </button>
-            <button
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
               <DeleteZoneModal
                 areas={areas as BasicArea[]}
                 areaSelectToDelete={selectedArea as BasicArea}
               />
-            </button>
-            <button
-              className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-              aria-label="Show All Tables"
-            >
               <EditZoneModal
                 areas={areas as Area[]}
                 areaSelectToEdit={selectedArea as Area}
               />
-            </button>
-         
-            <button
-              onClick={() => adjustScale(0.1)}
-              className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              aria-label="Zoom In"
-            >
-              Zoom In
-            </button>
-            <button
-              onClick={() => adjustScale(-0.1)}
-              className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              aria-label="Zoom Out"
-            >
-              Zoom Out
-            </button>
-            <button
-              onClick={handleSaveChanges}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Save Table Positions
-            </button>
-            <AddTableModal
-              allAreas={areas} // array of BasicArea
-              areaSelectID={selectedArea} // optional pre-selected area
-            />
-    
+
+              {/* Zoom */}
+              <button
+                type="button"
+                onClick={() => adjustScale(0.1)}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                aria-label="Zoom In"
+              >
+                Zoom In
+              </button>
+              <button
+                type="button"
+                onClick={() => adjustScale(-0.1)}
+                className="w-full sm:w-auto min-h-[44px] text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                aria-label="Zoom Out"
+              >
+                Zoom Out
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveChanges}
+                className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+              >
+                Save Table Positions
+              </button>
+
+              {/* Table CRUD */}
+              <AddTableModal
+                allAreas={areas} // array of BasicArea
+                areaSelectID={selectedArea} // optional pre-selected area
+              />
+            </div>
           </div>
         </div>
+
+        {/* Optional loading state */}
+        {fetching && (
+          <div className="mb-3 rounded-lg bg-white p-3 text-sm text-gray-600 shadow-sm">
+            Loading tables...
+          </div>
+        )}
 
         {/* Content Section */}
         <div>
           {/* 4A) If "Show All" is on, we group tables by zone */}
           {showAllTables ? (
-            <div className="grid gap-6">
+            <div className="grid gap-4 sm:gap-6">
               {areas.map((zone) => {
                 // Filter tables by matching areaId
                 const zoneTables = localFiltered.filter(
                   (tbl) => tbl.areaId === zone.id
                 );
-                // Render each zone with its tables 
+                // Render each zone with its tables
                 return (
-                  <div key={zone.id} className="border rounded-lg p-4 bg-white">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                  <div
+                    key={zone.id}
+                    className="border rounded-lg p-3 sm:p-4 bg-white"
+                  >
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
                       {zone.name}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                       {zoneTables.map((table) => (
-                        <TableCard
-                          key={table.id}
-                          table={table as TableInStore}
-                        />
-                        
+                        <TableCard key={table.id} table={table as TableInStore} />
                       ))}
                     </div>
                   </div>
                 );
               })}
             </div>
-          ) : showAllTablesable ? ( // Render each zone with its tables available
-            <div className="grid gap-6">
+          ) : showAllTablesable ? (
+            // Render each zone with its tables available
+            <div className="grid gap-4 sm:gap-6">
               {areas.map((zone) => {
                 // Filter tables by matching areaId
-                const zoneTables = localFiltered.filter(                  
+                const zoneTables = localFiltered.filter(
                   (tbl) => tbl.areaId === zone.id && !tbl.reserved
                 );
                 return (
-                  <div key={zone.id} className="border rounded-lg p-4 bg-white">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                  <div
+                    key={zone.id}
+                    className="border rounded-lg p-3 sm:p-4 bg-white"
+                  >
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
                       {zone.name}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                       {zoneTables.map((table) => (
-                        <TableCard
-                          key={table.id}
-                          table={table as TableInStore}
-                        />
+                        <TableCard key={table.id} table={table as TableInStore} />
                       ))}
                     </div>
                   </div>
@@ -326,13 +369,12 @@ useEffect(() => {
             </div>
           ) : (
             // 4C) Default message
-            <div className="text-center text-gray-500 mt-12">
-              <p className="text-lg font-medium">
+            <div className="text-center text-gray-500 mt-10 sm:mt-12 px-2">
+              <p className="text-base sm:text-lg font-medium">
                 Select a zone to display tables or use “Show All Tables” for an
                 overview.
               </p>
             </div>
-            
           )}
         </div>
       </div>

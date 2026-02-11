@@ -1,145 +1,143 @@
 "use client";
 
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { HiMapPin, HiOutlineCursorArrowRays } from "react-icons/hi2";
 import toast from "react-hot-toast";
-import { HiMapPin } from "react-icons/hi2";
+
+interface MapboxFeature {
+  id: string;
+  place_name: string;
+}
 
 const LocationSearchForm = () => {
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-
+  const [address, setAddress] = useState("");
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Array<{ place_name: string }>>(
-    []
-  );
+  const [suggestions, setSuggestions] = useState<MapboxFeature[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-
+  // 1. טעינה ראשונית מה-Storage
   useEffect(() => {
-    const askForLocationPermission = () => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation((prevLocation) => ({
-            ...prevLocation,
-            latitude,
-            longitude,
-          }));
-        },
-        (error) => {
-          toast.error("Error getting location:");
-          console.log(error);
-        }
-      );
-    };
-
-    if ("geolocation" in navigator) {
-      navigator.permissions
-        .query({ name: "geolocation" })
-        .then((result) => {
-          if (result.state === "granted") {
-            askForLocationPermission();
-          } else if (result.state === "prompt") {
-            askForLocationPermission();
-          } else if (result.state === "denied") {
-            toast.error("Location access denied by the user.", {
-              duration: 1000,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error checking location permission:", error);
-        });
-    } else {
-      toast.error("Geolocation is not supported by this browser.", {
-        duration: 1000,
-      });
+    const saved = localStorage.getItem("delivery_address");
+    if (saved) {
+      setAddress(saved);
+      setQuery(saved);
     }
   }, []);
 
-  useEffect(() => {
-    if (location) {
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.longitude},${location.latitude}.json?proximity=31.7683,35.2137&country=IL&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
-      fetch(endpoint)
-        .then((response) => response.json())
-        .then((data) => {
+  // 2. פונקציית זיהוי מיקום אוטומטי (מהקוד הראשון, משופרת)
+  const detectLocation = () => {
+    if (!("geolocation" in navigator)) return;
+    
+    setIsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { longitude, latitude } = pos.coords;
+          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+          const { data } = await axios.get(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&country=IL&limit=1`
+          );
           const place = data.features[0]?.place_name || "Unknown Location";
-          localStorage.setItem("delivery_address", place);
-          setQuery(place);
-        });
-    }
-  }, [location]);
-
-  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    try {
-      setQuery(event.target.value);
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${event.target.value}.json?proximity=31.7683,35.2137&country=IL&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true`;
-
-      const response = await fetch(endpoint);
-      const results = await response.json();
-      setSuggestions(results?.features);
-    } catch (error: any) {
-      console.log("Error fetching data: " + error.message);
-    }
+          saveAddress(place);
+          toast.success("Location detected!");
+        } catch (err) {
+          toast.error("Failed to reverse geocode");
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      () => {
+        toast.error("Location access denied");
+        setIsLoading(false);
+      }
+    );
   };
 
-  const handleClearAddress = () => {
-    localStorage.removeItem("delivery_address");
-    setQuery("");
-  };
-
-  const handleSelectAddress = (selectedAddress: string) => {
-    localStorage.setItem("delivery_address", selectedAddress);
-    setQuery(selectedAddress);
-    setSuggestions([]);
+  const saveAddress = (val: string) => {
+    setAddress(val);
+    setQuery(val);
+    localStorage.setItem("delivery_address", val);
     setIsEditing(false);
+    setSuggestions([]);
+  };
+
+  const fetchSuggestions = async (input: string) => {
+    setQuery(input);
+    if (input.length < 3) return setSuggestions([]);
+
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      const { data } = await axios.get(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(input)}.json`,
+        { params: { access_token: token, autocomplete: true, country: "IL", limit: 5 } }
+      );
+      setSuggestions(data.features);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
-    <div className="mx-8 md:mx-12 mt-12">
-      <form className="max-w-6xl mx-auto ">
-        <div className="relative">
-          {isEditing ? (
-            <>
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <HiMapPin
-                  aria-hidden="true"
-                  className="w-5 h-5 text-gray-700 "
-                />
-              </div>
-              <input
-                type="search"
-                className="block w-full p-4 pl-10 text-sm text-gray-900 rounded-lg bg-gray-200 outline-none"
-                placeholder="Enter your address"
-                value={query}
-                onChange={handleChange}
-              />
-            </>
-          ) : (
-            <div className="flex flex-col " onClick={() => setIsEditing(true)}>
-              <p className="">{query}</p>
-              <button className="px-4 py-1 mt-2 w-24 text-green-600 bg-green-200 hover:bg-green-300 border border-green-500 focus-visible:ring-2 rounded-full  ">
-                Edit
-              </button>
-            </div>
-          )}
-          {suggestions?.length > 0 && (
-            <div className="absolute bg-gray-100 w-full shadow-sm">
-              {suggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between w-full p-1 cursor-pointer hover:bg-gray-200"
-                  onClick={() => handleSelectAddress(suggestion.place_name)}
+    <div className="mx-auto max-w-lg mt-6 px-4">
+      {!isEditing ? (
+        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <HiMapPin className="text-green-600 shrink-0" size={20} />
+            <p className="truncate text-sm font-medium text-slate-700">
+              {address || "Where should we deliver?"}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-xs font-bold text-green-700 hover:underline ml-4 uppercase tracking-wider"
+          >
+            Change
+          </button>
+        </div>
+      ) : (
+        <div className="relative space-y-3">
+          <div className="relative">
+            <input
+              autoFocus
+              className="w-full p-4 pr-12 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+              placeholder="Enter street and city..."
+              value={query}
+              onChange={(e) => fetchSuggestions(e.target.value)}
+            />
+            <button 
+              onClick={detectLocation}
+              disabled={isLoading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-green-600 disabled:opacity-50"
+              title="Use my current location"
+            >
+              <HiOutlineCursorArrowRays size={22} className={isLoading ? "animate-pulse text-green-500" : ""} />
+            </button>
+          </div>
+
+          {suggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+              {suggestions.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => saveAddress(s.place_name)}
+                  className="w-full p-3 text-left text-sm text-slate-600 hover:bg-green-50 hover:text-green-700 border-b border-slate-50 last:border-none transition-colors"
                 >
-                  {suggestion.place_name}
-                </div>
+                  {s.place_name}
+                </button>
               ))}
             </div>
           )}
+          
+          <button 
+            onClick={() => setIsEditing(false)}
+            className="w-full py-2 text-xs font-medium text-slate-400 hover:text-slate-600"
+          >
+            Cancel
+          </button>
         </div>
-      </form>
+      )}
     </div>
   );
 };

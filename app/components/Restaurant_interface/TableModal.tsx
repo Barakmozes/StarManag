@@ -10,6 +10,7 @@ import ToggleReservation from "./Table_Settings/ToggleReservation";
 import SpecialRequests from "./Table_Settings/specialRequests";
 import TableReservations from "./Table_Settings/TableReservations";
 import Start_an_order from "./Table_Settings/Start_an_order_Table";
+import { Table as PrismaTable } from "@prisma/client";
 
 export interface TableModalProps {
   table: TableInStore;
@@ -17,10 +18,9 @@ export interface TableModalProps {
 }
 
 const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
-
   const isDirty = table?.dirty;
 
-  const { tableNumber, diners, position, id, reserved } = table;
+  const { tableNumber, diners, position, reserved } = table;
   const x = (position as any)?.x ?? 0;
   const y = (position as any)?.y ?? 0;
 
@@ -32,64 +32,57 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
     }),
   }));
 
-
+  // TableInStore is structurally compatible with Prisma's Table scalar fields,
+  // but we cast to keep props strongly typed for the child components.
+  const prismaTable = table as unknown as PrismaTable;
 
   return (
     <div
       ref={drag}
-      className={`relative p-2 sm:p-2 bg-white rounded-lg shadow-md border border-gray-200 transition-transform ${
+      className={`relative select-none rounded-lg bg-white shadow-md border border-gray-200 transition-transform p-3 sm:p-3 ${
         isDragging ? "opacity-75 border-blue-500" : ""
       }`}
       style={{
         position: "absolute",
         transform: `translate(${x}px, ${y}px) scale(${scale})`,
         transformOrigin: "top left",
-        width: "clamp(120px, 20vw, 160px)", // Responsive width
+        width: "clamp(170px, 26vw, 220px)",
         cursor: "move",
       }}
       aria-label={`Table ${tableNumber}, ${
         reserved ? "Reserved" : "Available"
       }, for ${diners} diners`}
     >
-      {/* Table Info */}
-      <div className="mb-2 text-start">
-        <div className="flex mx-auto justify-between mb-1">
-          <div
-            className="text-sm bg-green-600 text-white px-2 py-1 rounded-lg shadow hover:bg-green-700 transition"
-            aria-label="Show All Tables"
-          >
-            <DeleteTableModal table={table as TableInStore} />
-          </div>
-          <div
-            className="text-sm bg-green-600 text-white px-2 py-1 rounded-lg shadow hover:bg-green-700 transition"
-            aria-label="Show All Tables"
-          >
-            <EditTableModal table={table as TableInStore} />
-          </div>
+      {/* Header: table info + quick actions */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-gray-700">
+            Table #{tableNumber}
+            {isDirty && <span className="text-red-500">*</span>}
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500">
+            <strong>Diners:</strong> {diners}
+          </p>
         </div>
-        <h2 className="text-sm sm:text-base font-bold text-gray-700">
-          Table #{tableNumber}
-          {isDirty && <span className="text-red-500">*</span>}
-        </h2>
-        <p className="text-xs sm:text-sm text-gray-500">
-          <strong>Diners:</strong> {diners}
-        </p>
-        
-        <div className="flex">
-          {/* Reservation Toggle */}
-        <ToggleReservation table={table as TableInStore} />
-             {/* Table Reservations */}
-        <TableReservations table={table as TableInStore} />
+
+        <div className="flex items-center gap-2">
+          <DeleteTableModal table={prismaTable} />
+          <EditTableModal table={prismaTable} />
         </div>
-      
       </div>
 
-      
-      {/* Special Requests */}
-         <SpecialRequests table={table as TableInStore  /* if needed, or typed to the same shape */} />
+      {/* Controls row */}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <ToggleReservation table={prismaTable} />
+        <TableReservations table={prismaTable} />
+      </div>
 
-              
-         <Start_an_order table={table as TableInStore}/>
+      {/* Special Requests */}
+      <SpecialRequests table={prismaTable} />
+
+      {/* Start Order */}
+      <Start_an_order table={prismaTable} />
+
       {/* Table Visualization */}
       <div className="relative mt-4 mx-auto">
         <div
@@ -104,7 +97,7 @@ const TableModal: React.FC<TableModalProps> = ({ table, scale }) => {
           </h3>
           {Array.from({ length: diners }).map((_, index) => {
             const angle = (index / diners) * 360;
-            const radius = diners <= 4 ? 35 : 45; // Adjust radius for smaller screens
+            const radius = diners <= 4 ? 35 : 45;
             const seatX = radius * Math.cos((angle * Math.PI) / 180);
             const seatY = radius * Math.sin((angle * Math.PI) / 180);
             return (

@@ -21,7 +21,8 @@ type Props = {
 const UserAddProfile = ({ user }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [phone, setPhone] = useState("");
-    //  const [userName, setUserName] = useState("");
+  //  const [userName, setUserName] = useState("");
+
   const closeModal = () => setIsOpen(false);
   const OpenModal = () => setIsOpen(true);
   const router = useRouter();
@@ -32,6 +33,7 @@ const UserAddProfile = ({ user }: Props) => {
     AddProfileMutation,
     AddProfileMutationVariables
   >(AddProfileDocument);
+
   const pageRefresh = () => {
     router.refresh();
     closeModal();
@@ -49,56 +51,66 @@ const UserAddProfile = ({ user }: Props) => {
   return (
     <>
       <button
-        className="flex items-center px-4 py-2 space-x-4 bg-green-600 text-white rounded-full"
+        type="button"
+        className="inline-flex w-full sm:w-auto min-h-[44px] items-center justify-between sm:justify-center gap-3 px-4 py-2.5 bg-green-600 text-white rounded-full"
         onClick={OpenModal}
       >
         <span>Add Profile</span>
-        <FaChevronRight className=" shrink-0" />
+        <FaChevronRight className="shrink-0" />
       </button>
+
       <Modal isOpen={isOpen} title="Account Info" closeModal={closeModal}>
-        <form className="flex flex-col space-y-8 " onSubmit={createProfile}>
-          <div>
-            <h2>Basic Info</h2>
-          </div>
-          <div className="flex flex-col space-y-8 ">
-         <div>
-  <label htmlFor="phone" className="form-label">
-    Phone
-  </label>
-
-  <input
-    id="phone"                 // 🔑 חובה
-    name="phone"               // 🔑 חובה לאוטופיל
-    type="tel"
-    className="form-input"
-    placeholder="Phone"
-    autoComplete="tel"         // 🔑 מומלץ
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-  />
-</div>
-
-
-            {/* <div className="">
-              <label htmlFor="email" className="form-label">
-                Name
-              </label>
-              <input
-                className="form-input"
-                placeholder="Name"
-                onChange={(e) => setUserName(e.target.value)}
-              />
-            </div> */}
-          </div>
-
-          <button
-            type="submit"
-            className="text-white inline-flex items-center bg-green-600 hover:bg-green-700 focus:ring-4  font-medium rounded-lg text-sm px-5 py-2.5 text-center "
+        {/* Mobile-safe modal body wrapper */}
+        <div className="w-[min(100vw-2rem,28rem)] max-w-full max-h-[90vh] overflow-y-auto overscroll-contain pb-6">
+          <form
+            className="flex flex-col gap-6 sm:gap-8"
+            onSubmit={createProfile}
           >
-            <HiPencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-            Add Profile
-          </button>
-        </form>
+            <div>
+              <h2 className="text-gray-700 font-semibold">Basic Info</h2>
+            </div>
+
+            <div className="flex flex-col gap-6 sm:gap-8">
+              <div>
+                <label htmlFor="phone" className="form-label">
+                  Phone
+                </label>
+
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  className="form-input min-h-[44px]"
+                  placeholder="Phone"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+
+              {/* <div className="">
+                <label htmlFor="email" className="form-label">
+                  Name
+                </label>
+                <input
+                  className="form-input"
+                  placeholder="Name"
+                  onChange={(e) => setUserName(e.target.value)}
+                />
+              </div> */}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-[44px] text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            >
+              <HiPencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
+              Add Profile
+            </button>
+
+            <div className="pb-[env(safe-area-inset-bottom)]" />
+          </form>
+        </div>
       </Modal>
     </>
   );

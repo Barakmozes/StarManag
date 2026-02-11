@@ -77,30 +77,38 @@ const AdminDeleteMenu = ({ menu }: Props) => {
 
   return (
     <>
-      <HiOutlineTrash
+      <button
+        type="button"
         onClick={openModal}
-        className="cursor-pointer h-6 w-6 text-red-500"
-      />
+        className="inline-flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-md hover:bg-slate-100 transition"
+        aria-label={`Delete ${menu.title}`}
+      >
+        <HiOutlineTrash className="h-6 w-6 text-red-500" />
+      </button>
 
       <Modal isOpen={isOpen} title={menu.title} closeModal={closeModal}>
-        <div className="relative p-4 w-full max-w-md h-full md:h-auto">
-          <div className="relative p-4 text-center bg-white">
+        {/* Mobile-safe modal wrapper */}
+        <div className="w-[min(100vw-2rem,28rem)] max-w-full mx-auto max-h-[90vh] overflow-y-auto overscroll-contain p-3 sm:p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <div className="text-center bg-white">
             <HiOutlineTrash className="text-gray-400 w-11 h-11 mb-3.5 mx-auto" />
+
             <p className="mb-4 text-gray-500">
               Are you sure you want to delete this item?
             </p>
-            <div className="flex justify-center items-center space-x-4">
+
+            <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2 sm:gap-3">
               <button
                 onClick={closeModal}
                 type="button"
-                className="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900"
+                className="w-full sm:w-auto min-h-[44px] py-2 px-4 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900"
               >
                 No, cancel
               </button>
+
               <button
                 onClick={handleDeleteMenu}
                 type="button"
-                className="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700"
+                className="w-full sm:w-auto min-h-[44px] py-2 px-4 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700"
               >
                 Yes, I&apos;m sure
               </button>

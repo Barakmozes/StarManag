@@ -16,7 +16,7 @@ import {
 
 /**
  * Props:
- * - allAreas: an array of all available BasicArea objects 
+ * - allAreas: an array of all available BasicArea objects
  *             so the user can choose from them.
  * - areaSelectID (optional): if there's already a connected area,
  *             we want to display it first as the default selection
@@ -26,7 +26,10 @@ export interface AddTableModalProps {
   areaSelectID?: BasicArea | null;
 }
 
-const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID }) => {
+const AddTableModal: React.FC<AddTableModalProps> = ({
+  allAreas,
+  areaSelectID,
+}) => {
   // 1) Modal open/close
   const [isOpen, setIsOpen] = useState(false);
 
@@ -109,8 +112,9 @@ const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID })
     <>
       {/* The button that triggers the modal */}
       <button
+        type="button"
         onClick={openModal}
-        className="flex items-center gap-1 text-sm px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 text-sm px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
       >
         Add Table
       </button>
@@ -119,23 +123,38 @@ const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID })
       <Modal isOpen={isOpen} closeModal={closeModal}>
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 max-w-md mx-auto p-4 bg-white rounded-lg shadow-md"
+          className="flex flex-col gap-4 w-[min(100vw-2rem,28rem)] max-w-md mx-auto p-4 sm:p-5 bg-white rounded-lg shadow-md max-h-[90vh] overflow-y-auto overscroll-contain"
         >
-          <h2 className="text-xl font-bold text-gray-800">Add a New Table</h2>
+          {/* Mobile-friendly close button */}
+          <button
+            type="button"
+            onClick={closeModal}
+            className="ml-auto -mt-1 -mr-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
 
-          {/* 
-            7) A dropdown with all area names. 
-            Preselect the areaSelectID's id if present 
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 -mt-2">
+            Add a New Table
+          </h2>
+
+          {/*
+            7) A dropdown with all area names.
+            Preselect the areaSelectID's id if present
           */}
           <div>
-            <label htmlFor="areaDropdown" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="areaDropdown"
+              className="block text-sm font-medium mb-1"
+            >
               Select an Area <span className="text-red-500">*</span>
             </label>
             <select
               id="areaDropdown"
               value={selectedAreaId}
               onChange={(e) => setSelectedAreaId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+              className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
               required
             >
               <option value="">-- Choose an area --</option>
@@ -162,7 +181,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID })
               value={tableNumber}
               onChange={(e) => setTableNumber(Number(e.target.value))}
               placeholder="e.g. 1"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+              className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
               required
             />
           </div>
@@ -179,59 +198,64 @@ const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID })
               value={diners}
               onChange={(e) => setDiners(Number(e.target.value))}
               placeholder="e.g. 4"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+              className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
               required
             />
           </div>
 
           {/* Position (X, Y) optional */}
-          <div className="flex gap-4">
-            <div>
-              <label htmlFor="posX" className="block text-sm font-medium mb-1">
-                Position X
-              </label>
-              <input
-                id="posX"
-                type="number"
-                value={posX}
-                onChange={(e) => setPosX(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-              />
-            </div>
-            <div>
-              <label htmlFor="posY" className="block text-sm font-medium mb-1">
-                Position Y
-              </label>
-              <input
-                id="posY"
-                type="number"
-                value={posY}
-                onChange={(e) => setPosY(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-              />
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Position (optional)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="posX" className="block text-xs font-medium mb-1">
+                  X
+                </label>
+                <input
+                  id="posX"
+                  type="number"
+                  value={posX}
+                  onChange={(e) => setPosX(Number(e.target.value))}
+                  className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div>
+                <label htmlFor="posY" className="block text-xs font-medium mb-1">
+                  Y
+                </label>
+                <input
+                  id="posY"
+                  type="number"
+                  value={posY}
+                  onChange={(e) => setPosY(Number(e.target.value))}
+                  className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+                />
+              </div>
             </div>
           </div>
 
           {/* Error Display */}
           {error && (
-            <p className="text-red-600 text-sm">
+            <p className="text-red-600 text-sm break-words">
               Something went wrong: {error.message}
             </p>
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-2">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={fetching}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
               {fetching ? "Adding..." : "Add Table"}
             </button>

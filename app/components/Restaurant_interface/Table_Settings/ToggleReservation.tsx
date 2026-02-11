@@ -4,10 +4,9 @@ import { useQuery, useMutation } from "@urql/next";
 import {
   GetTablesDocument,
   ToggleTableReservationDocument,
-  ToggleTableReservationMutation,
-  ToggleTableReservationMutationVariables,
 } from "@/graphql/generated";
 import toast from "react-hot-toast";
+
 interface Props {
   table: Table;
 }
@@ -31,7 +30,7 @@ const ToggleReservation = ({ table }: Props) => {
 
     // 1) Update the local state
     setReserved(newReserved);
-  
+
     try {
       const result = await ToggleTableReservationTable({
         toggleTableReservationId: table.id,
@@ -56,8 +55,9 @@ const ToggleReservation = ({ table }: Props) => {
 
   return (
     <button
+      type="button"
       onClick={handleToggleReservation}
-      className={` py-1 sm:py-1 text-xs sm:text-sm rounded font-bold ${
+      className={`inline-flex min-h-[44px] items-center justify-center rounded-lg px-2 py-1 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
         reserved ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
       }`}
       aria-label={`Mark table ${table.tableNumber} as ${

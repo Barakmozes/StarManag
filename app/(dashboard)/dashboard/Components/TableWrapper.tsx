@@ -1,4 +1,3 @@
-
 import SearchAndFilter from "./SearchAndFilter";
 
 type TableProps = {
@@ -8,15 +7,16 @@ type TableProps = {
 
 const TableWrapper = ({ title, children }: TableProps) => {
   return (
-    <div className="rounded-lg shadow-2xl p-6 my-12 max-h-[80vh] overflow-y-auto bg-white">
-      <div>
-        <h2 className="text-center  mb-6 text-2xl font-semibold text-slate-500">
+    <div className="my-6 rounded-lg bg-white p-4 shadow-2xl sm:my-12 sm:p-6 md:max-h-[80vh] md:overflow-y-auto">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="mb-4 text-center text-xl font-semibold text-slate-500 sm:mb-6 sm:text-2xl">
           {title}
         </h2>
+
         <SearchAndFilter />
       </div>
 
-      <div className="relative overflow-x-auto  ">{children}</div>
+      <div className="relative overflow-x-auto">{children}</div>
     </div>
   );
 };

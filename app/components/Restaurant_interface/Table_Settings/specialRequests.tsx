@@ -76,13 +76,11 @@ const SpecialRequests: React.FC<SpecialRequestsProps> = ({ table }) => {
 
       if (result.data?.editTable) {
         toast.success("Special requests updated!", { duration: 1200 });
-        // Re-fetch or skip if not needed
         reexecuteTables({ requestPolicy: "network-only" });
       } else if (result.error) {
-        toast.error(
-          "Failed to update requests: " + result.error.message,
-          { duration: 3000 }
-        );
+        toast.error("Failed to update requests: " + result.error.message, {
+          duration: 3000,
+        });
       }
     } catch (err) {
       console.error("Error updating special requests:", err);
@@ -91,39 +89,40 @@ const SpecialRequests: React.FC<SpecialRequestsProps> = ({ table }) => {
   };
 
   return (
-    <div className="mt-2 max-w-xs">
+    <div className="mt-2 w-full">
       {/* Title */}
       <h3 className="text-sm font-semibold text-gray-700 mb-1">
         Special Requests
       </h3>
 
       {/* Current requests list (scrollable if large) */}
-      <ul className="mb-2 space-y-1 text-xs sm:text-sm max-h-36 overflow-y-auto">
+      <ul className="mb-2 space-y-1 text-xs sm:text-sm max-h-32 sm:max-h-36 overflow-y-auto pr-1">
         {localRequests.map((req, index) => (
           <li
             key={index}
-            className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
+            className="flex items-start justify-between gap-2 bg-gray-100 px-2 py-2 rounded"
           >
-            <span className="flex-1 break-words pr-2">{req}</span>
+            <span className="flex-1 break-words">{req}</span>
             <button
+              type="button"
               onClick={() => handleRemoveRequest(index)}
-              className="text-red-500 hover:text-red-700 text-sm"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-600 hover:bg-red-50 hover:text-red-700 transition"
               aria-label="Remove request"
             >
-              ✕
+              <span aria-hidden="true">×</span>
             </button>
           </li>
         ))}
       </ul>
 
       {/* Input + "Add" button */}
-      <div className="flex items-center gap-1 ">
+      <div className="flex flex-col sm:flex-row items-stretch gap-2">
         <input
           type="text"
           value={newRequest}
           onChange={(e) => setNewRequest(e.target.value)}
           placeholder="Add a new request..."
-          className=" w-11/12 px-1 py-1 sm:py-2 text-xs sm:text-sm rounded border  "
+          className="w-full min-h-[44px] px-3 py-2 text-sm rounded border border-gray-300 focus:ring focus:ring-blue-200"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -133,31 +132,29 @@ const SpecialRequests: React.FC<SpecialRequestsProps> = ({ table }) => {
           aria-label="New special request"
         />
         <button
+          type="button"
           onClick={handleAddRequest}
-          className="text-sm bg-blue-500 text-white px-1 py-1  rounded hover:bg-blue-600 transition min-w-max "
+          className="w-full sm:w-auto min-h-[44px] text-sm bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
           aria-label="Add request"
         >
-         Add
+          Add
         </button>
       </div>
 
       {/* Save Requests button */}
-      
       <button
+        type="button"
         onClick={handleSaveRequests}
         disabled={isUpdating}
-        className={` mt-2 w-full py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded 
-          ${
-            isUpdating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-          }
-        `}
+        className={`mt-2 w-full min-h-[44px] px-4 py-2 text-sm font-medium rounded transition ${
+          isUpdating
+            ? "bg-gray-400 cursor-not-allowed text-white"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
+        }`}
         aria-label="Save special requests"
       >
         {isUpdating ? "Updating..." : "Save Requests"}
       </button>
-  
     </div>
   );
 };

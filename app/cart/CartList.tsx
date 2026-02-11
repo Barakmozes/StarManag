@@ -5,8 +5,10 @@ import { HiOutlineMinus, HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 import { useCartStore } from "@/lib/store";
 
 function getBasePrice(item: any) {
-  if (typeof item?.basePrice === "number" && Number.isFinite(item.basePrice)) return item.basePrice;
-  if (typeof item?.price === "number" && Number.isFinite(item.price)) return item.price;
+  if (typeof item?.basePrice === "number" && Number.isFinite(item.basePrice))
+    return item.basePrice;
+  if (typeof item?.price === "number" && Number.isFinite(item.price))
+    return item.price;
   return 0;
 }
 
@@ -30,69 +32,125 @@ const CartList = () => {
     toast.success("Item removed from Cart", { duration: 1000 });
   };
 
+  if (!menus || menus.length === 0) {
+    return (
+      <div className="mt-2 rounded-lg border border-gray-200 bg-white p-4 text-center text-sm text-gray-500">
+        No items yet.
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <p>Your Items</p>
+    <div className="mt-2">
+      <h2 className="text-sm sm:text-base font-medium text-gray-700">
+        Your Items
+      </h2>
 
-      {menus?.map((item: any) => {
-        const base = getBasePrice(item);
-        const unit = getEffectivePrice(item);
-        const discounted = unit < base && base > 0;
-        const percentOff =
-          discounted ? Math.round(((base - unit) / base) * 100) : null;
+      <div className="mt-3 space-y-3">
+        {menus?.map((item: any) => {
+          const base = getBasePrice(item);
+          const unit = getEffectivePrice(item);
+          const discounted = unit < base && base > 0;
+          const percentOff =
+            discounted ? Math.round(((base - unit) / base) * 100) : null;
 
-        return (
-          <div className="flex justify-between items-center mt-3" key={item.id}>
-            <div className="flex space-x-3 border rounded-full px-2 ">
-              <button
-                onClick={() => decreaseCartItem(menus as any, item.id)}
-                disabled={item.quantity === 1}
-              >
-                <HiOutlineMinus />
-              </button>
-              <p>{item.quantity}</p>
-              <button onClick={() => increaseCartItem(menus as any, item.id)}>
-                <HiOutlinePlus />
-              </button>
-            </div>
+          return (
+            <div
+              key={item.id}
+              className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+            >
+              {/* Header: item info + remove */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-semibold text-gray-800 break-words">
+                    {item.shortDescr}
+                  </p>
 
-            <div className="px-3">
-              <p>
-                <span className="text-sm">{item.shortDescr}: </span>{" "}
-                <span className="text-xs italic">notes({item.instructions}) </span>{" "}
-                <span className="text-xs italic">prepare({item.prepare}) </span>
-              </p>
-              {discounted && (
-                <p className="text-xs text-red-600 font-semibold">
-                  {percentOff}% OFF
-                </p>
-              )}
-            </div>
+                  <div className="mt-1 space-y-1 text-xs sm:text-sm text-gray-500">
+                    {item.instructions ? (
+                      <p className="italic break-words">
+                        notes({item.instructions})
+                      </p>
+                    ) : null}
+                    {item.prepare ? (
+                      <p className="italic break-words">
+                        prepare({item.prepare})
+                      </p>
+                    ) : null}
+                  </div>
 
-            <div className="flex items-center space-x-2">
-              {discounted ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 line-through">
-                    ${base.toFixed(2)}
-                  </span>
-                  <span className="font-semibold text-green-700">
-                    ${unit.toFixed(2)}
-                  </span>
+                  {discounted && percentOff !== null && (
+                    <p className="mt-1 inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+                      {percentOff}% OFF
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <p className="font-semibold text-gray-700">
-                  ${unit.toFixed(2)}
-                </p>
-              )}
 
-              <HiOutlineTrash
-                className="cursor-pointer text-green-700"
-                onClick={() => handleRemoveFromCart(item.id)}
-              />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFromCart(item.id)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-green-700 hover:bg-green-50 transition"
+                  aria-label={`Remove ${item.shortDescr ?? "item"} from cart`}
+                >
+                  <HiOutlineTrash className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Controls: quantity + price */}
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {/* Quantity controls */}
+                <div className="flex items-center justify-between sm:justify-start gap-3">
+                  <div className="inline-flex items-center rounded-full border border-gray-200 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => decreaseCartItem(menus as any, item.id)}
+                      disabled={item.quantity === 1}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent"
+                      aria-label="Decrease quantity"
+                    >
+                      <HiOutlineMinus className="h-5 w-5" aria-hidden="true" />
+                    </button>
+
+                    <span
+                      className="w-10 text-center text-sm font-medium text-gray-700"
+                      aria-label={`Quantity ${item.quantity}`}
+                    >
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => increaseCartItem(menus as any, item.id)}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-gray-50"
+                      aria-label="Increase quantity"
+                    >
+                      <HiOutlinePlus className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div className="flex items-center justify-between sm:justify-end gap-2">
+                  {discounted ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 line-through whitespace-nowrap">
+                        ${base.toFixed(2)}
+                      </span>
+                      <span className="font-semibold text-green-700 whitespace-nowrap">
+                        ${unit.toFixed(2)}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="font-semibold text-gray-700 whitespace-nowrap">
+                      ${unit.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };

@@ -20,8 +20,10 @@ type TableCartSummaryProps = {
 };
 
 function getBasePrice(item: any) {
-  if (typeof item?.basePrice === "number" && Number.isFinite(item.basePrice)) return item.basePrice;
-  if (typeof item?.price === "number" && Number.isFinite(item.price)) return item.price;
+  if (typeof item?.basePrice === "number" && Number.isFinite(item.basePrice))
+    return item.basePrice;
+  if (typeof item?.price === "number" && Number.isFinite(item.price))
+    return item.price;
   return 0;
 }
 
@@ -86,8 +88,8 @@ export default function TableCartSummary({ user }: TableCartSummaryProps) {
 
   if (menus.length < 1) {
     return (
-      <div className="flex items-center justify-center space-x-3">
-        <h2 className="text-2xl leading-tight tracking-tight text-gray-600">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center">
+        <h2 className="text-xl sm:text-2xl leading-tight tracking-tight text-gray-600">
           Cart Empty...
         </h2>
         <FaCartArrowDown className="animate-bounce text-green-600" size={24} />
@@ -145,68 +147,73 @@ export default function TableCartSummary({ user }: TableCartSummaryProps) {
   };
 
   return (
-    <div className="border-gray-200 py-4">
-      <h2 className="text-center">שולחן מס {tableNumber}</h2>
-
-      <CartList />
-
-      <div className="px-4 sm:px-6 lg:px-8 mt-4">
-        <h2 className="text-lg leading-6 my-2 font-medium text-gray-900">
-          Order Summary
+    <div className="py-2">
+      <div className="space-y-6">
+        <h2 className="text-center text-sm sm:text-base font-medium text-gray-600">
+          שולחן מס {tableNumber}
         </h2>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4">
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Subtotal</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              ${subTotal.toFixed(2)}
-            </dd>
-          </div>
+        <CartList />
 
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Service Fee</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              ${serviceFee.toFixed(2)}
-            </dd>
-          </div>
+        <section className="border-t border-gray-200 pt-4">
+          <h2 className="text-lg leading-6 font-medium text-gray-900">
+            Order Summary
+          </h2>
 
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Discount</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              -${discount.toFixed(2)}
-            </dd>
-          </div>
+          <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Subtotal</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                ${subTotal.toFixed(2)}
+              </dd>
+            </div>
 
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Total</dt>
-            <dd className="mt-1 text-lg font-semibold text-green-700">
-              ${total.toFixed(2)}
-            </dd>
-          </div>
-        </dl>
-      </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Service Fee</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                ${serviceFee.toFixed(2)}
+              </dd>
+            </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 mt-2">
-        <div className="border-t border-gray-200 py-4">
-          <h2 className="text-lg leading-6 font-medium text-gray-500">Add a Note</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Optional</p>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Discount</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                -${discount.toFixed(2)}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Total</dt>
+              <dd className="mt-1 text-lg font-semibold text-green-700">
+                ${total.toFixed(2)}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="border-t border-gray-200 pt-4">
+          <h2 className="text-lg leading-6 font-medium text-gray-500">
+            Add a Note
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">Optional</p>
+
           <textarea
             id="note"
             name="note"
             rows={2}
-            className="w-full mt-2 rounded bg-green-50 border border-green-500 focus:border-green-500 focus:outline-none focus-visible:ring-green-500"
+            className="w-full mt-2 min-h-[80px] p-3 rounded bg-green-50 border border-green-500 focus:border-green-500 focus:outline-none focus-visible:ring-green-500 text-sm"
             onChange={(e) => setNote(e.target.value)}
           />
-        </div>
-      </div>
+        </section>
 
-      <div className="px-4 sm:px-6 lg:px-8 mt-2 flex justify-end">
-        <button
-          onClick={handleTableOrder}
-          className="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Send Order to Kitchen
-        </button>
+        <div className="border-t border-gray-200 pt-4 flex justify-end">
+          <button
+            onClick={handleTableOrder}
+            className="w-full sm:w-auto min-h-[44px] px-5 py-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Send Order to Kitchen
+          </button>
+        </div>
       </div>
     </div>
   );

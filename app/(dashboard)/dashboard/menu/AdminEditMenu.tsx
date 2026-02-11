@@ -148,25 +148,26 @@ const AdminEditMenu = ({ menu }: Props) => {
       toast.error("Please add at least one preparation type", { duration: 2500 });
       return;
     }
-const normalized = sellingPrice.trim().replace(",", ".");
-const selling =   normalized === "" ? null : Number(normalized);
 
-if (selling !== null) {
-  if (!Number.isFinite(selling) || selling <= 0) {
-    toast.error("Selling price must be a valid number", { duration: 2500 });
-    return;
-  }
-  if (!Number.isFinite(price) || price <= 0) {
-    toast.error("Price must be greater than 0", { duration: 2500 });
-    return;
-  }
-  if (selling >= price) {
-    toast.error("Selling price must be lower than the regular price", {
-      duration: 2500,
-    });
-    return;
-  }
-}
+    const normalized = sellingPrice.trim().replace(",", ".");
+    const selling = normalized === "" ? null : Number(normalized);
+
+    if (selling !== null) {
+      if (!Number.isFinite(selling) || selling <= 0) {
+        toast.error("Selling price must be a valid number", { duration: 2500 });
+        return;
+      }
+      if (!Number.isFinite(price) || price <= 0) {
+        toast.error("Price must be greater than 0", { duration: 2500 });
+        return;
+      }
+      if (selling >= price) {
+        toast.error("Selling price must be lower than the regular price", {
+          duration: 2500,
+        });
+        return;
+      }
+    }
 
     const toastId = toast.loading("Saving changes...");
     try {
@@ -180,8 +181,8 @@ if (selling !== null) {
         prepType: cleanedPrep,
         price,
         sellingPrice: selling, // ✅ null clears
-        onPromo,              // ✅ NEW
-      } ); // <- remove after codegen updates
+        onPromo, // ✅ NEW
+      }); // <- remove after codegen updates
 
       if (res.data?.editMenu?.id) {
         toast.success("Menu Edited Successfully", { id: toastId, duration: 1200 });
@@ -194,201 +195,214 @@ if (selling !== null) {
       toast.error("An error occurred", { id: toastId, duration: 2000 });
     }
   };
+
   const handleResetPromo = () => {
     setSellingPrice("");
   };
+
   return (
     <>
-      <button type="button" onClick={openModal} className="inline-flex">
-        <HiOutlinePencil className="cursor-pointer h-6 w-6 text-green-600" />
+      <button
+        type="button"
+        onClick={openModal}
+        className="inline-flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-md hover:bg-slate-100 transition"
+        aria-label={`Edit ${menu.title}`}
+      >
+        <HiOutlinePencil className="h-6 w-6 text-green-600" />
       </button>
 
       <Modal isOpen={isOpen} title={title} closeModal={closeModal}>
-        <form onSubmit={handleEditMenu}>
-          <div className="grid gap-4 mb-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 border-gray-300">
-              <Image
-                src={image}
-                alt={title}
-                width={360}
-                height={200}
-                className="h-32 w-full object-cover rounded-md"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="title" className="form-label">
-                Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="title"
-                className="form-input"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="price" className="form-label">
-                Price <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="price"
-                className="form-input"
-                placeholder="$"
-                value={price}
-                min={0}
-                step={0.01}
-                onChange={(e) => setPrice(e.target.valueAsNumber)}
-              />
-            </div>
-
-            {/* ✅ promo toggle */}
-            <div className="flex items-center gap-3">
-              <label className="form-label mb-0">On Promo</label>
-              <input
-                type="checkbox"
-                className="w-5 h-5 accent-green-600 rounded"
-                checked={onPromo}
-                onChange={(e) => setOnPromo(e.target.checked)}
-              />
-            </div>
-
-            <div>
-                   <button
-                  type="button"
-                  onClick={handleResetPromo}
-                  className="text-xs text-gray-600 hover:text-gray-900 underline"
-                >
-                  Reset
-                </button>
-              <label htmlFor="sellingPrice" className="form-label">
-                Selling Price (optional)
-              </label>
-              <input
-                type="number"
-                id="sellingPrice"
-                className="form-input"
-                placeholder="$"
-                value={sellingPrice}
-                min={0}
-                step={0.01}
-                onChange={(e) => setSellingPrice(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category" className="form-label">
-                Category <span className="text-red-500">*</span>
-              </label>
-
-              <select
-                id="category"
-                className="form-input"
-                onChange={(e) => setCategoryTitle(e.target.value)}
-                value={categoryTitle}
-                disabled={catFetching}
-              >
-                {!catFetching &&
-                  categoryTitle &&
-                  !categories.some((c) => c.title === categoryTitle) && (
-                    <option value={categoryTitle}>
-                      {categoryTitle} (current)
-                    </option>
-                  )}
-
-                {catFetching && <option>Loading categories…</option>}
-
-                {!catFetching &&
-                  categories.map((cat) => (
-                    <option key={cat.id} value={cat.title}>
-                      {cat.title}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="longDescr" className="form-label">
-                Long Description
-              </label>
-              <textarea
-                id="longDescr"
-                rows={2}
-                className="form-input"
-                placeholder="Long description here"
-                value={longDescr}
-                onChange={(e) => setLongDescr(e.target.value)}
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="shortDescr" className="form-label">
-                Short Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                id="shortDescr"
-                rows={2}
-                className="form-input"
-                placeholder="Short description here"
-                value={shortDescr}
-                onChange={(e) => setShortDescr(e.target.value)}
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="form-label">
-                Preparation Types <span className="text-red-500">*</span>
-              </label>
-
-              <div className="flex sm:col-span-2 gap-2">
-                <input
-                  type="text"
-                  className="form-input"
-                  value={preparationInput}
-                  onChange={(e) => setPreparationInput(e.target.value)}
-                  placeholder="Enter text"
+        {/* Mobile-safe modal wrapper */}
+        <div className="w-[min(100vw-2rem,48rem)] max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <form onSubmit={handleEditMenu} className="p-3 sm:p-4">
+            <div className="grid gap-4 mb-4 sm:grid-cols-2">
+              <div className="sm:col-span-2 border-gray-300">
+                <Image
+                  src={image}
+                  alt={title}
+                  width={720}
+                  height={400}
+                  className="h-32 sm:h-40 w-full object-cover rounded-md"
                 />
-                <button
-                  type="button"
-                  className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                  onClick={addPreparation}
-                >
-                  Add
-                </button>
               </div>
 
-              {prepType.length > 0 && (
-                <ul className="list-none flex flex-wrap gap-2 mt-2">
-                  {prepType.map((value) => (
-                    <li key={value}>
-                      <button
-                        type="button"
-                        onClick={() => removePreparation(value)}
-                        className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded hover:bg-green-200"
-                        title="Click to remove"
-                      >
-                        {value}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div>
+                <label htmlFor="title" className="form-label">
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  className="form-input min-h-[44px]"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="price" className="form-label">
+                  Price <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  className="form-input min-h-[44px]"
+                  placeholder="$"
+                  value={price}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setPrice(e.target.valueAsNumber)}
+                />
+              </div>
+
+              {/* ✅ promo toggle */}
+              <div className="flex items-center justify-between sm:justify-start gap-3">
+                <label className="form-label mb-0">On Promo</label>
+                <input
+                  type="checkbox"
+                  className="w-6 h-6 accent-green-600 rounded"
+                  checked={onPromo}
+                  onChange={(e) => setOnPromo(e.target.checked)}
+                  aria-label="Toggle promo"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="sellingPrice" className="form-label mb-0">
+                    Selling Price (optional)
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleResetPromo}
+                    className="text-xs text-gray-600 hover:text-gray-900 underline underline-offset-2 min-h-[44px] px-2 -mr-2"
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <input
+                  type="number"
+                  id="sellingPrice"
+                  className="form-input min-h-[44px]"
+                  placeholder="$"
+                  value={sellingPrice}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="category" className="form-label">
+                  Category <span className="text-red-500">*</span>
+                </label>
+
+                <select
+                  id="category"
+                  className="form-input min-h-[44px]"
+                  onChange={(e) => setCategoryTitle(e.target.value)}
+                  value={categoryTitle}
+                  disabled={catFetching}
+                >
+                  {!catFetching &&
+                    categoryTitle &&
+                    !categories.some((c) => c.title === categoryTitle) && (
+                      <option value={categoryTitle}>{categoryTitle} (current)</option>
+                    )}
+
+                  {catFetching && <option>Loading categories…</option>}
+
+                  {!catFetching &&
+                    categories.map((cat) => (
+                      <option key={cat.id} value={cat.title}>
+                        {cat.title}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="longDescr" className="form-label">
+                  Long Description
+                </label>
+                <textarea
+                  id="longDescr"
+                  rows={3}
+                  className="form-input"
+                  placeholder="Long description here"
+                  value={longDescr}
+                  onChange={(e) => setLongDescr(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="shortDescr" className="form-label">
+                  Short Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="shortDescr"
+                  rows={3}
+                  className="form-input"
+                  placeholder="Short description here"
+                  value={shortDescr}
+                  onChange={(e) => setShortDescr(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="form-label">
+                  Preparation Types <span className="text-red-500">*</span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <input
+                    type="text"
+                    className="form-input min-h-[44px] flex-1"
+                    value={preparationInput}
+                    onChange={(e) => setPreparationInput(e.target.value)}
+                    placeholder="Enter text"
+                  />
+                  <button
+                    type="button"
+                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                    onClick={addPreparation}
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {prepType.length > 0 && (
+                  <ul className="list-none flex flex-wrap gap-2 mt-2">
+                    {prepType.map((value) => (
+                      <li key={value}>
+                        <button
+                          type="button"
+                          onClick={() => removePreparation(value)}
+                          className="bg-green-100 text-green-700 text-xs font-medium px-3 py-1 rounded hover:bg-green-200"
+                          title="Click to remove"
+                        >
+                          {value}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-          </div>
 
-          <UploadImg handleCallBack={replaceMenuImage} id="editAdminImg" />
+            <UploadImg handleCallBack={replaceMenuImage} id="editAdminImg" />
 
-          <button
-            type="submit"
-            className="text-white inline-flex items-center bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >
-            <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-            Edit Menu
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-[44px] text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-4"
+            >
+              <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
+              Edit Menu
+            </button>
+          </form>
+        </div>
       </Modal>
     </>
   );

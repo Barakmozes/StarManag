@@ -48,7 +48,7 @@ const DAYS: Array<
 
 type NormalizedOpenDay = {
   day: (typeof DAYS)[number];
-  open: string | null;  // "09:00"
+  open: string | null; // "09:00"
   close: string | null; // "22:00"
   closed: boolean;
   display: string; // "09:00 - 22:00" OR "Closed"
@@ -153,11 +153,7 @@ function normalizeOpenTimes(raw: unknown): NormalizedOpenDay[] {
     const timesString =
       typeof item?.times === "string" && item.times.trim() ? item.times.trim() : null;
 
-    const display = closed
-      ? "Closed"
-      : timesString
-        ? timesString
-        : `${open} - ${close}`;
+    const display = closed ? "Closed" : timesString ? timesString : `${open} - ${close}`;
 
     return {
       day,
@@ -212,7 +208,7 @@ type RestaurantDetailsModalProps = {
 const RestaurantDetailsModal = ({
   restaurantId,
   triggerText = "More Info",
-  triggerClassName = "underline text-lg text-green-700 cursor-pointer font-semibold",
+  triggerClassName = "underline text-lg text-green-700 cursor-pointer font-semibold inline-flex items-center justify-center min-h-11 px-2",
   hideTrigger = false,
 }: RestaurantDetailsModalProps) => {
   const router = useRouter();
@@ -303,9 +299,7 @@ const RestaurantDetailsModal = ({
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
   }, [restaurant?.address]);
 
-
-// ואייז אפליקצה 
-
+  // ואייז אפליקצה
   const wazeUrl = useMemo(() => {
     const name = restaurant?.name?.trim();
     const addr = restaurant?.address?.trim();
@@ -326,9 +320,6 @@ const RestaurantDetailsModal = ({
     if (isMobile) window.location.href = wazeUrl;
     else window.open(wazeUrl, "_blank", "noopener,noreferrer");
   }, [wazeUrl]);
-
-
-
 
   const openModal = () => {
     // Ensure latest data when opening
@@ -391,222 +382,226 @@ const RestaurantDetailsModal = ({
       )}
 
       <Modal isOpen={isOpen} closeModal={closeModal} title={restaurant?.name ?? "Restaurant"}>
-        {/* Loading / error / empty states */}
-        {fetching && (
-          <div className="py-4 text-sm text-gray-500">Loading restaurant details…</div>
-        )}
+        {/* Mobile-safe: never overflow viewport */}
+        <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+24px)]">
+          {/* Loading / error / empty states */}
+          {fetching && (
+            <div className="py-4 text-sm text-gray-500">Loading restaurant details…</div>
+          )}
 
-        {!fetching && error && (
-          <div className="py-4 text-sm text-red-600">
-            Could not load restaurant details. Please try again.
-            <div className="mt-3">
-              <button
-                type="button"
-                onClick={refreshInfo}
-                className="px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-sm"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!fetching && !error && !restaurant && (
-          <div className="py-4 text-sm text-gray-600">
-            Restaurant details are not available yet.
-          </div>
-        )}
-
-        {!fetching && !error && restaurant && (
-          <div className="flex flex-col space-y-5">
-            {/* Banner */}
-            <div className="relative w-full h-40 rounded-lg overflow-hidden bg-slate-100">
-              <Image
-                src={restaurant.bannerImg || "/banner.jpg"}
-                alt={restaurant.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 600px"
-                priority={false}
-              />
-            </div>
-
-            {/* If multiple restaurants exist: allow switching */}
-            {restaurants.length > 1 && (
-              <div className="space-y-1">
-                <label className="text-sm text-gray-600">Select restaurant</label>
-                <select
-                  value={restaurant.id}
-                  onChange={(e) => {
-                    updateUrlParams({ [RESTAURANT_ID_PARAM]: e.target.value });
-                    // Fetch fresh data (best practice)
-                    reexecuteQuery({ requestPolicy: "network-only" });
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white"
-                >
-                  {restaurants.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Name */}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
-                {restaurant.name}
-              </h1>
-
-              {/* Open/Closed badge */}
-              {today && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span
-                    className={`px-2 py-1 rounded-md text-xs font-medium ${
-                      openNow === true
-                        ? "bg-green-100 text-green-700"
-                        : openNow === false
-                          ? "bg-red-100 text-red-700"
-                          : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    {openNow === true ? "Open now" : openNow === false ? "Closed" : "Hours unknown"}
-                  </span>
-
-                  <span className="text-xs text-gray-500">
-                    Today ({todayName}): {today.display}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Address */}
-            <div className="flex items-start gap-3">
-              <HiMapPin className="shrink-0 mt-0.5" size={24} />
-              <div className="flex-1">
-                <p className="text-gray-800">
-                  {restaurant.address ? restaurant.address : "No address set"}
-                                 {wazeUrl && (
+          {!fetching && error && (
+            <div className="py-4 text-sm text-red-600">
+              Could not load restaurant details. Please try again.
+              <div className="mt-3">
                 <button
                   type="button"
-                  onClick={openWaze}
-                  className="inline-flex items-center justify-center ml-3 w-9 h-9 rounded-md bg-slate-100 hover:bg-slate-200"
-                  aria-label={`Open ${restaurant?.name ?? "restaurant"} in Waze`}
-                  title="Open in Waze"
+                  onClick={refreshInfo}
+                  className="min-h-11 px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                 >
-                  <FaWaze size={20} />
+                  Refresh
                 </button>
-              )}
-                </p>
-                
+              </div>
+            </div>
+          )}
 
-                <div className="mt-2 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={copyAddress}
-                    className="text-sm text-green-700 underline underline-offset-2"
-                    disabled={!restaurant.address}
+          {!fetching && !error && !restaurant && (
+            <div className="py-4 text-sm text-gray-600">
+              Restaurant details are not available yet.
+            </div>
+          )}
+
+          {!fetching && !error && restaurant && (
+            <div className="flex flex-col space-y-5">
+              {/* Banner */}
+              <div className="relative w-full h-36 sm:h-40 rounded-lg overflow-hidden bg-slate-100">
+                <Image
+                  src={restaurant.bannerImg || "/banner.jpg"}
+                  alt={restaurant.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  priority={false}
+                />
+              </div>
+
+              {/* If multiple restaurants exist: allow switching */}
+              {restaurants.length > 1 && (
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-600">Select restaurant</label>
+                  <select
+                    value={restaurant.id}
+                    onChange={(e) => {
+                      updateUrlParams({ [RESTAURANT_ID_PARAM]: e.target.value });
+                      // Fetch fresh data (best practice)
+                      reexecuteQuery({ requestPolicy: "network-only" });
+                    }}
+                    className="w-full min-h-11 border border-gray-300 rounded-lg px-3 py-2 text-base text-gray-700 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                   >
-                    Copy address
-                  </button>
-             
+                    {restaurants.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-                  {mapsUrl && (
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-green-700 underline underline-offset-2"
+              {/* Name */}
+              <div>
+                <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                  {restaurant.name}
+                </h1>
+
+                {/* Open/Closed badge */}
+                {today && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        openNow === true
+                          ? "bg-green-100 text-green-700"
+                          : openNow === false
+                            ? "bg-red-100 text-red-700"
+                            : "bg-slate-100 text-slate-700"
+                      }`}
                     >
-                      Open in Maps
-                    </a>
-                  )}
+                      {openNow === true ? "Open now" : openNow === false ? "Closed" : "Hours unknown"}
+                    </span>
+
+                    <span className="text-xs text-gray-500">
+                      Today ({todayName}): {today.display}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Address */}
+              <div className="flex items-start gap-3">
+                <HiMapPin className="shrink-0 mt-0.5" size={24} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-gray-800 break-words">
+                      {restaurant.address ? restaurant.address : "No address set"}
+                    </p>
+
+                    {wazeUrl && (
+                      <button
+                        type="button"
+                        onClick={openWaze}
+                        className="inline-flex items-center justify-center h-11 w-11 shrink-0 rounded-md bg-slate-100 hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                        aria-label={`Open ${restaurant?.name ?? "restaurant"} in Waze`}
+                        title="Open in Waze"
+                      >
+                        <FaWaze size={20} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={copyAddress}
+                      className="inline-flex min-h-11 items-center text-sm text-green-700 underline underline-offset-2 disabled:opacity-50"
+                      disabled={!restaurant.address}
+                    >
+                      Copy address
+                    </button>
+
+                    {mapsUrl && (
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-11 items-center text-sm text-green-700 underline underline-offset-2"
+                      >
+                        Open in Maps
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Opening Times */}
-            <Disclosure as="div" className="mt-2">
-              {({ open }) => (
-                <>
-                  <Disclosure.Button className="flex w-full items-center justify-between focus:outline-none">
-                    <div className="flex items-center">
-                      <HiClock className="shrink-0 mr-2" size={24} />
-                      <p className="text-gray-900 font-medium">Opening Times</p>
-                    </div>
+              {/* Opening Times */}
+              <Disclosure as="div" className="mt-2">
+                {({ open }) => (
+                  <>
+                    <Disclosure.Button className="flex w-full min-h-11 items-center justify-between rounded-lg px-2 py-2 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+                      <div className="flex items-center">
+                        <HiClock className="shrink-0 mr-2" size={24} />
+                        <p className="text-gray-900 font-medium">Opening Times</p>
+                      </div>
 
-                    <HiChevronDown
-                      className={`${open ? "rotate-180 transform" : ""} h-5 w-5`}
-                    />
-                  </Disclosure.Button>
+                      <HiChevronDown
+                        className={`${open ? "rotate-180 transform" : ""} h-5 w-5`}
+                      />
+                    </Disclosure.Button>
 
-                  <Disclosure.Panel className="px-2 pt-3 pb-2">
-                    <div className="space-y-2">
-                      {openTimes.map((d) => (
-                        <div
-                          className="flex items-center justify-between text-sm"
-                          key={d.day}
-                        >
-                          <p className="shrink-0 text-gray-700">{d.day}</p>
-                          <p className={`${d.closed ? "text-red-600" : "text-gray-600"}`}>
-                            {d.display}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </Disclosure.Panel>
-                </>
-              )}
-            </Disclosure>
+                    <Disclosure.Panel className="px-2 pt-3 pb-2">
+                      <div className="space-y-2">
+                        {openTimes.map((d) => (
+                          <div
+                            className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between text-sm"
+                            key={d.day}
+                          >
+                            <p className="shrink-0 text-gray-700">{d.day}</p>
+                            <p className={`${d.closed ? "text-red-600" : "text-gray-600"}`}>
+                              {d.display}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </Disclosure.Panel>
+                  </>
+                )}
+              </Disclosure>
 
-            {/* Rating + Fees */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-center">
-                <HiStar className="shrink-0 mr-2" size={24} />
-                <p className="text-gray-800">
-                  {Number.isFinite(restaurant.rating)
-                    ? `${restaurant.rating.toFixed(1)} rating`
-                    : "No rating"}
-                </p>
+              {/* Rating + Fees */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <HiStar className="shrink-0 mr-2" size={24} />
+                  <p className="text-gray-800">
+                    {Number.isFinite(restaurant.rating)
+                      ? `${restaurant.rating.toFixed(1)} rating`
+                      : "No rating"}
+                  </p>
+                </div>
+
+                <div className="text-sm text-gray-700 flex flex-col gap-1">
+                  <p>
+                    Delivery fee:{" "}
+                    <span className="font-semibold text-gray-900">
+                      ${restaurant.deliveryFee?.toFixed?.(2) ?? restaurant.deliveryFee}
+                    </span>
+                  </p>
+                  <p>
+                    Service fee:{" "}
+                    <span className="font-semibold text-gray-900">
+                      ${restaurant.serviceFee?.toFixed?.(2) ?? restaurant.serviceFee}
+                    </span>
+                  </p>
+                </div>
               </div>
 
-              <div className="text-sm text-gray-700 flex flex-col gap-1">
-                <p>
-                  Delivery fee:{" "}
-                  <span className="font-semibold text-gray-900">
-                    ${restaurant.deliveryFee?.toFixed?.(2) ?? restaurant.deliveryFee}
-                  </span>
-                </p>
-                <p>
-                  Service fee:{" "}
-                  <span className="font-semibold text-gray-900">
-                    ${restaurant.serviceFee?.toFixed?.(2) ?? restaurant.serviceFee}
-                  </span>
-                </p>
+              {/* Footer actions */}
+              <div className="pt-2 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  type="button"
+                  onClick={refreshInfo}
+                  className="min-h-11 w-full sm:w-auto px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                >
+                  Refresh
+                </button>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="min-h-11 w-full sm:w-auto px-4 py-2 rounded-lg bg-green-700 hover:bg-green-800 text-sm text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            {/* Footer actions */}
-            <div className="pt-2 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={refreshInfo}
-                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm text-gray-800"
-              >
-                Refresh
-              </button>
-
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-4 py-2 rounded-lg bg-green-700 hover:bg-green-800 text-sm text-white"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </Modal>
     </>
   );

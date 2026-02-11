@@ -46,41 +46,47 @@ const PriceDropDown = () => {
   };
 
   return (
-    <div ref={wrapperRef} className="relative inline-block bg-white cursor-pointer">
+    <div ref={wrapperRef} className="relative inline-block bg-white">
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="md:w-auto flex items-center justify-center py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
+        className="min-h-[44px] md:w-auto inline-flex items-center justify-center gap-1 py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
         type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
       >
         Price
-        <HiChevronDown className="ml-1 mr-1.5 w-5 h-5" />
+        <HiChevronDown className="w-5 h-5" />
       </button>
 
       {isOpen && (
-        <div className="absolute mt-2 -mr-1 w-56 bg-white rounded-md shadow-lg z-10">
-          <div className="text-center py-3">
-            <h3>Filter by Price</h3>
+        <div className="absolute right-0 mt-2 w-[min(90vw,14rem)] sm:w-56 bg-white rounded-md shadow-lg z-10 overflow-hidden">
+          <div className="text-center py-3 px-3 border-b">
+            <h3 className="text-sm font-semibold text-slate-700">Filter by Price</h3>
           </div>
 
-          <ul className="space-y-2 text-sm p-3">
-            {options.map((key) => (
-              <li className="flex items-center" key={key}>
-                <input
-                  type="radio"
-                  name="price-filter"
-                  checked={selected === key}
-                  onChange={() => {
-                    updateUrl(key);
-                    setIsOpen(false);
-                  }}
-                  className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-600">
-                  {key === "all" ? "All" : key === "15+" ? "$15+" : `$${key}`}
-                </label>
-              </li>
-            ))}
-          </ul>
+          <div className="max-h-[70vh] overflow-auto p-2">
+            <ul className="space-y-1 text-sm">
+              {options.map((key) => (
+                <li key={key}>
+                  <label className="flex items-center gap-3 rounded-md px-2 py-2 min-h-[44px] hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="price-filter"
+                      checked={selected === key}
+                      onChange={() => {
+                        updateUrl(key);
+                        setIsOpen(false);
+                      }}
+                      className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <span className="text-sm font-medium text-gray-600">
+                      {key === "all" ? "All" : key === "15+" ? "$15+" : `$${key}`}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>

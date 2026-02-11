@@ -1,10 +1,6 @@
-import Container from "@/app/components/Common/Container";
+// app/(dashboard)/dashboard/deliveries/page.tsx
 import DeliveriesTable from "./DeliveriesTable";
 
 export default function DeliveriesPage() {
-  return (
-    <Container>
-      <DeliveriesTable />
-    </Container>
-  );
+  return <DeliveriesTable />;
 }

@@ -2,7 +2,12 @@
 import gql from "graphql-tag";
 
 export const GET_DELIVERY_ORDERS = gql`
-  query GetDeliveryOrders($first: Int!, $after: ID, $search: String, $statusIn: [OrderStatus!]) {
+  query GetDeliveryOrders(
+    $first: Int!
+    $after: ID
+    $search: String
+    $statusIn: [OrderStatus!]
+  ) {
     getDeliveryOrders(first: $first, after: $after, search: $search, statusIn: $statusIn) {
       pageInfo {
         endCursor
@@ -40,6 +45,7 @@ export const MARK_DELIVERY_READY = gql`
     }
   }
 `;
+
 export const GET_DELIVERY_DRIVERS = gql`
   query GetDeliveryDrivers {
     getUsers {
@@ -53,6 +59,7 @@ export const GET_DELIVERY_DRIVERS = gql`
     }
   }
 `;
+
 export const ASSIGN_DRIVER_TO_ORDER = gql`
   mutation AssignDriverToOrder(
     $orderNumber: String!

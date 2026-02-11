@@ -20,7 +20,11 @@ function toastStyles(type: ToastType) {
   return "bg-slate-900 text-white";
 }
 
-export function DeliveriesToastProvider({ children }: { children: React.ReactNode }) {
+export function DeliveriesToastProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const api = useMemo<ToastApi>(() => {
@@ -43,12 +47,20 @@ export function DeliveriesToastProvider({ children }: { children: React.ReactNod
     <ToastCtx.Provider value={api}>
       {children}
 
-      {/* Toasts */}
-      <div className="fixed z-[9999] top-4 right-4 flex flex-col gap-2">
+      {/* Toasts (mobile-safe width + safe-area top) */}
+      <div
+        className="fixed z-[9999] top-[calc(env(safe-area-inset-top)+0.75rem)] left-3 right-3 sm:left-auto sm:right-4 flex flex-col gap-2"
+        aria-live="polite"
+        aria-relevant="additions text"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`px-4 py-3 rounded-lg shadow-lg text-sm min-w-[220px] ${toastStyles(t.type)}`}
+            className={[
+              "w-full sm:min-w-[220px] sm:w-auto max-w-full",
+              "break-words px-4 py-3 rounded-lg shadow-lg text-sm",
+              toastStyles(t.type),
+            ].join(" ")}
           >
             {t.message}
           </div>
@@ -60,6 +72,7 @@ export function DeliveriesToastProvider({ children }: { children: React.ReactNod
 
 export function useDeliveriesToast() {
   const ctx = useContext(ToastCtx);
-  if (!ctx) throw new Error("useDeliveriesToast must be used within DeliveriesToastProvider");
+  if (!ctx)
+    throw new Error("useDeliveriesToast must be used within DeliveriesToastProvider");
   return ctx;
 }
