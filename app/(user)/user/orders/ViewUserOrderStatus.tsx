@@ -25,14 +25,14 @@ export const UserOrderPreparing = () => {
             <h6 className="text-sm font-semibold text-slate-800">
               Chef: Manuel
             </h6>
-            <a href="tel:+44756235-89" className="text-sm text-slate-600">
-              +44 756 235-89
+            <a href="tel:05275623589" className="text-sm text-slate-600">
+             44 756 235-89
             </a>
           </div>
         </div>
 
         <a
-          href="tel:+44756235-89"
+          href="tel:0524475623589"
           className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-white cursor-pointer shadow-sm hover:bg-slate-50 transition self-start sm:self-auto"
           aria-label="Call chef"
         >
@@ -68,14 +68,14 @@ export const UserOrderCollected = () => {
             <h6 className="text-sm font-semibold text-slate-800 break-words">
               Josie Macmillan
             </h6>
-            <a href="tel:+44756235-89" className="text-sm text-slate-600">
+            <a href="tel:052475623589" className="text-sm text-slate-600">
               756 235-89
             </a>
           </div>
         </div>
 
         <a
-          href="tel:+44756235-89"
+          href="tel:05275623589"
           className="inline-flex h-11 w-11 items-center justify-center rounded-md bg-white cursor-pointer shadow-sm hover:bg-slate-50 transition self-start sm:self-auto"
           aria-label="Call driver"
         >

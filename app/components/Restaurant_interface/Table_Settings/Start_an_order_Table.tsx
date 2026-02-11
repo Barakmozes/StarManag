@@ -36,7 +36,7 @@ const StartAnOrder = ({ table }: StartAnOrderProps) => {
     <button
       onClick={handleStartOrder}
       type="button"
-      className="w-full min-h-[44px] py-3 px-4 mt-2 text-sm sm:text-base font-medium text-black bg-orange-400 rounded hover:bg-orange-500 transition disabled:bg-gray-400"
+      className="w-full min-h-[22px] py-1 px-1 mt-1 text-sm sm:text-base font-medium text-black bg-orange-400 rounded hover:bg-orange-500 transition disabled:bg-gray-400"
     >
       Start an order
     </button>
