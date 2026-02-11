@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
+
 import { useDrop } from "react-dnd";
 import throttle from "lodash/throttle";
 import TableModal from "./TableModal";
@@ -31,14 +32,14 @@ const TablesSection: React.FC<TablesSectionProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Throttle "moveTable"
-  const throttledMoveTable = useCallback(
-    throttle(async (tableId, newAreaId, newPosition) => {
-      // Just do the local store update
+const throttledMoveTable = useMemo(() => {
+  return throttle(
+    (tableId: string, newAreaId: string, newPosition: { x: number; y: number }) => {
       moveTable(tableId, newAreaId, newPosition);
-      // No DB call here
-    }, 100),
-    [moveTable]
+    },
+    100
   );
+}, [moveTable]);
 
   // Snap to 5px grid
   const snapToGrid = (x: number, y: number, gridSize: number) => ({

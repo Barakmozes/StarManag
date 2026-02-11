@@ -74,7 +74,7 @@ export const AdminFetchedMenus = ({
     }
   );
 
-  const edges = data?.getMenus?.edges ?? [];
+const edges = useMemo(() => data?.getMenus?.edges ?? [], [data?.getMenus?.edges]);
 
   const filteredEdges = useMemo(() => {
     return edges.filter((edge) => {

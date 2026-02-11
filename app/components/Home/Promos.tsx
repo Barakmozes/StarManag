@@ -232,10 +232,10 @@ function PromosInner() {
   const promosForRow = useMemo(() => promoMenus.slice(0, PROMO_ROW_COUNT), [promoMenus]);
 
   // O(1) lookup via Map ref (recomputed when menus change)
-  const selectedMenu = useMemo(() => {
-    if (!selectedPromoId) return null;
-    return menusByIdRef.current.get(selectedPromoId) ?? null;
-  }, [allMenus, selectedPromoId]);
+const selectedMenu = useMemo(() => {
+  if (!selectedPromoId) return null;
+  return allMenus.find((m) => m.id === selectedPromoId) ?? null;
+}, [allMenus, selectedPromoId]);
 
   const setPromoParam = useCallback(
     (value: string | null) => {

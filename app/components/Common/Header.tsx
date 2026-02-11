@@ -195,7 +195,10 @@ if (!identifier) {
         <div className="absolute -top-1 right-5 h-2 w-2 rotate-45 bg-white/90 ring-1 ring-slate-200" />
 
         <div className="space-y-1">
-          <p className="font-semibold text-slate-800">✨ -Let's try the dashboard- <br />בוא ננסה את הדשבורד</p>
+<p className="font-semibold text-slate-800">
+  ✨ -Let&apos;s try the dashboard- <br />
+  בוא ננסה את הדשבורד
+</p>
           <p className="text-slate-600">
             ניהול תפריטים, הזמנות ותפקידים—בלחיצה אחת. מומלץ להיכנס ולהתנסות 
           </p>

@@ -147,7 +147,10 @@ export default function UserOrders({ user }: Props) {
     variables: { email: userEmail },
   });
 
-  const rawOrders = (data?.getUser?.order as any[]) ?? [];
+const rawOrders = useMemo(
+  () => (data?.getUser?.order as any[]) ?? [],
+  [data?.getUser?.order]
+);
 
   const { tableOrders, otherOrders } = useMemo(() => {
     const table = rawOrders.filter((o) => o.tableId != null);
