@@ -150,22 +150,26 @@ export default function OrdersFilter() {
   }, [mutateUrlParams]);
 
   return (
-    <div ref={wrapperRef} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      ref={wrapperRef}
+      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
       {/* Search */}
       <div className="relative w-full sm:w-[360px]">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by order#, email, phone, address, token..."
-          className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-300"
+          className="w-full min-h-11 rounded-md border border-slate-200 bg-white px-3 py-2 text-base outline-none focus:ring-2 focus:ring-slate-300"
         />
 
         {q ? (
           <button
             type="button"
             onClick={() => setQ("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 inline-flex items-center justify-center rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
             title="Clear search"
+            aria-label="Clear search"
           >
             <HiXMark className="h-5 w-5" />
           </button>
@@ -173,18 +177,21 @@ export default function OrdersFilter() {
       </div>
 
       {/* Filter dropdown */}
-      <div className="relative inline-block">
+      <div className="relative w-full sm:w-auto inline-block">
         <button
           type="button"
           onClick={() => setIsOpen((v) => !v)}
-          className="md:w-auto flex items-center justify-center py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
+          className="w-full sm:w-auto min-h-11 flex items-center justify-center py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
         >
-          Filter {activeCount ? <span className="ml-2 text-xs text-slate-500">({activeCount})</span> : null}
+          Filter{" "}
+          {activeCount ? (
+            <span className="ml-2 text-xs text-slate-500">({activeCount})</span>
+          ) : null}
           <HiChevronDown className="ml-2 w-5 h-5" />
         </button>
 
         {isOpen ? (
-          <div className="absolute mt-2 right-0 w-[300px] bg-white rounded-md shadow-lg z-20 border border-slate-100">
+          <div className="absolute mt-2 right-0 w-[92vw] max-w-[320px] sm:w-[320px] bg-white rounded-md shadow-lg z-20 border border-slate-100 overflow-hidden max-h-[80vh]">
             <div className="px-4 py-3 border-b border-slate-100">
               <h3 className="text-sm font-semibold text-slate-800">Filters</h3>
               <p className="text-xs text-slate-500 mt-1">Server-side filtering</p>
@@ -193,11 +200,11 @@ export default function OrdersFilter() {
             {/* Paid */}
             <div className="p-3 border-b border-slate-100">
               <p className="text-xs font-medium text-slate-600 mb-2">Paid</p>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setStagedPaid(null)}
-                  className={`px-3 py-1 rounded-md text-xs border ${
+                  className={`min-h-11 px-3 py-2 rounded-md text-sm border ${
                     stagedPaid === null
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white border-slate-200 text-slate-700"
@@ -209,7 +216,7 @@ export default function OrdersFilter() {
                 <button
                   type="button"
                   onClick={() => setStagedPaid(true)}
-                  className={`px-3 py-1 rounded-md text-xs border ${
+                  className={`min-h-11 px-3 py-2 rounded-md text-sm border ${
                     stagedPaid === true
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white border-slate-200 text-slate-700"
@@ -221,7 +228,7 @@ export default function OrdersFilter() {
                 <button
                   type="button"
                   onClick={() => setStagedPaid(false)}
-                  className={`px-3 py-1 rounded-md text-xs border ${
+                  className={`min-h-11 px-3 py-2 rounded-md text-sm border ${
                     stagedPaid === false
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white border-slate-200 text-slate-700"
@@ -237,23 +244,26 @@ export default function OrdersFilter() {
               <p className="text-xs font-medium text-slate-600 mb-1">Status</p>
 
               {STATUS_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2 text-sm text-slate-700">
+                <label
+                  key={opt.value}
+                  className="flex items-center gap-3 rounded-md px-2 py-2 min-h-11 text-sm text-slate-700 hover:bg-slate-50"
+                >
                   <input
                     type="checkbox"
                     checked={stagedStatus.includes(opt.value)}
                     onChange={() => toggleStatus(opt.value)}
-                    className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded"
+                    className="w-5 h-5 accent-green-600 bg-gray-100 border-gray-300 rounded"
                   />
                   <span>{opt.label}</span>
                 </label>
               ))}
             </div>
 
-            <div className="flex items-center justify-between gap-2 p-3 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 p-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={clearAll}
-                className="text-sm px-3 py-2 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                className="min-h-11 w-full sm:w-auto text-sm px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 Clear
               </button>
@@ -261,7 +271,7 @@ export default function OrdersFilter() {
               <button
                 type="button"
                 onClick={applyFilters}
-                className="text-sm px-3 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800"
+                className="min-h-11 w-full sm:w-auto text-sm px-4 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 Apply
               </button>

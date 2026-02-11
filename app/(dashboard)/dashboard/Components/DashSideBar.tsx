@@ -1,70 +1,162 @@
-import { HiArrowRightOnRectangle, HiChevronDoubleLeft } from "react-icons/hi2";
+"use client";
+
+import { useCallback } from "react";
+import { signOut } from "next-auth/react";
+import {
+  HiArrowRightOnRectangle,
+  HiChevronDoubleLeft,
+  HiXMark,
+} from "react-icons/hi2";
+
 import RenderRoutes from "./RenderRoutes";
 import { AdminRoutes } from "./routes";
 
 type Props = {
-  show: boolean;
+  show: boolean; // desktop: expanded vs collapsed
   showSideBar: () => void;
+
+  mobileOpen: boolean; // mobile drawer open/close
+  onCloseMobile: () => void;
 };
 
-const DashSideBar = ({ show, showSideBar }: Props) => {
-  const adminRouter = () => {
-    return <>{RenderRoutes({ routes: AdminRoutes, show })}</>;
-  };
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export default function DashSideBar({
+  show,
+  showSideBar,
+  mobileOpen,
+  onCloseMobile,
+}: Props) {
+  const showForRoutes = show || mobileOpen;
+
+  const handleLogout = useCallback(async () => {
+    await signOut({ callbackUrl: "/" });
+  }, []);
+
+  const handleNavClickCapture = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      if (!mobileOpen) return;
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const anchor = target.closest("a[href]");
+      if (anchor) onCloseMobile();
+    },
+    [mobileOpen, onCloseMobile]
+  );
 
   return (
     <aside
-      className={`py-4 px-2 fixed inset-y-0 left-0 bg-white transition-all duration-1000 ease-out shadow-md w-[5rem]  ${
-        show && "md:w-40 "
-      }`}
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 flex flex-col bg-white shadow-md",
+        // ✅ animate both slide + width
+        "transition-[transform,width] ease-out duration-300 md:duration-1000",
+        // Mobile: slide-in drawer. Desktop: always visible.
+        mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        // Mobile drawer width
+        "w-[85vw] max-w-[18rem]",
+        // ✅ Desktop width: pick ONE md width (no conflicts!)
+        show ? "md:w-40" : "md:w-[5rem]"
+      )}
+      aria-label="Dashboard navigation"
     >
-      <HiChevronDoubleLeft
-        className={`bg-green-600  hidden md:block
-       rounded-full text-white shadow-lg
-       absolute -right-3 top-9 z-10 cursor-pointer 
-        ${!show && "rotate-180"}`}
-        size={32}
+      {/* Mobile top bar */}
+      <div className="flex items-center justify-between border-b border-slate-100 px-3 py-3 md:hidden">
+        <span className="text-sm font-semibold text-slate-700">Menu</span>
+
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 shadow-sm ring-1 ring-black/5 transition-colors hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+          aria-label="Close navigation"
+        >
+          <HiXMark className="h-6 w-6" aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Desktop toggle */}
+      <button
+        type="button"
         onClick={showSideBar}
-      />
-      <nav className="flex flex-col items-center justify-between h-full   ">
+        aria-label={show ? "Collapse sidebar" : "Expand sidebar"}
+        aria-expanded={show}
+        className={cn(
+          "absolute -right-3 top-9 z-10 hidden h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white shadow-lg md:flex",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2",
+          !show && "rotate-180"
+        )}
+      >
+        <HiChevronDoubleLeft className="h-5 w-5" aria-hidden="true" />
+      </button>
+
+      <nav
+        className="flex min-h-0 flex-1 flex-col items-center justify-between"
+        onClickCapture={handleNavClickCapture}
+      >
+        {/* ✅ min-h-0 + flex-1 = scroll לא “נחתך” */}
         <div
-          className={`overflow-y-auto pt-20 w-16 scrollbar-hide ${
-            show && "md:w-[10rem]"
-          } `}
+          className={cn(
+            "w-full min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-6 md:pt-20",
+            "scrollbar-hide",
+            showForRoutes ? "px-2" : "px-0"
+          )}
         >
           <div
-            className={`flex flex-col items-center space-y-6 ${
-              show && "md:items-start"
-            } `}
+            className={cn(
+              "flex flex-col space-y-6",
+              showForRoutes ? "items-start" : "items-center"
+            )}
           >
-            {adminRouter()}
+            <RenderRoutes routes={AdminRoutes} show={showForRoutes} />
           </div>
         </div>
 
-        <div className="pt-6 mb-8 bg-white  border-t">
-          <div className="flex items-center   cursor-pointer pb-3 md:justify-start group ">
-            <div className="relative ">
+        {/* Logout */}
+        <div className="w-full border-t border-slate-100 bg-white px-2 pb-6 pt-4">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={cn(
+              "group flex w-full items-center rounded-md px-2 py-2 transition hover:bg-slate-50",
+              showForRoutes ? "justify-start" : "justify-center",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+            )}
+            aria-label="Logout"
+          >
+            <div className="relative">
               <span
-                className={`absolute bg-green-600
-                 text-white text-[0.7rem] p-1 
-                 rounded-md -top-6 left-[0.8rem]  transform -translate-x-1/2 invisible ${
-                   show && "md:hidden"
-                 } group-hover:visible md:left-[1.6rem]`}
+                className={cn(
+                  "invisible absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-green-600 px-2 py-1 text-[0.7rem] text-white shadow-sm group-hover:visible",
+                  showForRoutes && "hidden"
+                )}
               >
                 Logout
               </span>
+
               <HiArrowRightOnRectangle
-                className="text-slate-500 mr-2"
+                className={cn(
+                  "text-slate-500 transition-colors group-hover:text-green-600",
+                  showForRoutes ? "mr-2" : "mr-0"
+                )}
                 size={24}
+                aria-hidden="true"
               />
             </div>
 
-            <span className={`hidden ${show && "md:inline"}`}>Logout</span>
-          </div>
+            <span
+              className={cn(
+                "text-sm text-slate-600 transition-colors group-hover:text-green-600",
+                showForRoutes ? "inline" : "hidden"
+              )}
+            >
+              Logout
+            </span>
+          </button>
         </div>
       </nav>
     </aside>
   );
-};
-
-export default DashSideBar;
+}

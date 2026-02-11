@@ -1,10 +1,13 @@
 export default function Loading() {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-8 px-6 md:h-screen">
-      <p className="text-green-800 pb-5 animate-pulse">Loading...</p>
-      <div role="status">
+    <div className="flex flex-col items-center justify-center text-center py-10 px-4 min-h-[60vh] md:min-h-screen">
+      <p className="text-green-800 pb-4 text-sm sm:text-base animate-pulse">
+        Loading...
+      </p>
+
+      <div role="status" className="flex items-center justify-center">
         <svg
-          className="inline mr-2 w-16 h-16 text-gray-200 animate-spin fill-green-800"
+          className="w-14 h-14 sm:w-16 sm:h-16 text-gray-200 animate-spin fill-green-800"
           viewBox="0 0 100 101"
           fill="none"
         >
@@ -17,6 +20,7 @@ export default function Loading() {
             fill="currentFill"
           />
         </svg>
+
         <span className="sr-only">Loading...</span>
       </div>
     </div>

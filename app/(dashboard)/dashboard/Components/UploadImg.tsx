@@ -1,75 +1,66 @@
 "use client";
 
-import React, { ChangeEvent, useCallback, useState } from "react";
+import React, { ChangeEvent, useCallback, useId, useState } from "react";
 import { AiOutlineCloudUpload } from "react-icons/ai";
 
 type Props = {
-  handleCallBack: (file: File) => void | Promise<void>;
+  handleCallBack: (file: File) => void;
   id?: string;
-  maxMB?: number;
-  accept?: string;
-  title?: string;
-  description?: string;
 };
 
-const UploadImg = ({
-  handleCallBack,
-  id = "image-upload",
-  maxMB = 50,
-  accept = "image/*",
-  title = "Upload a new file",
-  description = "Accepted formats: .png, .jpg",
-}: Props) => {
+const UploadImg = ({ handleCallBack, id }: Props) => {
+  const autoId = useId();
+  const inputId = id ?? autoId;
+
   const [data, setData] = useState<{ image: string | null }>({ image: null });
+  const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
-
-  const readAsDataURL = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setData((prev) => ({ ...prev, image: e.target?.result as string }));
-    };
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleFile = useCallback(
-    (file: File) => {
-      const sizeMB = file.size / 1024 / 1024;
-      if (sizeMB > maxMB) {
-        // You can plug in a toast here if you use one.
-        console.warn(`File too big: ${sizeMB.toFixed(2)}MB (max ${maxMB}MB)`);
-        return;
-      }
-
-      // ✅ notify parent so it can upload to Supabase + store URL
-      void handleCallBack(file);
-
-      // ✅ local preview
-      readAsDataURL(file);
-    },
-    [handleCallBack, maxMB, readAsDataURL]
-  );
 
   const onChangePicture = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.currentTarget.files && event.currentTarget.files[0];
-      if (file) handleFile(file);
+      const nextFile = event.currentTarget.files && event.currentTarget.files[0];
+      if (nextFile) {
+        if (nextFile.size / 1024 / 1024 > 3) {
+          // toast.error('File size too big (max 3MB)')
+        } else {
+          handleCallBack(nextFile);
+          setFile(nextFile);
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setData((prev) => ({ ...prev, image: e.target?.result as string }));
+          };
+          reader.readAsDataURL(nextFile);
+        }
+      }
     },
-    [handleFile]
+    [handleCallBack],
   );
 
+  const hasImage = Boolean(data.image);
+
+  const overlayBase =
+    "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md transition-all";
+  const overlayPadding = "px-4 sm:px-10";
+  const overlayEmpty =
+    "bg-white opacity-100 hover:bg-gray-50 group-active:bg-gray-50";
+  const overlayWithImage =
+    "bg-white/80 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100 hover:backdrop-blur-md";
+  const overlayDrag = dragActive ? "border-2 border-black opacity-100" : "";
+
   return (
-    <div>
-      <div className="space-y-1 mb-4">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <p className="text-sm text-gray-500">{description}</p>
+    <div className="w-full">
+      <div className="mb-4 space-y-1">
+        <h2 className="text-lg font-semibold sm:text-xl">Upload a new file</h2>
+        <p className="text-sm text-gray-500">Accepted formats: .png, .jpg</p>
       </div>
 
       <label
-        htmlFor={id}
-        className="group relative mt-2 flex h-56 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+        htmlFor={inputId}
+        className="group relative mt-2 flex h-48 w-full touch-manipulation cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 focus-within:ring-2 focus-within:ring-green-600 focus-within:ring-offset-2 sm:h-56"
       >
         <div
-          className="absolute z-[5] h-full w-full rounded-md"
+          className="absolute inset-0 z-[5] rounded-md"
           onDragOver={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -90,32 +81,44 @@ const UploadImg = ({
             e.stopPropagation();
             setDragActive(false);
 
-            const file = e.dataTransfer.files && e.dataTransfer.files[0];
-            if (file) handleFile(file);
+            const droppedFile = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (droppedFile) {
+              if (droppedFile.size / 1024 / 1024 > 50) {
+                // toast.error("File size too big (max 50MB)");
+              } else {
+                setFile(droppedFile);
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  setData((prev) => ({
+                    ...prev,
+                    image: ev.target?.result as string,
+                  }));
+                };
+                reader.readAsDataURL(droppedFile);
+              }
+            }
           }}
         />
 
         <div
-          className={`${
-            dragActive ? "border-2 border-black" : ""
-          } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md px-10 transition-all ${
-            data.image
-              ? "bg-white/80 opacity-0 hover:opacity-100 hover:backdrop-blur-md"
-              : "bg-white opacity-100 hover:bg-gray-50"
-          }`}
+          className={`${overlayBase} ${overlayPadding} ${
+            hasImage ? overlayWithImage : overlayEmpty
+          } ${overlayDrag}`}
         >
           <AiOutlineCloudUpload
             className={`${
               dragActive ? "scale-110" : "scale-100"
-            } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95`}
+            } h-8 w-8 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95 sm:h-7 sm:w-7`}
           />
 
           <p className="mt-2 text-center text-sm text-gray-500">
-            Drag and drop or click to upload.
+            {hasImage ? "Tap or click to replace." : "Drag and drop or click to upload."}
           </p>
+
           <p className="mt-2 text-center text-sm text-gray-500">
-            Max file size: {maxMB}MB
+            Max file size: 50MB
           </p>
+
           <span className="sr-only">Photo upload</span>
         </div>
 
@@ -129,12 +132,22 @@ const UploadImg = ({
         )}
       </label>
 
+      {file?.name && (
+        <p className="mt-2 truncate text-xs text-gray-500">{file.name}</p>
+      )}
+
+      {hasImage && (
+        <p className="mt-1 text-xs text-gray-500 md:hidden">
+          Tip: tap the image preview to replace it.
+        </p>
+      )}
+
       <div className="mt-1 flex rounded-md shadow-sm">
         <input
-          id={id}
+          id={inputId}
           name="image"
           type="file"
-          accept={accept}
+          accept="image/*"
           className="sr-only"
           onChange={onChangePicture}
         />

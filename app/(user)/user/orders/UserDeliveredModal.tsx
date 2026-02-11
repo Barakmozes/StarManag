@@ -1,12 +1,9 @@
-
 import Image from "next/image";
-
 import { useState } from "react";
 import { FaChevronRight } from "react-icons/fa";
 import { BsFillBoxFill } from "react-icons/bs";
 import Modal from "@/app/components/Common/Modal";
 import { Order } from "@prisma/client";
-import { CartItemType } from "@/types";
 
 type Props = {
   order: Order;
@@ -21,84 +18,115 @@ const UserDeliveredModal = ({ order }: Props) => {
   return (
     <>
       <button
-        className="flex justify-between bg-green-50  p-1 text-green-700 items-center"
+        type="button"
+        className="w-full min-h-[44px] flex items-center justify-between gap-3 rounded-lg bg-green-50 px-3 py-2 text-green-700 hover:bg-green-100 transition"
         onClick={openModal}
+        aria-label={`View delivered order ${order.orderNumber}`}
       >
-        <span className="flex items-center space-x-2 ">
-          <BsFillBoxFill size={24} />
-          <span>Order Delivered</span>
+        <span className="flex items-center gap-2 min-w-0">
+          <BsFillBoxFill size={20} className="shrink-0" />
+          <span className="text-sm sm:text-base font-medium truncate">
+            Order Delivered
+          </span>
         </span>
 
-        <FaChevronRight className="shrink-0" />
+        <FaChevronRight className="shrink-0" aria-hidden="true" />
       </button>
 
       <Modal
         isOpen={isOpen}
-        title={"Order: "+order.orderNumber}
+        title={"Order: " + order.orderNumber}
         closeModal={closeModal}
       >
-        <div className="mt-4">
-          {order?.cart.map((cart: any) => (
-            <div className="flex items-center space-y-3 " key={cart.id}>
-              <div className="w-16 h-16 overflow-hidden  rounded-full">
-                <Image
-                  src={cart.image}
-                  alt="logo"
-                  width={70}
-                  height={70}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="pl-4 font-semibold ">{cart.title}</span>
-                <p className="pl-4 text-xs">
-                  Preparation:{" "}
-                  <span className=" italic text-gray-500">{cart.prepare}</span>
-                </p>
-                <p className="pl-4 text-xs">
-                  Note:{" "}
-                  <span className=" italic text-gray-500">
-                    {cart.instructions}
-                  </span>
-                </p>
-                <p className="pl-4 text-xs">
-                  Price:{" "}
-                  <span className="font-semibold  text-green-600">
-                    ${cart.price}
-                  </span>
-                </p>
-              </div>
-            </div>
-          ))}
+        <div className="w-[min(100vw-2rem,42rem)] max-w-2xl mx-auto max-h-[90vh] overflow-y-auto overscroll-contain pb-6">
+          {/* Items */}
+          <div className="mt-4 space-y-3">
+            {order?.cart.map((cart: any) => (
+              <div
+                key={cart.id}
+                className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3"
+              >
+                <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 overflow-hidden rounded-full bg-gray-100">
+                  <Image
+                    src={cart.image}
+                    alt={cart.title ?? "menu item"}
+                    width={70}
+                    height={70}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
 
-          <div className="flex items-center justify-between p-2 mt-3 text-gray-500 border-t">
-            <span>Discount</span>
-            <span>$- {order.discount}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-semibold text-sm sm:text-base text-gray-800 break-words">
+                      {cart.title}
+                    </span>
+                    {cart.price != null && (
+                      <span className="shrink-0 font-semibold text-green-600 whitespace-nowrap">
+                        ${cart.price}
+                      </span>
+                    )}
+                  </div>
+
+                  {cart.prepare ? (
+                    <p className="mt-1 text-sm text-gray-600 break-words">
+                      Preparation:{" "}
+                      <span className="italic text-gray-500">
+                        {cart.prepare}
+                      </span>
+                    </p>
+                  ) : null}
+
+                  {cart.instructions ? (
+                    <p className="mt-1 text-sm text-gray-600 break-words">
+                      Note:{" "}
+                      <span className="italic text-gray-500">
+                        {cart.instructions}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center justify-between p-2 text-gray-500">
-            <span>Service Fees</span>
-            <span>${order.serviceFee}</span>
+
+          {/* Totals */}
+          <div className="mt-4 rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between p-3 text-sm text-gray-600 border-b">
+              <span>Discount</span>
+              <span className="whitespace-nowrap">$- {order.discount}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 text-sm text-gray-600 border-b">
+              <span>Service Fees</span>
+              <span className="whitespace-nowrap">${order.serviceFee}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 text-sm text-gray-600 border-b">
+              <span>Delivery Fee</span>
+              <span className="whitespace-nowrap">${order.deliveryFee}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 text-gray-700">
+              <span className="text-base font-medium">Total</span>
+              <span className="text-base font-medium whitespace-nowrap">
+                ${order.total}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between p-2 text-gray-500">
-            <span>Delivery Fee</span>
-            <span>${order.deliveryFee}</span>
+
+          {/* Note / Address */}
+          <div className="mt-4 p-3 bg-slate-50 rounded-md space-y-2">
+            <p className="text-sm text-slate-700">
+              Delivery Note:
+              <span className="text-sm ml-2 text-gray-500 break-words">
+                {order.note}
+              </span>
+            </p>
+            <p className="text-sm text-slate-700">
+              Delivery Address:
+              <span className="text-sm ml-2 text-gray-500 break-words">
+                {order.deliveryAddress}
+              </span>
+            </p>
           </div>
-          <div className="flex items-center justify-between p-2 text-gray-500 border-t">
-            <span className="text-lg font-medium">Total</span>
-            <span className="text-lg font-medium">${order.total}</span>
-          </div>
-        </div>
-        <div className="mt-3 p-2 bg-slate-50 rounded-md">
-          <p>
-            Delivery Note:
-            <span className="text-xs ml-2 text-gray-500">{order.note}</span>
-          </p>
-          <p>
-            Delivery Address:{" "}
-            <span className="text-xs ml-2 text-gray-500">
-              {order.deliveryAddress}
-            </span>{" "}
-          </p>
         </div>
       </Modal>
     </>

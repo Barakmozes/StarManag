@@ -5,7 +5,6 @@ import React, { useCallback, useState, useEffect } from 'react'
 export default function FullscreenButton() {
   const [isFs, setIsFs] = useState(false)
 
-  // Listen for fullscreen change events (in case the user hits Esc or F11)
   useEffect(() => {
     const handler = () => setIsFs(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', handler)
@@ -26,9 +25,11 @@ export default function FullscreenButton() {
     <button
       onClick={toggleFullscreen}
       className={`
-        px-4 py-2 rounded-lg shadow 
+        inline-flex items-center justify-center
+        min-h-11 px-4 py-2 rounded-lg shadow
         ${isFs ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}
-        text-white transition
+        text-white transition whitespace-nowrap
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white
       `}
     >
       {isFs ? 'Exit Fullscreen' : 'Enter Fullscreen'}

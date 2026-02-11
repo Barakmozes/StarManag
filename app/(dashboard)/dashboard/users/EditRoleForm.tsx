@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { gql, useMutation } from "@urql/next";;
+import { gql, useMutation } from "@urql/next";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { GoChevronDown } from "react-icons/go";
@@ -59,7 +59,12 @@ type Props = {
   onChanged?: () => void;
 };
 
-export default function EditRoleForm({ user, currentUserId = null, closeModal, onChanged }: Props) {
+export default function EditRoleForm({
+  user,
+  currentUserId = null,
+  closeModal,
+  onChanged,
+}: Props) {
   const router = useRouter();
 
   const [{ fetching: updatingProfile }, updateUserProfile] = useMutation<
@@ -100,7 +105,8 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
   const normalizedNextEmail = email.trim().toLowerCase();
 
   const nameChanged = showEditDetails && name.trim() !== (user.name ?? "");
-  const emailChanged = showEditDetails && showChangeEmail && normalizedNextEmail !== normalizedOriginalEmail;
+  const emailChanged =
+    showEditDetails && showChangeEmail && normalizedNextEmail !== normalizedOriginalEmail;
   const roleChanged = showChangeRole && role !== user.role;
   const imageChanged = showChangeAvatar && !!avatarFile;
 
@@ -175,23 +181,18 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
   };
 
   return (
-    <form onSubmit={onSave} className="my-6 space-y-5">
+    <form onSubmit={onSave} className="my-4 sm:my-6 space-y-5">
       {/* Read-only email */}
       <div>
         <label className="form-label">Current Email</label>
-        <input
-          type="text"
-          className="formInput"
-          value={user.email ?? ""}
-          disabled
-        />
+        <input type="text" className="form-input min-h-[44px]" value={user.email ?? ""} disabled />
       </div>
 
       {/* Toggle edit sections */}
       <div className="flex flex-col gap-3">
         <label className="flex items-center gap-3">
           <input
-            className="w-6 h-6 text-slate-900 bg-slate-100 rounded focus:outline-none"
+            className="w-6 h-6 accent-green-600 bg-slate-100 rounded focus:outline-none"
             type="checkbox"
             checked={showEditDetails}
             onChange={(e) => setShowEditDetails(e.target.checked)}
@@ -201,7 +202,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
 
         <label className="flex items-center gap-3">
           <input
-            className="w-6 h-6 text-slate-900 bg-slate-100 rounded focus:outline-none"
+            className="w-6 h-6 accent-green-600 bg-slate-100 rounded focus:outline-none"
             type="checkbox"
             checked={showChangeRole}
             onChange={(e) => setShowChangeRole(e.target.checked)}
@@ -219,25 +220,30 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
           <div>
             <label className="form-label">Name</label>
             <input
-              className="formInput"
+              className="form-input min-h-[44px]"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
+              autoComplete="name"
             />
           </div>
 
           <div>
             <label className="form-label">Email</label>
             <input
-              className="formInput"
+              type="email"
+              inputMode="email"
+              className="form-input min-h-[44px]"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!showChangeEmail}
               placeholder="name@example.com"
+              autoComplete="email"
             />
+
             <label className="mt-3 flex items-center gap-3">
               <input
-                className="w-6 h-6 text-slate-900 bg-slate-100 rounded focus:outline-none"
+                className="w-6 h-6 accent-green-600 bg-slate-100 rounded focus:outline-none"
                 type="checkbox"
                 checked={showChangeEmail}
                 onChange={(e) => setShowChangeEmail(e.target.checked)}
@@ -253,7 +259,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
           <div>
             <label className="flex items-center gap-3">
               <input
-                className="w-6 h-6 text-slate-900 bg-slate-100 rounded focus:outline-none"
+                className="w-6 h-6 accent-green-600 bg-slate-100 rounded focus:outline-none"
                 type="checkbox"
                 checked={showChangeAvatar}
                 onChange={(e) => setShowChangeAvatar(e.target.checked)}
@@ -263,10 +269,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
 
             {showChangeAvatar ? (
               <div className="mt-3">
-                <UploadImg
-                  id={`edit-user-img-${user.id}`}
-                  handleCallBack={(f) => setAvatarFile(f)}
-                />
+                <UploadImg id={`edit-user-img-${user.id}`} handleCallBack={(f) => setAvatarFile(f)} />
               </div>
             ) : null}
           </div>
@@ -281,7 +284,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as Role)}
-              className="block w-full rounded-md appearance-none bg-white border border-green-400 px-4 py-2 pr-8 leading-tight focus:outline-none"
+              className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-green-400 px-4 py-2 pr-8 leading-tight focus:outline-none"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>
@@ -296,7 +299,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
         </div>
       ) : null}
 
-      <button type="submit" className="form-button w-full" disabled={saving}>
+      <button type="submit" className="form-button w-full min-h-[44px]" disabled={saving}>
         {saving ? "Saving..." : "Save Changes"}
       </button>
 
@@ -311,7 +314,7 @@ export default function EditRoleForm({ user, currentUserId = null, closeModal, o
           type="button"
           onClick={onDelete}
           disabled={saving}
-          className="mt-3 inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-500 disabled:opacity-50"
+          className="mt-3 w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-500 disabled:opacity-50"
         >
           <HiOutlineTrash className="h-5 w-5" />
           Delete User

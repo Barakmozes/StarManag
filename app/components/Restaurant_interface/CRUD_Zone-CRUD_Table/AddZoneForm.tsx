@@ -68,9 +68,19 @@ const AddZoneForm = () => {
       <Modal isOpen={isOpen} closeModal={closeModal}>
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 max-w-md mx-auto p-4 bg-white rounded-lg shadow-md"
+          className="flex flex-col gap-4 w-[min(100vw-2rem,28rem)] max-w-md mx-auto p-4 sm:p-5 bg-white rounded-lg shadow-md max-h-[90vh] overflow-y-auto overscroll-contain"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
+          {/* Mobile-friendly close button */}
+          <button
+            type="button"
+            onClick={closeModal}
+            className="ml-auto -mt-1 -mr-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 -mt-2">
             Create a New Zone
           </h2>
 
@@ -85,7 +95,7 @@ const AddZoneForm = () => {
               value={zoneName}
               onChange={(e) => setZoneName(e.target.value)}
               placeholder="Enter zone name"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+              className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
               required
             />
           </div>
@@ -103,31 +113,31 @@ const AddZoneForm = () => {
               value={zoneDescription}
               onChange={(e) => setZoneDescription(e.target.value)}
               placeholder="Describe this zone"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200 min-h-[96px]"
               rows={3}
             />
           </div>
 
           {/* Error Handling */}
           {error && (
-            <p className="text-red-600 text-sm">
+            <p className="text-red-600 text-sm break-words">
               Something went wrong: {error.message}
             </p>
           )}
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-2">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={fetching}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
               {fetching ? "Adding..." : "Add Zone"}
             </button>

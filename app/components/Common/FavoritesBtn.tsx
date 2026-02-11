@@ -23,28 +23,25 @@ type Props = {
 const FavoritesBtn = ({ menuId, user }: Props) => {
   const router = useRouter();
   const userEmail = user?.email as string;
-  const [{ data, fetching, error }] = useQuery<
-    GetUserFavoritesQuery,
-    GetUserFavoritesQueryVariables
-  >({ query: GetUserFavoritesDocument, variables: { userEmail } });
 
-  const FavsIds = data?.getUserFavorites.menu;
+  const [{ data }] = useQuery<GetUserFavoritesQuery, GetUserFavoritesQueryVariables>({
+    query: GetUserFavoritesDocument,
+    variables: { userEmail },
+  });
 
-  const [_add, addFav] = useMutation<
-    AddFavoriteMutation,
-    AddFavoriteMutationVariables
-  >(AddFavoriteDocument);
+  const favIds = data?.getUserFavorites.menu;
+  const isFav = Array.isArray(favIds) ? favIds.includes(menuId) : false;
 
-  const [_remove, removeFav] = useMutation<
-    RemoveFavoriteMutation,
-    RemoveFavoriteMutationVariables
-  >(RemoveFavoriteDocument);
+  const [_add, addFav] = useMutation<AddFavoriteMutation, AddFavoriteMutationVariables>(
+    AddFavoriteDocument
+  );
+
+  const [_remove, removeFav] = useMutation<RemoveFavoriteMutation, RemoveFavoriteMutationVariables>(
+    RemoveFavoriteDocument
+  );
 
   const handleAddFav = async () => {
-    const res = await addFav({
-      userEmail,
-      menuId,
-    });
+    const res = await addFav({ userEmail, menuId });
     if (res.data?.addFavorite) {
       toast.success("Favorite Added Successfully", { duration: 2000 });
       router.refresh();
@@ -54,10 +51,7 @@ const FavoritesBtn = ({ menuId, user }: Props) => {
   };
 
   const handleRemoveFav = async () => {
-    const res = await removeFav({
-      userEmail,
-      menuId,
-    });
+    const res = await removeFav({ userEmail, menuId });
     if (res.data?.removeFavorite) {
       toast.success("Favorite removed Successfully", { duration: 2000 });
       router.refresh();
@@ -67,33 +61,23 @@ const FavoritesBtn = ({ menuId, user }: Props) => {
   };
 
   return (
-    <div
-      className="
-        relative
-        hover:opacity-80
-        transition
-        
-      "
+    <button
+      type="button"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+      aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={isFav}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isFav) handleRemoveFav();
+        else handleAddFav();
+      }}
     >
-      {FavsIds?.includes(menuId) ? (
-        <AiFillHeart
-          size={36}
-          className="fill-green-700 cursor-pointer"
-          onClick={handleRemoveFav}
-        />
+      {isFav ? (
+        <AiFillHeart size={28} className="fill-green-700" aria-hidden="true" />
       ) : (
-        <AiOutlineHeart
-          size={40}
-          className="
-            text-green-700
-            -top-[20px]
-            -right-[30px]
-            cursor-pointer
-          "
-          onClick={handleAddFav}
-        />
+        <AiOutlineHeart size={30} className="text-green-700" aria-hidden="true" />
       )}
-    </div>
+    </button>
   );
 };
 

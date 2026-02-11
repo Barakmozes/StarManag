@@ -1,68 +1,72 @@
 "use client";
-import Map, { Layer, LineLayer, Marker, Source } from "react-map-gl";
+
+import Map, { Marker, Source, Layer, type LineLayer } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useState } from "react";
-import Image from "next/image";
+import { HiMapPin } from "react-icons/hi2";
 import type { Feature, LineString } from "geojson";
 
 type MapProps = {
-  width: number;
-  height: number;
+  latitude: number;
+  longitude: number;
+  routeCoordinates?: [number, number][]; // [lng, lat]
+  width?: number | string;              // ✅ הוסף
+  height?: number | string;
+  className?: string;
 };
 
-const AppMap = ({ width, height }: MapProps) => {
-  const [viewState, setViewState] = useState({
-    latitude: 31.7683,
-    longitude: 35.2137,
-    zoom: 14,
-  });
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string;
+const AppMap = ({
+  latitude,
+  longitude,
+  routeCoordinates,
+  width = "100%",          // ✅ ברירת מחדל
+  height = 320,
+  className,
+}: MapProps) => {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  const geojson: Feature<LineString> = {
-    type: "Feature",
-    properties: {},
-    geometry: {
-      type: "LineString",
-      coordinates: [
-        [35.2137, 31.7683],
-        [35.2145, 31.7690],
-        [35.2150, 31.7700],
-        [35.2160, 31.7710],
-        [35.2170, 31.7720],
-      ],
-    },
-  };
+  const geojson: Feature<LineString> | null = routeCoordinates
+    ? {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: routeCoordinates },
+      }
+    : null;
 
   const routeLayer: LineLayer = {
     id: "route",
     type: "line",
-    source: "route",
-    layout: {
-      "line-join": "round",
-      "line-cap": "round",
-    },
     paint: {
-      "line-color": "#0ea5e9",
-      "line-width": 5,
+      "line-color": "#16a34a",
+      "line-width": 4,
+      "line-dasharray": [2, 1],
     },
   };
 
   return (
-    <Map
-      mapboxAccessToken={token}
-      {...viewState}
-      onMove={(evt) => setViewState(evt.viewState)}
-      style={{ width, height }}
-      mapStyle="mapbox://styles/mapbox/streets-v9"
+    <div
+      className={`overflow-hidden rounded-xl shadow-inner border border-slate-200 ${className ?? ""}`}
+      style={{ width }} // ✅ מאפשר גם width מספרי/מחרוזת
     >
-      <Marker longitude={35.2137} latitude={31.7683} anchor="bottom">
-        <Image src="/img/loc.png" alt="mappin" width={30} height={30} />
-      </Marker>
+      <Map
+        mapboxAccessToken={token}
+        initialViewState={{ latitude, longitude, zoom: 14 }}
+        style={{ width: "100%", height }} // המפה תמיד ממלאת את הקונטיינר
+        mapStyle="mapbox://styles/mapbox/streets-v12"
+      >
+        <Marker latitude={latitude} longitude={longitude} anchor="bottom">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute h-10 w-10 animate-ping rounded-full bg-green-500/20" />
+            <HiMapPin size={32} className="text-green-600 drop-shadow-md" />
+          </div>
+        </Marker>
 
-      <Source id="route" type="geojson" data={geojson}>
-        <Layer {...routeLayer} />
-      </Source>
-    </Map>
+        {geojson && (
+          <Source id="route" type="geojson" data={geojson}>
+            <Layer {...routeLayer} />
+          </Source>
+        )}
+      </Map>
+    </div>
   );
 };
 

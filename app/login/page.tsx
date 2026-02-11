@@ -8,7 +8,7 @@ const LoginPage = () => {
             <h2 className="text-center text-2xl py-4 leading-tight tracking-tight text-gray-600">
                 Login / Signup
             </h2>
-        <LoginComponent/>
+   <LoginComponent  />
         </div>
     </div>
   )

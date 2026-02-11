@@ -40,21 +40,24 @@ export default function MarkReady({
   return (
     <>
       <button
-        className="px-3 py-1 rounded-full text-sm bg-blue-600 text-white"
+        type="button"
+        className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-full text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition"
         onClick={() => setIsOpen(true)}
       >
         Ready
       </button>
 
       <Modal isOpen={isOpen} closeModal={closeModal} title="Mark order as ready?">
-        <div className="p-2 space-y-4">
+        {/* Mobile-safe modal body wrapper */}
+        <div className="w-[min(100vw-2rem,28rem)] max-w-full mx-auto max-h-[90vh] overflow-y-auto overscroll-contain p-3 sm:p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] space-y-4">
           <p className="text-sm text-slate-600">
             This will move the order from <b>PREPARING</b> to <b>UNASSIGNED</b>.
           </p>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
             <button
-              className="px-3 py-2 rounded-md bg-slate-200 text-slate-800"
+              type="button"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-md bg-slate-200 text-slate-800 hover:bg-slate-300 transition disabled:opacity-60"
               onClick={closeModal}
               disabled={fetching}
             >
@@ -62,7 +65,8 @@ export default function MarkReady({
             </button>
 
             <button
-              className="px-3 py-2 rounded-md bg-blue-600 text-white"
+              type="button"
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-60"
               onClick={onConfirm}
               disabled={fetching}
             >

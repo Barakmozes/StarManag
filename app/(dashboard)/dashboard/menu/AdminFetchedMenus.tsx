@@ -110,12 +110,14 @@ export const AdminFetchedMenus = ({
   const endCursor = data?.getMenus?.pageInfo?.endCursor ?? null;
   const hasNextPage = Boolean(data?.getMenus?.pageInfo?.hasNextPage);
 
+  const colCount = 6;
+
   return (
     <>
       <tbody>
         {fetching && edges.length === 0 && (
           <tr className="bg-white">
-            <td className="px-6 py-4 text-sm text-gray-500" colSpan={8}>
+            <td className="px-3 sm:px-6 py-4 text-sm text-gray-500" colSpan={colCount}>
               Loading menus…
             </td>
           </tr>
@@ -123,7 +125,7 @@ export const AdminFetchedMenus = ({
 
         {!fetching && error && (
           <tr className="bg-white">
-            <td className="px-6 py-4 text-sm text-red-600" colSpan={8}>
+            <td className="px-3 sm:px-6 py-4 text-sm text-red-600" colSpan={colCount}>
               Failed to load menus. Please refresh.
             </td>
           </tr>
@@ -131,7 +133,7 @@ export const AdminFetchedMenus = ({
 
         {!fetching && !error && filteredEdges.length === 0 && (
           <tr className="bg-white">
-            <td className="px-6 py-4 text-sm text-gray-500" colSpan={8}>
+            <td className="px-3 sm:px-6 py-4 text-sm text-gray-500" colSpan={colCount}>
               No menus match your current filters.
             </td>
           </tr>
@@ -144,69 +146,83 @@ export const AdminFetchedMenus = ({
           const effectivePrice = getEffectivePrice(menu);
 
           return (
-            <tr className="bg-white" key={menu.id}>
-              <td className="px-6 py-2">
+            <tr className="bg-white border-b last:border-b-0" key={menu.id}>
+              {/* Selection checkbox: desktop only */}
+              <td className="hidden md:table-cell px-3 sm:px-6 py-2 align-top">
                 <input
                   className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
                   type="checkbox"
+                  aria-label={`Select ${menu.title}`}
                 />
               </td>
 
-              <td className="px-6 py-2">
+              <td className="px-3 sm:px-6 py-2 align-top">
                 <Image
                   src={menu.image}
-                  width={50}
-                  height={50}
+                  width={40}
+                  height={40}
                   alt={menu.title}
-                  className="rounded-md object-cover"
+                  className="h-10 w-10 rounded-md object-cover"
                 />
               </td>
 
-              <td className="px-6 py-2">{menu.title}</td>
+              <td className="px-3 sm:px-6 py-2 align-top">
+                <div className="font-medium text-slate-700 break-words">
+                  {menu.title}
+                </div>
 
-              <td className="px-6 py-2">
-                <span className="bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded">
+                {/* Small helper line on mobile to keep rows informative without extra columns */}
+                {menu.shortDescr ? (
+                  <div className="mt-0.5 text-xs text-slate-400 sm:hidden truncate max-w-[12rem]">
+                    {menu.shortDescr}
+                  </div>
+                ) : null}
+              </td>
+
+              <td className="px-3 sm:px-6 py-2 align-top">
+                <span className="inline-flex bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded whitespace-nowrap">
                   {menu.category}
                 </span>
               </td>
 
-              <td className="px-6 py-2 whitespace-nowrap">
+              <td className="px-3 sm:px-6 py-2 align-top whitespace-nowrap">
                 {menu.sellingPrice ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
                     <span className="text-slate-400 line-through">${menu.price}</span>
-                    <span className="text-green-700 font-semibold">${effectivePrice}</span>
+                    <span className="text-green-700 font-semibold">
+                      ${effectivePrice}
+                    </span>
                   </div>
                 ) : (
                   <span>${menu.price}</span>
                 )}
               </td>
 
-              <td className="px-6 py-2 whitespace-nowrap">
-                <AdminPreviewMenu menu={menu} />
-              </td>
-
-              <td className="px-6 py-2 whitespace-nowrap">
-                <AdminEditMenu menu={menu} />
-              </td>
-
-              <td className="px-6 py-2 whitespace-nowrap">
-                <AdminDeleteMenu menu={menu} />
+              {/* Combined actions column */}
+              <td className="px-3 sm:px-6 py-2 align-top">
+                <div className="flex items-center justify-end sm:justify-start gap-1 sm:gap-2">
+                  <AdminPreviewMenu menu={menu} />
+                  <AdminEditMenu menu={menu} />
+                  <AdminDeleteMenu menu={menu} />
+                </div>
               </td>
             </tr>
           );
         })}
       </tbody>
 
-      <tfoot className="flex justify-center py-3">
+      <tfoot>
         <tr>
-          <td>
+          <td className="px-3 sm:px-6 py-3" colSpan={colCount}>
             {isAdminLastPage && hasNextPage && endCursor && (
-              <button
-                onClick={() => onLoadMore(endCursor)}
-                className="bg-green-600 text-white text-center hover:bg-green-200 hover:text-green-700 py-1 px-2 rounded focus:outline-none"
-              >
-                Load More ...
-              </button>
+              <div className="flex justify-center">
+                <button
+                  onClick={() => onLoadMore(endCursor)}
+                  className="min-h-[44px] w-full sm:w-auto bg-green-600 text-white text-center hover:bg-green-200 hover:text-green-700 py-2 px-4 rounded focus:outline-none"
+                >
+                  Load More ...
+                </button>
+              </div>
             )}
           </td>
         </tr>

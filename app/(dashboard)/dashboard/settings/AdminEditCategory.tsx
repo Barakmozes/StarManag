@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { HiOutlinePencil, HiOutlinePencilSquare } from "react-icons/hi2";
@@ -71,10 +73,9 @@ const AdminEditCategory = ({ category }: Props) => {
   };
 
   const editCategoryId = category.id;
-  const [_, editCategory] = useMutation<
-    EditCategoryMutation,
-    EditCategoryMutationVariables
-  >(EditCategoryDocument);
+  const [, editCategory] = useMutation<EditCategoryMutation, EditCategoryMutationVariables>(
+    EditCategoryDocument
+  );
 
   const handleEditCategory = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -103,65 +104,71 @@ const AdminEditCategory = ({ category }: Props) => {
 
   return (
     <>
-      <HiOutlinePencilSquare
+      <button
+        type="button"
         onClick={openModal}
-        className="cursor-pointer h-6 w-6 text-green-600"
-      />
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+        aria-label={`Edit category ${category.title}`}
+        title="Edit"
+      >
+        <HiOutlinePencilSquare className="h-6 w-6 text-green-600" />
+      </button>
 
       <Modal isOpen={isOpen} title={title} closeModal={closeModal}>
-        <form onSubmit={handleEditCategory}>
-          <div className="grid gap-4 mb-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 border-gray-300">
-              <Image
-                src={img || category.img}
-                alt={category.title}
-                width={360}
-                height={200}
-                className="h-32 w-full object-cover rounded-md"
-              />
+        {/* Mobile-safe: prevent overflow + safe-area bottom padding */}
+        <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
+          <form onSubmit={handleEditCategory} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2 border-gray-300">
+                <Image
+                  src={img || category.img}
+                  alt={category.title}
+                  width={720}
+                  height={400}
+                  className="h-32 w-full object-cover rounded-md"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="title" className="form-label">
+                  Title
+                </label>
+                <input
+                  id="title"
+                  className="form-input min-h-11 text-base sm:text-sm"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="desc" className="form-label">
+                  Description
+                </label>
+                <textarea
+                  id="desc"
+                  rows={3}
+                  className="form-input text-base sm:text-sm"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="title" className="form-label">
-                Title
-              </label>
-              <input
-                id="title"
-                className="form-input"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
+            <UploadImg
+              handleCallBack={getCategoryImageFile}
+              id={`editAdminCategoryImg-${category.id}`}
+            />
 
-            <div className="sm:col-span-2">
-              <label htmlFor="desc" className="form-label">
-                Description
-              </label>
-              <textarea
-                id="desc"
-                rows={3}
-                className="form-input"
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <UploadImg
-            handleCallBack={getCategoryImageFile}
-            id={`editAdminCategoryImg-${category.id}`}
-          />
-
-          <button
-            type="submit"
-            className="mt-4 text-white inline-flex items-center bg-green-600
-              hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
-              font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >
-            <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-            Edit Category
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            >
+              <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
+              Edit Category
+            </button>
+          </form>
+        </div>
       </Modal>
     </>
   );

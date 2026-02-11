@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { gql, useMutation, useQuery } from "@urql/next";;
+import { gql, useMutation, useQuery } from "@urql/next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { GoChevronDown } from "react-icons/go";
@@ -99,7 +99,12 @@ type AddProfileData = {
 };
 
 type UpdateUserProfileData = {
-  updateUserProfile: { id: string; name?: string | null; email?: string | null; image?: string | null };
+  updateUserProfile: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 };
 
 type EditUserRoleData = { editUserRole: { id: string; role: Role } };
@@ -129,25 +134,34 @@ function mutateUrl(
   router.replace(qs ? `${pathname}?${qs}` : pathname);
 }
 
+function roleBadgeClass(role: Role) {
+  if (role === Role.Admin) return "bg-red-100 text-red-700";
+  if (role === Role.Manager) return "bg-green-100 text-green-700";
+  if (role === Role.Chef) return "bg-orange-100 text-orange-700";
+  if (role === Role.Waiter) return "bg-blue-100 text-blue-700";
+  if (role === Role.Delivery) return "bg-purple-100 text-purple-700";
+  return "bg-slate-100 text-slate-700";
+}
+
 /* ------------------------------ Add User Modal ---------------------------- */
 
-function AddUserModal({
-  canAdd,
-  onCreated,
-}: {
-  canAdd: boolean;
-  onCreated: () => void;
-}) {
+function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () => void }) {
   const router = useRouter();
 
-  const [{ fetching: creatingProfile }, addProfile] = useMutation<AddProfileData, { email: string; name?: string; img?: string; phone?: string }>(
-    ADD_PROFILE
-  );
+  const [{ fetching: creatingProfile }, addProfile] = useMutation<
+    AddProfileData,
+    { email: string; name?: string; img?: string; phone?: string }
+  >(ADD_PROFILE);
+
   const [{ fetching: updatingUser }, updateUserProfile] = useMutation<
     UpdateUserProfileData,
     { id: string; name?: string; email?: string; image?: string }
   >(UPDATE_USER_PROFILE);
-  const [{ fetching: updatingRole }, editUserRole] = useMutation<EditUserRoleData, { id: string; role: Role }>(EDIT_USER_ROLE);
+
+  const [{ fetching: updatingRole }, editUserRole] = useMutation<
+    EditUserRoleData,
+    { id: string; role: Role }
+  >(EDIT_USER_ROLE);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -225,7 +239,7 @@ function AddUserModal({
     <>
       <button
         type="button"
-        className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-2 text-white hover:bg-green-700"
+        className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md bg-green-800 px-4 py-2 text-white hover:bg-green-700"
         onClick={() => setIsOpen(true)}
       >
         <HiOutlinePlus className="h-5 w-5" />
@@ -233,65 +247,81 @@ function AddUserModal({
       </button>
 
       <Modal isOpen={isOpen} closeModal={close} title="Add User">
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="form-label">Name</label>
-            <input
-              className="formInput"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Full name"
-            />
-          </div>
+        {/* Mobile-safe modal wrapper */}
+        <div className="w-[min(100vw-2rem,34rem)] max-w-full mx-auto max-h-[90vh] overflow-y-auto overscroll-contain p-3 sm:p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label className="form-label">Name</label>
+              <input
+                className="form-input min-h-[44px]"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full name"
+                autoComplete="name"
+              />
+            </div>
 
-          <div>
-            <label className="form-label">Email *</label>
-            <input
-              className="formInput"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
-              required
-            />
-          </div>
+            <div>
+              <label className="form-label">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                inputMode="email"
+                className="form-input min-h-[44px]"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                required
+                autoComplete="email"
+              />
+            </div>
 
-          <div>
-            <label className="form-label">Phone</label>
-            <input
-              className="formInput"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Optional"
-            />
-          </div>
+            <div>
+              <label className="form-label">Phone</label>
+              <input
+                type="tel"
+                inputMode="tel"
+                className="form-input min-h-[44px]"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Optional"
+                autoComplete="tel"
+              />
+            </div>
 
-          <div>
-            <label className="form-label">Role</label>
-            <div className="relative inline-block w-full">
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
-                className="block w-full rounded-md appearance-none bg-white border border-green-400 px-4 py-2 pr-8 leading-tight focus:outline-none"
-              >
-                <option value={Role.User}>USER</option>
-                <option value={Role.Admin}>ADMIN</option>
-                <option value={Role.Manager}>MANAGER</option>
-                <option value={Role.Chef}>CHEF</option>
-                <option value={Role.Waiter}>WAITER</option>
-                <option value={Role.Delivery}>DELIVERY</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <GoChevronDown className="dark:text-gray-300" />
+            <div>
+              <label className="form-label">Role</label>
+              <div className="relative inline-block w-full">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as Role)}
+                  className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-green-400 px-4 py-2 pr-8 leading-tight focus:outline-none"
+                >
+                  <option value={Role.User}>USER</option>
+                  <option value={Role.Admin}>ADMIN</option>
+                  <option value={Role.Manager}>MANAGER</option>
+                  <option value={Role.Chef}>CHEF</option>
+                  <option value={Role.Waiter}>WAITER</option>
+                  <option value={Role.Delivery}>DELIVERY</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <GoChevronDown className="dark:text-gray-300" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <UploadImg id="add-user-img" handleCallBack={(f) => setFile(f)} />
+            <UploadImg id="add-user-img" handleCallBack={(f) => setFile(f)} />
 
-          <button type="submit" className="form-button w-full" disabled={saving}>
-            {saving ? "Saving..." : "Create"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="form-button w-full min-h-[44px]"
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Create"}
+            </button>
+          </form>
+        </div>
       </Modal>
     </>
   );
@@ -340,7 +370,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
     return () => clearTimeout(t);
   }, [qDraft, router, pathname, sp]);
 
-  const users = useMemo(() => data?.getUsers ?? [],[data?.getUsers]);
+  const users = useMemo(() => data?.getUsers ?? [], [data?.getUsers]);
 
   const filteredSorted = useMemo(() => {
     let list = [...users];
@@ -379,11 +409,17 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         list.sort((a, b) => String(b.role).localeCompare(String(a.role)));
         break;
       case "createdAt_asc":
-        list.sort((a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime());
+        list.sort(
+          (a, b) =>
+            new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
+        );
         break;
       case "createdAt_desc":
       default:
-        list.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+        list.sort(
+          (a, b) =>
+            new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+        );
         break;
     }
 
@@ -409,21 +445,22 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
   return (
     <TableWrapper title="All Users">
       {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {/* Search */}
-          <div className="relative w-full md:w-[320px]">
+          <div className="relative w-full sm:w-[320px]">
             <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input
-              className="w-full rounded-md border border-slate-200 bg-white py-2 pl-10 pr-3 text-slate-700 focus:outline-none"
+              className="min-h-[44px] w-full rounded-md border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 focus:outline-none"
               placeholder="Search name/email..."
               value={qDraft}
               onChange={(e) => setQDraft(e.target.value)}
+              inputMode="search"
             />
           </div>
 
           {/* Role filter */}
-          <div className="relative w-full md:w-[210px]">
+          <div className="relative w-full sm:w-[210px]">
             <select
               value={roleParam ?? ""}
               onChange={(e) => {
@@ -434,7 +471,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
                   next.delete("page");
                 });
               }}
-              className="block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 leading-tight focus:outline-none"
+              className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 text-sm leading-tight focus:outline-none"
             >
               <option value="">All roles</option>
               <option value={Role.Admin}>ADMIN</option>
@@ -450,7 +487,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
           </div>
 
           {/* Sort */}
-          <div className="relative w-full md:w-[220px]">
+          <div className="relative w-full sm:w-[220px]">
             <select
               value={sortParam}
               onChange={(e) => {
@@ -459,7 +496,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
                   next.delete("page");
                 });
               }}
-              className="block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 leading-tight focus:outline-none"
+              className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 text-sm leading-tight focus:outline-none"
             >
               <option value="createdAt_desc">Created: Newest</option>
               <option value="createdAt_asc">Created: Oldest</option>
@@ -476,7 +513,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
           </div>
 
           {/* Page size */}
-          <div className="relative w-full md:w-[160px]">
+          <div className="relative w-full sm:w-[160px]">
             <select
               value={String(take)}
               onChange={(e) => {
@@ -485,7 +522,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
                   next.delete("page");
                 });
               }}
-              className="block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 leading-tight focus:outline-none"
+              className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-slate-200 px-4 py-2 pr-8 text-sm leading-tight focus:outline-none"
             >
               <option value="10">10 / page</option>
               <option value="20">20 / page</option>
@@ -499,17 +536,17 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
 
           <button
             type="button"
-            className="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
             onClick={clearFilters}
           >
             Clear
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
           <button
             type="button"
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
+            className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             onClick={() => refetch()}
             disabled={fetching}
           >
@@ -518,17 +555,13 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
           </button>
 
           {/* For safety: only ADMIN can create users */}
-          
-          <AddUserModal  canAdd={currentUserRole === "ADMIN"} onCreated={refetch} /> (-damo)
-         
+          <AddUserModal canAdd={currentUserRole === "ADMIN"} onCreated={refetch} />
         </div>
       </div>
 
       {/* Info / Errors */}
-      <div className="mb-3 text-sm text-slate-500 flex items-center justify-between">
-        <span>
-          {fetching ? "Loading..." : `Showing ${pageItems.length} of ${total} result(s)`}
-        </span>
+      <div className="mb-3 text-sm text-slate-500 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <span>{fetching ? "Loading..." : `Showing ${pageItems.length} of ${total} result(s)`}</span>
         <span>
           Page {safePage} / {totalPages}
         </span>
@@ -537,75 +570,69 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
       {error ? (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
           <div className="font-semibold">Could not load users</div>
-          <div className="text-sm mt-1">{error.message}</div>
+          <div className="text-sm mt-1 break-words">{error.message}</div>
         </div>
       ) : null}
 
-      {/* Table */}
-      <table className="w-full border text-left text-slate-500">
-        <thead className="text-xs overflow-x-auto whitespace-nowrap text-slate-700 uppercase bg-slate-100">
-          <tr>
-            <th scope="col" className="px-6 py-3">
-              Avatar
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Name
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Email
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Role
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Edit
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {fetching && pageItems.length === 0 ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <tr className="bg-white" key={`skeleton-${i}`}>
-                <td className="px-6 py-2">
-                  <div className="h-[50px] w-[50px] rounded-full bg-slate-200 animate-pulse" />
-                </td>
-                <td className="px-6 py-2">
-                  <div className="h-4 w-44 bg-slate-200 animate-pulse rounded" />
-                </td>
-                <td className="px-6 py-2">
-                  <div className="h-4 w-60 bg-slate-200 animate-pulse rounded" />
-                </td>
-                <td className="px-6 py-2">
-                  <div className="h-4 w-24 bg-slate-200 animate-pulse rounded" />
-                </td>
-                <td className="px-6 py-2">
-                  <div className="h-6 w-10 bg-slate-200 animate-pulse rounded" />
-                </td>
-              </tr>
-            ))
-          ) : pageItems.length === 0 ? (
-            <tr className="bg-white">
-              <td className="px-6 py-6" colSpan={5}>
-                No users found.
-              </td>
-            </tr>
-          ) : (
-            pageItems.map((user) => (
-              <tr className="bg-white" key={user.id}>
-                <td className="px-6 py-2">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {fetching && pageItems.length === 0 ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={`mobile-skeleton-${i}`}
+              className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse shrink-0" />
+                  <div className="min-w-0 space-y-2">
+                    <div className="h-4 w-40 bg-slate-200 animate-pulse rounded" />
+                    <div className="h-3 w-56 bg-slate-200 animate-pulse rounded" />
+                  </div>
+                </div>
+                <div className="h-9 w-9 rounded-md bg-slate-200 animate-pulse" />
+              </div>
+            </div>
+          ))
+        ) : pageItems.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+            No users found.
+          </div>
+        ) : (
+          pageItems.map((user) => (
+            <div
+              className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+              key={user.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <Image
                     src={user.image || "/img/humans/pro.jpg"}
-                    width={50}
-                    height={50}
+                    width={40}
+                    height={40}
                     alt="avatar"
-                    className="rounded-full object-cover"
+                    className="h-10 w-10 rounded-full object-cover shrink-0"
                   />
-                </td>
-                <td className="px-6 py-2">{user.name || "-"}</td>
-                <td className="px-6 py-2">{user.email || "-"}</td>
-                <td className="px-6 py-2">{user.role}</td>
-                <td className="px-6 py-2 whitespace-nowrap">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-800 truncate">
+                      {user.name || "-"}
+                    </div>
+                    <div className="text-xs text-slate-500 break-all">
+                      {user.email || "-"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <span
+                    className={[
+                      "inline-flex px-2 py-1 rounded-md text-xs border border-slate-200 whitespace-nowrap",
+                      roleBadgeClass(user.role),
+                    ].join(" ")}
+                  >
+                    {user.role}
+                  </span>
+
                   <EditRoleModal
                     user={user}
                     currentUserId={currentUserId}
@@ -613,32 +640,122 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
                       refetch();
                     }}
                   />
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop/table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full min-w-[720px] border text-left text-slate-500">
+          <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100">
+            <tr>
+              <th scope="col" className="px-3 lg:px-6 py-3">
+                Avatar
+              </th>
+              <th scope="col" className="px-3 lg:px-6 py-3">
+                Name
+              </th>
+              <th scope="col" className="px-3 lg:px-6 py-3">
+                Email
+              </th>
+              <th scope="col" className="px-3 lg:px-6 py-3">
+                Role
+              </th>
+              <th scope="col" className="px-3 lg:px-6 py-3">
+                Edit
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {fetching && pageItems.length === 0 ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <tr className="bg-white" key={`skeleton-${i}`}>
+                  <td className="px-3 lg:px-6 py-2">
+                    <div className="h-12 w-12 rounded-full bg-slate-200 animate-pulse" />
+                  </td>
+                  <td className="px-3 lg:px-6 py-2">
+                    <div className="h-4 w-44 bg-slate-200 animate-pulse rounded" />
+                  </td>
+                  <td className="px-3 lg:px-6 py-2">
+                    <div className="h-4 w-60 bg-slate-200 animate-pulse rounded" />
+                  </td>
+                  <td className="px-3 lg:px-6 py-2">
+                    <div className="h-4 w-24 bg-slate-200 animate-pulse rounded" />
+                  </td>
+                  <td className="px-3 lg:px-6 py-2">
+                    <div className="h-9 w-9 bg-slate-200 animate-pulse rounded-md" />
+                  </td>
+                </tr>
+              ))
+            ) : pageItems.length === 0 ? (
+              <tr className="bg-white">
+                <td className="px-3 lg:px-6 py-6" colSpan={5}>
+                  No users found.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              pageItems.map((user) => (
+                <tr className="bg-white border-b last:border-b-0" key={user.id}>
+                  <td className="px-3 lg:px-6 py-2">
+                    <Image
+                      src={user.image || "/img/humans/pro.jpg"}
+                      width={50}
+                      height={50}
+                      alt="avatar"
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                  </td>
+                  <td className="px-3 lg:px-6 py-2">{user.name || "-"}</td>
+                  <td className="px-3 lg:px-6 py-2 break-all">{user.email || "-"}</td>
+                  <td className="px-3 lg:px-6 py-2">
+                    <span
+                      className={[
+                        "inline-flex px-2 py-1 rounded-md text-xs border border-slate-200",
+                        roleBadgeClass(user.role),
+                      ].join(" ")}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-3 lg:px-6 py-2 whitespace-nowrap">
+                    <EditRoleModal
+                      user={user}
+                      currentUserId={currentUserId}
+                      onChanged={() => {
+                        refetch();
+                      }}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 ? (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            className="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-700 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
             disabled={safePage <= 1}
             onClick={() => setPage(safePage - 1)}
           >
             Prev
           </button>
 
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-slate-500 text-center">
             Page {safePage} / {totalPages}
           </div>
 
           <button
             type="button"
-            className="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-700 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
             disabled={safePage >= totalPages}
             onClick={() => setPage(safePage + 1)}
           >

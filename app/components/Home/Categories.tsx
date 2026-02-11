@@ -23,10 +23,6 @@ import { useMenuFilterStore } from "@/lib/menuCategory";
 
 const CATEGORY_PARAM = "category";
 
-/**
- * DB-backed categories query (Prisma -> Pothos -> Apollo -> Urql).
- * Uses getCategories from your GraphQL schema.
- */
 const GetCategoriesForHomeDocument = gql`
   query GetCategoriesForHome {
     getCategories {
@@ -43,23 +39,11 @@ type GetCategoriesForHomeQuery = {
 };
 
 type CategoryOption = {
-  /** Stable react key */
   id: string;
-  /** Display title */
   title: string;
-  /** Image URL or public path */
   img: string;
-  /** Optional description */
   desc?: string;
-  /**
-   * Value used to filter menus.
-   *
-   * IMPORTANT:
-   * Your current Menu query returns Menu.category as a STRING (legacy),
-   * so we use Category.title to match it.
-   */
   filterValue: string | "all";
-  /** Precomputed: remote image? */
   isRemote: boolean;
 };
 
@@ -74,11 +58,14 @@ function normalizeImgSrc(src: string) {
   if (!src) return "";
   if (isRemoteUrl(src)) return src;
   if (src.startsWith("/")) return src;
-  // handle "img/categories/pizza.png" without leading slash
   return `/${src}`;
 }
 
-function buildNextUrl(pathname: string, currentQuery: string, nextCategory: string | null) {
+function buildNextUrl(
+  pathname: string,
+  currentQuery: string,
+  nextCategory: string | null
+) {
   const params = new URLSearchParams(currentQuery);
 
   if (!nextCategory) params.delete(CATEGORY_PARAM);
@@ -88,15 +75,10 @@ function buildNextUrl(pathname: string, currentQuery: string, nextCategory: stri
   return qs ? `${pathname}?${qs}` : pathname;
 }
 
-/**
- * Build fallback categories once (static data) to avoid rework on every render.
- * Keeps your existing "design" and mapping behavior intact.
- */
 const FALLBACK_CATEGORIES: CategoryOption[] = (() => {
   const list = (categoriesData as any[])
     .filter((c) => isNonEmptyString(c?.title))
     .map((c) => {
-      // Support multiple possible field names without breaking existing data shape
       const rawImg =
         (c?.imageSrc as string | undefined) ??
         (c?.img as string | undefined) ??
@@ -127,10 +109,6 @@ const ALL_OPTION: CategoryOption = (() => {
   };
 })();
 
-/**
- * Memoized chip so changing the active category doesn't force all chips to rerender.
- * (Only the previously-active and newly-active chips will update.)
- */
 const CategoryChip = React.memo(function CategoryChip({
   option,
   size = "sm",
@@ -140,7 +118,10 @@ const CategoryChip = React.memo(function CategoryChip({
   option: CategoryOption;
   size?: "sm" | "md";
   isActive: boolean;
-  onSelect: (filterValue: CategoryOption["filterValue"], titleForToast?: string) => void;
+  onSelect: (
+    filterValue: CategoryOption["filterValue"],
+    titleForToast?: string
+  ) => void;
 }) {
   const base = size === "md" ? "h-20 w-20" : "h-16 w-16";
 
@@ -150,7 +131,7 @@ const CategoryChip = React.memo(function CategoryChip({
       onClick={() => onSelect(option.filterValue, option.title)}
       aria-pressed={isActive}
       className={[
-        "flex flex-col items-center justify-center shrink-0 overflow-hidden rounded-full p-3 transition",
+        "flex flex-col items-center justify-center shrink-0 overflow-hidden rounded-full p-3 transition snap-start",
         base,
         isActive
           ? "bg-green-100 ring-2 ring-green-500"
@@ -194,11 +175,10 @@ const Categories = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const searchParamsString = searchParams.toString(); // important: stable primitive dependency
+  const searchParamsString = searchParams.toString();
 
   const [isAllModalOpen, setIsAllModalOpen] = useState(false);
 
-  // Filter store (shared with Menu rendering)
   const selectedCategoryId = useMenuFilterStore((s) => s.selectedCategoryId);
   const setCategory = useMenuFilterStore((s) => s.setCategory);
   const clearCategory = useMenuFilterStore((s) => s.clearCategory);
@@ -208,22 +188,13 @@ const Categories = () => {
 
   const [{ data, fetching, error }, refetch] = useQuery<GetCategoriesForHomeQuery>({
     query: GetCategoriesForHomeDocument,
-    // Keeps UI fast (cached first if available) while still updating in the background.
     requestPolicy: "cache-and-network",
   });
 
-  /**
-   * Persist middleware uses skipHydration across your app.
-   * Rehydrate client-side to keep behavior consistent with existing patterns.
-   */
   useEffect(() => {
     rehydrate();
   }, [rehydrate]);
 
-  /**
-   * Source-of-truth = URL param.
-   * Keep the store aligned with ?category=...
-   */
   const lastUrlCategoryRef = useRef<string | null>(null);
   useEffect(() => {
     if (lastUrlCategoryRef.current === urlCategory) return;
@@ -233,7 +204,6 @@ const Categories = () => {
     else clearCategory();
   }, [urlCategory, setCategory, clearCategory]);
 
-  // Show a toast once on error (and still render Retry UI)
   const hasShownErrorToastRef = useRef(false);
   useEffect(() => {
     if (!error || hasShownErrorToastRef.current) return;
@@ -258,16 +228,12 @@ const Categories = () => {
       .sort((a, b) => a.title.localeCompare(b.title));
 
     const list = dbCats.length ? dbCats : FALLBACK_CATEGORIES;
-
     return [ALL_OPTION, ...list];
   }, [data?.getCategories]);
 
   const setCategoryInUrl = useCallback(
     (next: string | null) => {
       const nextUrl = buildNextUrl(pathname, searchParamsString, next);
-
-      // IMPORTANT perf win: `router.refresh()` is redundant after `router.replace()` navigation
-      // and causes extra work/network. Keeping only replace makes filtering much snappier.
       startTransition(() => {
         router.replace(nextUrl, { scroll: false });
       });
@@ -275,7 +241,6 @@ const Categories = () => {
     [pathname, router, searchParamsString]
   );
 
-  // Keep a ref of the active value so onSelectCategory stays stable (helps memoized chips)
   const activeValue = selectedCategoryId ?? "all";
   const activeValueRef = useRef(activeValue);
   useEffect(() => {
@@ -287,7 +252,6 @@ const Categories = () => {
       const currentActive = activeValueRef.current ?? "all";
       const nextActive = filterValue === "all" ? "all" : filterValue;
 
-      // If user re-clicks the already active filter, avoid extra router work/toasts.
       if (nextActive === currentActive) {
         setIsAllModalOpen(false);
         return;
@@ -303,7 +267,6 @@ const Categories = () => {
         toast.success(`Filtered by: ${titleForToast ?? filterValue}`, { duration: 2500 });
       }
 
-      // Close modal if open (nice UX on mobile)
       setIsAllModalOpen(false);
     },
     [clearCategory, setCategory, setCategoryInUrl]
@@ -314,54 +277,49 @@ const Categories = () => {
 
   return (
     <section id="menuSection" className="my-16">
-      <div className="max-w-2xl mx-auto my-5 text-center relative">
+      <div className="max-w-2xl mx-auto my-5 text-center relative px-4 sm:px-0">
         <h2 className="text-3xl leading-tight tracking-tight text-gray-600 sm:text-4xl">
           Categories
         </h2>
 
-        {/* subtle actions + status (top-right) */}
-        <div className="absolute -top-1 right-0 flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:mt-0 sm:absolute sm:-top-1 sm:right-0 sm:flex-nowrap sm:justify-end sm:gap-2">
           <button
             type="button"
             onClick={() => setIsAllModalOpen(true)}
-            className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
-                 decoration-gray-200 hover:decoration-gray-400 transition"
+            className="inline-flex min-h-11 items-center justify-center rounded px-2 py-1.5 text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4 decoration-gray-200 hover:decoration-gray-400 transition hover:bg-slate-50"
           >
             Browse all
           </button>
 
           {activeValue !== "all" && (
             <>
-              <span className="text-gray-300">•</span>
+              <span className="text-gray-300 hidden sm:inline">•</span>
 
               <button
                 type="button"
                 onClick={() => onSelectCategory("all", "All")}
-                className="text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4
-                     decoration-gray-200 hover:decoration-gray-400 transition"
+                className="inline-flex min-h-11 items-center justify-center rounded px-2 py-1.5 text-xs text-gray-400 hover:text-gray-700 underline underline-offset-4 decoration-gray-200 hover:decoration-gray-400 transition hover:bg-slate-50"
               >
                 Clear filter
               </button>
 
-              <span className="text-gray-300">•</span>
+              <span className="text-gray-300 hidden sm:inline">•</span>
 
               <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                Showing:{" "}
-                <span className="font-semibold text-gray-600">{activeValue}</span>
+                Showing: <span className="font-semibold text-gray-600">{activeValue}</span>
               </span>
             </>
           )}
         </div>
       </div>
 
-      {/* Horizontal categories row */}
-      <div className="flex flex-row items-center md:justify-center justify-between mt-12 md:gap-12 overflow-x-auto">
+      <div className="mt-8 flex flex-row items-center gap-3 overflow-x-auto px-4 pb-2 sm:mt-12 sm:gap-6 md:justify-center md:gap-12 md:px-0 snap-x snap-mandatory">
         {shouldShowSkeleton ? (
           <>
             {Array.from({ length: 10 }).map((_, idx) => (
               <div
                 key={`cat-skel-${idx}`}
-                className="flex flex-col rounded-full h-16 w-16 items-center justify-center p-3 shrink-0 overflow-hidden bg-transparent"
+                className="flex flex-col rounded-full h-16 w-16 items-center justify-center p-3 shrink-0 overflow-hidden bg-transparent snap-start"
                 aria-hidden="true"
               >
                 <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse" />
@@ -388,7 +346,6 @@ const Categories = () => {
         )}
       </div>
 
-      {/* Error + Retry */}
       {error && (
         <div className="mt-6 flex flex-col items-center gap-2">
           <p className="text-sm text-red-600">Couldn&apos;t load categories.</p>
@@ -398,16 +355,15 @@ const Categories = () => {
               hasShownErrorToastRef.current = false;
               refetch({ requestPolicy: "network-only" });
             }}
-            className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            className="min-h-11 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Modal: full categories list */}
       <Modal isOpen={isAllModalOpen} closeModal={() => setIsAllModalOpen(false)}>
-        <div className="p-4">
+        <div className="p-4 max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+24px)]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-800">All Categories</h3>
@@ -418,7 +374,7 @@ const Categories = () => {
               <button
                 type="button"
                 onClick={() => onSelectCategory("all", "All")}
-                className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-500"
+                className="min-h-11 rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-500"
               >
                 Clear
               </button>

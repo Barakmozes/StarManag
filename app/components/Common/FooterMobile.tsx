@@ -2,63 +2,96 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AiOutlineHeart } from "react-icons/ai";
-import { HiOutlineHome, HiOutlineShoppingCart, HiOutlineUser } from "react-icons/hi2";
+import { useEffect, useMemo } from "react";
+import { HiHome, HiOutlineShoppingCart, HiUser } from "react-icons/hi2";
+import { useCartStore } from "@/lib/store";
 
-const FooterMobile = () => {
+export default function FooterMobile() {
   const pathname = usePathname();
+  const menus = useCartStore((state) => state.menus);
 
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+  useEffect(() => {
+    // Load persisted cart state for accurate badge counts on mobile.
+    useCartStore.persist.rehydrate();
+  }, []);
 
-  // Static placeholder (you can wire this to Zustand later)
-  const cartCount = 0;
+  const cartCount = menus?.length ?? 0;
 
-  const activeCls = "rounded-full bg-green-600 p-3 text-white shadow";
-  const idleCls = "p-3 text-slate-700";
+  const isActive = useMemo(() => {
+    return (href: string) => {
+      if (href === "/") return pathname === "/";
+      return pathname === href || pathname.startsWith(`${href}/`);
+    };
+  }, [pathname]);
+
+  const activeCls = "bg-green-200 text-green-600 p-3 rounded-full transition-colors";
+  const idleCls =
+    "p-3 text-gray-500 hover:bg-green-200 hover:text-green-600 rounded-full transition-colors";
 
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-0 z-50 w-full bg-white/95 backdrop-blur md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white shadow-md md:hidden"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between border-t-2 border-gray-100 px-10 py-4">
-        <Link aria-label="Home" href="/" className={isActive("/") ? activeCls : idleCls}>
-          <HiOutlineHome className="h-6 w-6" />
-        </Link>
-
+      <div className="flex items-center justify-between px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-10">
         <Link
-          aria-label="Favorites"
-          href="/user/favorites"
-          className={isActive("/user/favorites") ? activeCls : idleCls}
+          href="/"
+          aria-label="Home"
+          aria-current={isActive("/") ? "page" : undefined}
+          className={isActive("/") ? activeCls : idleCls}
         >
-          <AiOutlineHeart className="h-6 w-6" />
+          <HiHome size={24} />
         </Link>
 
         <Link
-          aria-label="Cart"
           href="/cart"
-          className={isActive("/cart") ? `${activeCls} relative` : "relative " + idleCls}
+          aria-label="Cart"
+          aria-current={isActive("/cart") ? "page" : undefined}
+          className={`relative ${isActive("/cart") ? activeCls : idleCls}`}
         >
-          <span
-            className={[
-              "absolute -top-2 left-7 min-w-[18px] rounded-full px-1 text-center text-xs font-semibold",
-              isActive("/cart") ? "bg-white/15 text-white" : "bg-green-50 text-green-700",
-            ].join(" ")}
-          >
+          <HiOutlineShoppingCart size={24} />
+          <span className="absolute -top-1 -right-1 min-w-[1.25rem] rounded-full bg-green-600 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
             {cartCount}
           </span>
-          <HiOutlineShoppingCart className="h-6 w-6" />
         </Link>
 
-        <Link aria-label="Account" href="/user" className={isActive("/user") ? activeCls : idleCls}>
-          <HiOutlineUser className="h-6 w-6" />
+        <Link
+          href="/user"
+          aria-label="Profile"
+          aria-current={isActive("/user") ? "page" : undefined}
+          className={isActive("/user") ? activeCls : idleCls}
+        >
+          <HiUser size={24} />
         </Link>
+        {/* Mobile-only Admin dashboard button */}
+<div className="md:hidden">
+  { (
+    <Link
+      href="/dashboard"
+      className="
+        inline-flex items-center justify-center
+        rounded-full bg-green-600 px-3 py-1.5
+        text-xs font-semibold text-white
+        shadow-sm transition
+        hover:bg-green-200 hover:text-green-700
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500
+      "
+      aria-label="Go to Dashboard"
+    >
+     
+     Dashboard
+      
+    </Link>
+  )}
+
+ 
+
+</div>
+
+
+
+
       </div>
     </nav>
   );
-};
-
-export default FooterMobile;
+}

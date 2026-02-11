@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Image from "next/image";
 import Modal from "./Modal";
@@ -14,9 +14,9 @@ const AuthModal = () => {
         alt="logo"
         width={75}
         height={75}
-        className="mx-auto mb-12"
+        className="mx-auto mb-6 sm:mb-10"
       />
-      <LoginComponent/>
+      <LoginComponent />
     </Modal>
   );
 };

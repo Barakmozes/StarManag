@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HiPlus } from "react-icons/hi2";
@@ -7,7 +9,6 @@ import toast from "react-hot-toast";
 import Modal from "@/app/components/Common/Modal";
 import UploadImg from "../Components/UploadImg";
 import { SupabaseImageUpload } from "@/lib/supabaseStorage";
-// import { categoriesData } from "@/data/categories-data";
 import {
   AddCategoryDocument,
   AddCategoryMutation,
@@ -40,10 +41,9 @@ const AdminAddCategory = () => {
     }
   };
 
-  const [_, addCategory] = useMutation<
-    AddCategoryMutation,
-    AddCategoryMutationVariables
-  >(AddCategoryDocument);
+  const [, addCategory] = useMutation<AddCategoryMutation, AddCategoryMutationVariables>(
+    AddCategoryDocument
+  );
 
   const handleAddCategory = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,90 +71,61 @@ const AdminAddCategory = () => {
     }
   };
 
-//   const seedCategories = async () => {
-//   try {
-//     for (const c of categoriesData) {
-//       const title = c.title?.trim();
-//       if (!title) continue; // אצלך יש פריט שחסר לו title
-
-//       await addCategory({
-//         title,
-//         desc: c.desc,
-//         img: c.imageSrc, // ✅ מיפוי: imageSrc -> img
-//       });
-//     }
-
-//     toast.success("כל הקטגוריות נוספו בהצלחה");
-//     router.refresh();
-//   } catch (err) {
-//     toast.error("שגיאה בהוספת קטגוריות");
-//     console.error(err);
-//   }
-// };
-
-
   return (
     <>
       <button
         type="button"
         onClick={openModal}
-        className="text-white inline-flex items-center whitespace-nowrap bg-green-600
-         hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+        className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center sm:whitespace-nowrap bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
       >
         <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
         Add Category
       </button>
-{/* <button
-  type="button"
-  onClick={seedCategories}
-  className="bg-slate-200 text-gray-600 px-4 py-2 rounded-lg hover:bg-green-200 hover:text-green-700"
->
-  Seed Categories
-</button> */}
 
       <Modal isOpen={isOpen} title="Add Category" closeModal={closeModal}>
-        <form onSubmit={handleAddCategory}>
-          <div className="grid gap-4 mb-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label htmlFor="title" className="form-label">
-                Title
-              </label>
-              <input
-                id="title"
-                className="form-input"
-                placeholder="Category title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+        {/* Mobile-safe: prevent overflow + safe-area bottom padding */}
+        <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
+          <form onSubmit={handleAddCategory} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="title" className="form-label">
+                  Title
+                </label>
+                <input
+                  id="title"
+                  className="form-input min-h-11 text-base sm:text-sm"
+                  placeholder="Category title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="desc" className="form-label">
+                  Description
+                </label>
+                <textarea
+                  id="desc"
+                  rows={3}
+                  className="form-input text-base sm:text-sm"
+                  placeholder="Short description"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="desc" className="form-label">
-                Description
-              </label>
-              <textarea
-                id="desc"
-                rows={3}
-                className="form-input"
-                placeholder="Short description"
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-              />
-            </div>
-          </div>
+            <UploadImg handleCallBack={getCategoryImageFile} id="addAdminCategoryImg" />
 
-          <UploadImg handleCallBack={getCategoryImageFile} id="addAdminCategoryImg" />
-
-          <button
-            type="submit"
-            className="mt-4 text-white inline-flex items-center bg-green-600
-              hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
-              font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >
-            <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-            Save Category
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            >
+              <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
+              Save Category
+            </button>
+          </form>
+        </div>
       </Modal>
     </>
   );

@@ -5,19 +5,21 @@ import { useDrop } from "react-dnd";
 import throttle from "lodash/throttle";
 import TableModal from "./TableModal";
 import { BasicArea } from "@/graphql/generated";
-import{TableInStore}from "@/lib/AreaStore";
-
+import { TableInStore } from "@/lib/AreaStore";
 
 export interface TablesSectionProps {
   areaSelect: BasicArea;
-  filteredTables:TableInStore[];
+  filteredTables: TableInStore[];
   scale: number;
   /**
    * Now expects (tableId: string, newAreaId: string, newPos: { x: number; y: number })
    * for local store updates or anything else.
    */
-  moveTable: (tableId: string, newAreaId: string, newPos: { x: number; y: number }) => void;
-
+  moveTable: (
+    tableId: string,
+    newAreaId: string,
+    newPos: { x: number; y: number }
+  ) => void;
 }
 
 const TablesSection: React.FC<TablesSectionProps> = ({
@@ -28,10 +30,6 @@ const TablesSection: React.FC<TablesSectionProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-
-
-
-  
   // Throttle "moveTable"
   const throttledMoveTable = useCallback(
     throttle(async (tableId, newAreaId, newPosition) => {
@@ -57,17 +55,25 @@ const TablesSection: React.FC<TablesSectionProps> = ({
       const offset = monitor.getClientOffset();
       if (!offset) return;
 
-      const containerRect = containerRef.current.getBoundingClientRect();
-      let x = (offset.x - containerRect.left) / scale;
-      let y = (offset.y - containerRect.top) / scale;
+      const containerEl = containerRef.current;
+      const containerRect = containerEl.getBoundingClientRect();
 
-      // clamp
-      x = Math.max(0, Math.min(x, containerRect.width / scale));
-      y = Math.max(0, Math.min(y, containerRect.height / scale));
+      // Account for internal scroll when the canvas is pannable
+      const scrollLeft = containerEl.scrollLeft;
+      const scrollTop = containerEl.scrollTop;
+
+      let x = (offset.x - containerRect.left + scrollLeft) / scale;
+      let y = (offset.y - containerRect.top + scrollTop) / scale;
+
+      // Clamp within the container's scrollable area
+      const maxX = containerEl.scrollWidth / scale;
+      const maxY = containerEl.scrollHeight / scale;
+
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
 
       const newPosition = snapToGrid(x, y, 5);
 
-      // Call our throttled function with 'id' + newAreaId
       throttledMoveTable(item.tableId, areaSelect.id, newPosition);
     },
   });
@@ -79,39 +85,32 @@ const TablesSection: React.FC<TablesSectionProps> = ({
     };
   }, [throttledMoveTable]);
 
-
-
-
-
-  
-
   return (
     <section
-      ref={(el) => {
-        drop(el as HTMLDivElement);
-        containerRef.current = el as HTMLDivElement;
-      }}
-      className="relative flex flex-col items-center justify-center px-4 mb-2"
-      aria-label={
-        areaSelect.name ? `Tables in ${areaSelect.name}` : "All tables"
-      }
+      className="relative flex flex-col items-stretch px-3 sm:px-4 mb-2"
+      aria-label={areaSelect.name ? `Tables in ${areaSelect.name}` : "All tables"}
     >
-    <div>
-    {areaSelect.name && (
-        <div className="flex items-center max-w-2xl mx-auto mb-1  text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mr-2">
+      {areaSelect.name && (
+        <div className="max-w-2xl mx-auto mb-2 sm:mb-3 text-center px-2">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800 break-words">
             {areaSelect.name}
           </h2>
-           
         </div>
       )}
-      </div>
+
+      {/*
+        Floor plan canvas
+        - Mobile-first height to avoid 100vh issues
+        - Internal scroll/pan is deliberate and helps access content on small screens
+      */}
       <div
-        className="relative w-full h-[100vh] rounded-lg shadow-md break-all mb-6"
+        ref={(el) => {
+          drop(el as HTMLDivElement);
+          containerRef.current = el as HTMLDivElement;
+        }}
+        className="relative w-full h-[70vh] sm:h-[80vh] lg:h-[100vh] rounded-lg shadow-md mb-6 overflow-auto overscroll-contain touch-pan-x touch-pan-y"
         style={{
-          backgroundImage: `url(${
-             "/img/pexels-pixabay-235985.jpg"
-          })`,
+          backgroundImage: `url(${"/img/pexels-pixabay-235985.jpg"})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

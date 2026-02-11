@@ -16,11 +16,11 @@ export default async function Cart() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center py-8 px-6 mb-24">
-        <div className="w-full rounded-lg shadow-xl sm:max-w-md p-6">
+      <div className="flex flex-col items-center justify-start py-6 sm:py-8 px-3 sm:px-6 mb-24">
+        <div className="w-full rounded-lg shadow-xl sm:max-w-md p-4 sm:p-6">
           <CartTopSection />
 
-          <div className="flex flex-col space-y-4 border-t mt-4">
+          <div className="mt-4 flex flex-col gap-4 border-t pt-4">
             {["MANAGER", "WAITER"].includes(role ?? "") ? (
               // Show TableCartSummary for Manager or Waiter
               <TableCartSummary user={user as User} />
@@ -31,6 +31,7 @@ export default async function Cart() {
           </div>
         </div>
       </div>
+
       <FooterMobile />
     </>
   );

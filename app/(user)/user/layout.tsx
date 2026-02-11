@@ -1,8 +1,6 @@
-import Header from "@/app/components/Common/Header";
-import SideBar from "@/app/components/Common/SideBar";
 import { getCurrentUser } from "@/lib/session";
 import { User } from "@prisma/client";
-
+import UserLayoutShell from "./UserLayoutShell";
 
 export default async function RootLayout({
   children,
@@ -10,11 +8,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  return (
-    <div>
-      <Header  user={user as User} />
-      <SideBar user={user as User}   />
-      {children}
-    </div>
-  );
+
+  return <UserLayoutShell user={user as User}>{children}</UserLayoutShell>;
 }

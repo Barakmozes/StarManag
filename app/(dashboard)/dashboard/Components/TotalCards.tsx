@@ -87,7 +87,10 @@ export default function TotalCards() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { range, from, to } = useMemo(() => buildRangeFromParams(searchParams), [searchParams]);
+  const { range, from, to } = useMemo(
+    () => buildRangeFromParams(searchParams),
+    [searchParams]
+  );
 
   const vars = useMemo<GetDashboardKpisCompareQueryVariables>(
     () => ({ from: from.toISOString(), to: to.toISOString() }),
@@ -100,7 +103,6 @@ export default function TotalCards() {
   >({
     query: GetDashboardKpisCompareDocument,
     variables: vars,
-    // ✅ Fast initial load: if cache exists (SSR/previous navigation) don't refetch immediately
     requestPolicy: "cache-first",
   });
 
@@ -121,8 +123,6 @@ export default function TotalCards() {
     }
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-
-    // ✅ keep “admin-style”
     router.refresh();
   }
 
@@ -150,7 +150,6 @@ export default function TotalCards() {
   }
 
   function onRefresh() {
-    // ✅ force network only on demand
     reexecute({ requestPolicy: "network-only" });
     router.refresh();
     toast.success("רענון בוצע");
@@ -216,7 +215,6 @@ export default function TotalCards() {
         icon: HiOutlineUserGroup,
         deltaTitle,
       },
-      // “מידע שקיפות”
       {
         title: "Menus",
         total: fmtInt(menusCount),
@@ -243,11 +241,12 @@ export default function TotalCards() {
 
   return (
     <section className="py-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 scrollbar-hide sm:flex-wrap sm:overflow-visible">
           <button
+            type="button"
             onClick={() => applyPreset("7d")}
-            className={`px-3 py-2 text-xs rounded-md border ${
+            className={`inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-xs ${
               range === "7d"
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-white border-slate-200 text-slate-700"
@@ -256,8 +255,9 @@ export default function TotalCards() {
             7d
           </button>
           <button
+            type="button"
             onClick={() => applyPreset("30d")}
-            className={`px-3 py-2 text-xs rounded-md border ${
+            className={`inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-xs ${
               range === "30d"
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-white border-slate-200 text-slate-700"
@@ -266,8 +266,9 @@ export default function TotalCards() {
             30d
           </button>
           <button
+            type="button"
             onClick={() => applyPreset("90d")}
-            className={`px-3 py-2 text-xs rounded-md border ${
+            className={`inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-xs ${
               range === "90d"
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-white border-slate-200 text-slate-700"
@@ -276,8 +277,9 @@ export default function TotalCards() {
             90d
           </button>
           <button
+            type="button"
             onClick={() => applyPreset("12m")}
-            className={`px-3 py-2 text-xs rounded-md border ${
+            className={`inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-xs ${
               range === "12m"
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-white border-slate-200 text-slate-700"
@@ -286,20 +288,22 @@ export default function TotalCards() {
             12m
           </button>
           <button
+            type="button"
             onClick={() => applyPreset("custom")}
-            className="px-3 py-2 text-xs rounded-md border bg-white border-slate-200 text-slate-700"
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border bg-white border-slate-200 px-3 py-2 text-xs text-slate-700"
           >
             Custom
           </button>
           <button
+            type="button"
             onClick={onRefresh}
-            className="px-3 py-2 text-xs rounded-md border bg-white border-slate-200 text-slate-700"
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-md border bg-white border-slate-200 px-3 py-2 text-xs text-slate-700"
           >
             {fetching ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
-        <div className="text-xs text-slate-500 text-right">
+        <div className="text-xs text-slate-500 sm:text-right">
           <div>
             Range:{" "}
             <span className="font-medium text-slate-700">
@@ -314,33 +318,36 @@ export default function TotalCards() {
         </div>
       </div>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
         {totals.map((t) => (
-          <div className="p-3 shadow-md bg-white rounded-md" key={t.title}>
-            <button className="p-2 bg-slate-200 rounded-full hover:bg-green-200 text-green-600">
+          <div className="rounded-md bg-white p-4 shadow-md" key={t.title}>
+            <div
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-green-600"
+              aria-hidden="true"
+            >
               {React.createElement(t.icon, { size: 24 })}
-            </button>
+            </div>
 
-            <h2 className="font-semibold text-2xl py-2">
+            <h2 className="py-2 text-2xl font-semibold">
               {showSkeleton ? (
-                <span className="inline-block h-7 w-32 bg-slate-100 animate-pulse rounded" />
+                <span className="inline-block h-7 w-32 animate-pulse rounded bg-slate-100" />
               ) : (
                 t.total
               )}
             </h2>
 
-            <div className="flex justify-between items-center">
-              <p className="text-slate-500">{t.title}</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-slate-500">{t.title}</p>
 
               {t.noDelta ? (
-                <p className="text-slate-400 text-sm">—</p>
+                <p className="text-sm text-slate-400">—</p>
               ) : (
-                <p className="flex items-center" title={t.deltaTitle}>
+                <p className="flex shrink-0 items-center text-sm" title={t.deltaTitle}>
                   <span>{Math.abs(t.percentage).toFixed(1)}%</span>
                   {t.percentage >= 0 ? (
-                    <HiArrowSmUp className="text-green-500 mb-1" size={22} />
+                    <HiArrowSmUp className="mb-1 text-green-500" size={22} />
                   ) : (
-                    <HiArrowSmDown className="text-red-500 mb-1" size={22} />
+                    <HiArrowSmDown className="mb-1 text-red-500" size={22} />
                   )}
                 </p>
               )}
@@ -351,22 +358,23 @@ export default function TotalCards() {
 
       {/* Modal: custom range */}
       {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white shadow-xl border border-slate-200">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 sm:items-center">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-xl border border-slate-200 bg-white shadow-xl sm:rounded-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 p-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Custom Range</h3>
                 <p className="text-sm text-slate-500">בחר טווח תאריכים לקלפים</p>
               </div>
               <button
-                className="px-3 py-1 text-sm rounded-md border border-slate-200"
+                type="button"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-slate-200 px-3 text-sm"
                 onClick={() => setIsModalOpen(false)}
               >
                 Close
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="space-y-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-slate-700">From</label>
@@ -374,7 +382,7 @@ export default function TotalCards() {
                     type="date"
                     value={customFrom}
                     onChange={(e) => setCustomFrom(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    className="mt-1 h-11 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                   />
                 </div>
                 <div>
@@ -383,21 +391,23 @@ export default function TotalCards() {
                     type="date"
                     value={customTo}
                     onChange={(e) => setCustomTo(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    className="mt-1 h-11 w-full rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-md px-4 py-2 text-sm border border-slate-200 bg-white text-slate-700"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={applyCustom}
-                  className="rounded-md px-4 py-2 text-sm bg-slate-900 text-white"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm text-white"
                 >
                   Apply
                 </button>

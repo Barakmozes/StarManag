@@ -70,69 +70,77 @@ const CategoryDropDown = () => {
   };
 
   return (
-    <div ref={wrapperRef} className="relative inline-block bg-white cursor-pointer">
+    <div ref={wrapperRef} className="relative inline-block bg-white">
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="md:w-auto flex items-center justify-center py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
+        className="min-h-[44px] md:w-auto inline-flex items-center justify-center gap-1 py-2 px-4 text-sm text-gray-900 focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
         type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
       >
         Category
-        <HiChevronDown className="ml-1 mr-1.5 w-5 h-5" />
+        <HiChevronDown className="w-5 h-5" />
       </button>
 
       {isOpen && (
-        <div className="absolute mt-2 -mr-1 w-56 bg-white rounded-md shadow-lg z-10">
-          <div className="text-center py-3">
-            <h3>Filter by Category</h3>
+        <div className="absolute right-0 mt-2 w-[min(90vw,14rem)] sm:w-56 bg-white rounded-md shadow-lg z-10 overflow-hidden">
+          <div className="text-center py-3 px-3 border-b">
+            <h3 className="text-sm font-semibold text-slate-700">
+              Filter by Category
+            </h3>
           </div>
 
-          {fetching && (
-            <div className="px-3 pb-3 text-sm text-gray-500">Loading…</div>
-          )}
+          <div className="max-h-[70vh] overflow-auto p-2">
+            {fetching && (
+              <div className="px-2 pb-2 text-sm text-gray-500">Loading…</div>
+            )}
 
-          {!fetching && error && (
-            <div className="px-3 pb-3 text-sm text-red-600">
-              Failed to load categories
-            </div>
-          )}
+            {!fetching && error && (
+              <div className="px-2 pb-2 text-sm text-red-600">
+                Failed to load categories
+              </div>
+            )}
 
-          {!fetching && !error && (
-            <ul className="space-y-2 text-sm p-3">
-              <li className="flex items-center">
-                <input
-                  type="radio"
-                  name="cat-filter"
-                  checked={selected === "all"}
-                  onChange={() => {
-                    updateUrl("all");
-                    setIsOpen(false);
-                  }}
-                  className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-600">
-                  All
-                </label>
-              </li>
-
-              {categories.map((cat) => (
-                <li className="flex items-center" key={cat.id}>
-                  <input
-                    type="radio"
-                    name="cat-filter"
-                    checked={selected === cat.title}
-                    onChange={() => {
-                      updateUrl(cat.title);
-                      setIsOpen(false);
-                    }}
-                    className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                  />
-                  <label className="ml-2 text-sm font-medium text-gray-600">
-                    {cat.title}
+            {!fetching && !error && (
+              <ul className="space-y-1 text-sm">
+                <li>
+                  <label className="flex items-center gap-3 rounded-md px-2 py-2 min-h-[44px] hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cat-filter"
+                      checked={selected === "all"}
+                      onChange={() => {
+                        updateUrl("all");
+                        setIsOpen(false);
+                      }}
+                      className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <span className="text-sm font-medium text-gray-600">All</span>
                   </label>
                 </li>
-              ))}
-            </ul>
-          )}
+
+                {categories.map((cat) => (
+                  <li key={cat.id}>
+                    <label className="flex items-center gap-3 rounded-md px-2 py-2 min-h-[44px] hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cat-filter"
+                        checked={selected === cat.title}
+                        onChange={() => {
+                          updateUrl(cat.title);
+                          setIsOpen(false);
+                        }}
+                        className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium text-gray-600 break-words">
+                        {cat.title}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>

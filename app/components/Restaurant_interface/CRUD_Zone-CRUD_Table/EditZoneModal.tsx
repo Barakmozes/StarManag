@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useMutation, useQuery } from "@urql/next";
 
 import {
-    Area,
+  Area,
   GetAreasNameDescriptionDocument,
   EditAreaDocument,
   EditAreaMutation,
@@ -43,17 +43,15 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
     query: GetAreasNameDescriptionDocument,
     pause: true,
     variables: {
-        orderBy: { createdAt: "asc" },
-      }, // We'll call reexecuteQuery manually on success
+      orderBy: { createdAt: "asc" },
+    },
   });
-  
 
   // GraphQL: editArea mutation
   const [{ fetching: updating }, editArea] = useMutation<
     EditAreaMutation,
     EditAreaMutationVariables
   >(EditAreaDocument);
-
 
   // ---------------------------
   // OPEN/CLOSE MODAL
@@ -62,8 +60,7 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
     // If we already have a selected area from props, use that;
     // else pick the first from areas[] if it exists:
     const initialId =
-      areaSelectToEdit?.id ||
-      (areas.length > 0 ? areas[0].id : "");
+      areaSelectToEdit?.id || (areas.length > 0 ? areas[0].id : "");
 
     setSelectedAreaId(initialId);
     // Pre-fill fields if we have an existing area
@@ -92,7 +89,6 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
   // ---------------------------
   // HANDLE DROPDOWN CHANGE
   // ---------------------------
-  // If you want the user to be able to switch areas within the modal:
   const handleSelectArea = (id: string) => {
     setSelectedAreaId(id);
     const found = areas.find((a) => a.id === id);
@@ -149,155 +145,161 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
     }
   };
 
-
-
   return (
     <>
-      {/* 
-        TRIGGER TO OPEN MODAL
-        Could be an icon + text. 
-      */}
-      
-      <div
+      {/* Trigger to open modal (mobile friendly) */}
+      <button
+        type="button"
         onClick={openModal}
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition"
+        className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition"
+        aria-label="Edit zone"
       >
-        <FaEdit className="h-5 w-5" aria-hidden="true"
-      />
-        <span className="text-sm font-medium">Edit Area</span>
-      </div>
+        <FaEdit className="h-5 w-5" aria-hidden="true" />
+        <span>Edit Zone</span>
+      </button>
 
-      {/* 
-        EDIT ZONE MODAL
-      */}
+      {/* EDIT ZONE MODAL */}
       <Modal isOpen={isOpen} closeModal={closeModal}>
-        <div className="relative p-4 w-full max-w-md md:h-auto mx-auto bg-white rounded-lg shadow">
-          {/* Title & Icon */}
-          <div className="text-center">
-            <FaEdit
-              className="text-gray-500 w-10 h-10 mb-2 mx-auto"
-              aria-hidden="true"
-            />
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
-              Edit Zone
-            </h2>
-          </div>
-
-          {/* CONTENT */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleUpdateArea();
-            }}
-            className="flex flex-col gap-4"
+        <div className="relative w-[min(100vw-2rem,36rem)] max-w-lg mx-auto bg-white rounded-lg shadow max-h-[90vh] overflow-y-auto overscroll-contain">
+          {/* Close */}
+          <button
+            type="button"
+            onClick={closeModal}
+            className="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition"
+            aria-label="Close"
           >
-            {/* (Optional) Select which area to edit */}
-            {areas.length > 0 && (
-              <div>
-                <label
-                  htmlFor="areaSelect"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Select Zone
-                </label>
-                <select
-                  id="areaSelect"
-                  value={selectedAreaId}
-                  onChange={(e) => handleSelectArea(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-                >
-                  <option value="">-- Choose an area --</option>
-                  {areas.map((area) => (
-                    <option key={area.id} value={area.id}>
-                      {area.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <span aria-hidden="true">×</span>
+          </button>
 
-            {/* Name */}
-            <div>
-              <label
-                htmlFor="zoneName"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Zone Name
-              </label>
-              <input
-                id="zoneName"
-                type="text"
-                value={zoneName}
-                onChange={(e) => setZoneName(e.target.value)}
-                placeholder="Zone name"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-                required
+          <div className="p-4 sm:p-6">
+            {/* Title & Icon */}
+            <div className="text-center">
+              <FaEdit
+                className="text-gray-500 w-10 h-10 mb-2 mx-auto"
+                aria-hidden="true"
               />
+              <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                Edit Zone
+              </h2>
             </div>
 
-            {/* Description */}
-            <div>
-              <label
-                htmlFor="zoneDesc"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Description
-              </label>
-              <textarea
-                id="zoneDesc"
-                value={zoneDesc}
-                onChange={(e) => setZoneDesc(e.target.value)}
-                placeholder="Optional description..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-              />
-            </div>
-
-            {/* Floor Plan Image Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Floor Plan Image
-              </label>
-              {/* Show current image thumbnail if available */}
-              {zoneImage && (
-                <div className="mb-2">
-                  <Image
-                   width={800}         // בחר מידות אינהרנטיות מתאימות
-                  height={600} 
-                    src={zoneImage}
-                    alt="Floor Plan Preview"
-                    className="w-full h-auto max-h-48 object-contain border rounded"
-                  />
-
+            {/* CONTENT */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateArea();
+              }}
+              className="flex flex-col gap-4"
+            >
+              {/* (Optional) Select which area to edit */}
+              {areas.length > 0 && (
+                <div>
+                  <label
+                    htmlFor="areaSelect"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Select Zone
+                  </label>
+                  <select
+                    id="areaSelect"
+                    value={selectedAreaId}
+                    onChange={(e) => handleSelectArea(e.target.value)}
+                    className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+                  >
+                    <option value="">-- Choose an area --</option>
+                    {areas.map((area) => (
+                      <option key={area.id} value={area.id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-
-
               )}
 
-              {/* Upload input */}
-              <UploadImg handleCallBack={getMenuImageFile} id="editZoneFloorPlan" />
-            </div>
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="zoneName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Zone Name
+                </label>
+                <input
+                  id="zoneName"
+                  type="text"
+                  value={zoneName}
+                  onChange={(e) => setZoneName(e.target.value)}
+                  placeholder="Zone name"
+                  className="w-full min-h-[44px] px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
+                  required
+                />
+              </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="py-2 px-4 text-sm font-medium text-gray-500 bg-gray-200 
-                  rounded hover:bg-gray-300 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!selectedAreaId || updating}
-                className="py-2 px-4 text-sm font-medium text-white bg-blue-600 
-                  rounded hover:bg-blue-700 transition disabled:bg-gray-400"
-              >
-                {updating ? "Updating..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
+              {/* Description */}
+              <div>
+                <label
+                  htmlFor="zoneDesc"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="zoneDesc"
+                  value={zoneDesc}
+                  onChange={(e) => setZoneDesc(e.target.value)}
+                  placeholder="Optional description..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring focus:ring-blue-200 min-h-[96px]"
+                />
+              </div>
+
+              {/* Floor Plan Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Floor Plan Image
+                </label>
+
+                {/* Show current image thumbnail if available */}
+                {zoneImage && (
+                  <div className="mb-2">
+                    <Image
+                      width={800}
+                      height={600}
+                      src={zoneImage}
+                      alt="Floor Plan Preview"
+                      className="w-full h-auto max-h-48 object-contain border rounded"
+                    />
+                  </div>
+                )}
+
+                {/* Upload input */}
+                <div className="rounded-lg border border-dashed border-gray-200 p-2">
+                  <UploadImg
+                    handleCallBack={getMenuImageFile}
+                    id="editZoneFloorPlan"
+                  />
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="mt-2 flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="w-full sm:w-auto min-h-[44px] py-2 px-4 text-sm font-medium text-gray-500 bg-gray-200 rounded hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!selectedAreaId || updating}
+                  className="w-full sm:w-auto min-h-[44px] py-2 px-4 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+                >
+                  {updating ? "Updating..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </Modal>
     </>

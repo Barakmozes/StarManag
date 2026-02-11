@@ -26,7 +26,6 @@ import {
 
 import PanelWrapper from "../Components/PanelWrapper";
 
-
 // Same helper as category files (works whether you stored filename OR full public URL)
 const getSupabaseFileName = (urlOrPath: string) => {
   if (!urlOrPath) return "";
@@ -245,12 +244,13 @@ const RestaurantDetails = () => {
           <div className="py-6 text-center text-red-600">Failed to load restaurant data.</div>
         ) : noRestaurantsInDb ? (
           <div className="py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-gray-500">No restaurant found in DB.</p>
+
               <button
                 onClick={openCreate}
-                className="text-white inline-flex items-center whitespace-nowrap bg-green-600
-                hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center sm:whitespace-nowrap bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                type="button"
               >
                 <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
                 Create Restaurant
@@ -258,47 +258,48 @@ const RestaurantDetails = () => {
             </div>
 
             <Modal isOpen={createOpen} title="Create Restaurant" closeModal={closeCreate}>
-              <form onSubmit={handleCreateRestaurant}>
-                <div className="grid gap-4 mb-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className="form-label" htmlFor="newName">
-                      Name
-                    </label>
-                    <input
-                      id="newName"
-                      className="form-input"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="Restaurant name"
-                    />
+              {/* Mobile-safe: prevent overflow + safe-area bottom padding */}
+              <div className="max-h-[90vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
+                <form onSubmit={handleCreateRestaurant} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="form-label" htmlFor="newName">
+                        Name
+                      </label>
+                      <input
+                        id="newName"
+                        className="form-input min-h-11 text-base sm:text-sm"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="Restaurant name"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="form-label" htmlFor="newAddress">
+                        Address
+                      </label>
+                      <input
+                        id="newAddress"
+                        className="form-input min-h-11 text-base sm:text-sm"
+                        value={newAddress}
+                        onChange={(e) => setNewAddress(e.target.value)}
+                        placeholder="Restaurant address"
+                      />
+                    </div>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="form-label" htmlFor="newAddress">
-                      Address
-                    </label>
-                    <input
-                      id="newAddress"
-                      className="form-input"
-                      value={newAddress}
-                      onChange={(e) => setNewAddress(e.target.value)}
-                      placeholder="Restaurant address"
-                    />
-                  </div>
-                </div>
+                  <UploadImg handleCallBack={getNewBannerFile} id="createRestaurantBanner" />
 
-                <UploadImg handleCallBack={getNewBannerFile} id="createRestaurantBanner" />
-
-                <button
-                  type="submit"
-                  className="mt-4 text-white inline-flex items-center bg-green-600
-                    hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
-                    font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                >
-                  <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-                  Create
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  >
+                    <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
+                    Create
+                  </button>
+                </form>
+              </div>
             </Modal>
           </div>
         ) : (
@@ -310,7 +311,7 @@ const RestaurantDetails = () => {
                 </label>
                 <select
                   id="restaurantSelect"
-                  className="form-input"
+                  className="form-input min-h-11 text-base sm:text-sm"
                   value={selectedRestaurant?.id ?? ""}
                   onChange={(e) => setSelectedRestaurantId(e.target.value)}
                 >
@@ -323,7 +324,7 @@ const RestaurantDetails = () => {
               </div>
             )}
 
-            <form onSubmit={handleSaveRestaurantDetails}>
+            <form onSubmit={handleSaveRestaurantDetails} className="space-y-4">
               <div className="rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <div>
@@ -353,7 +354,7 @@ const RestaurantDetails = () => {
                     </label>
                     <input
                       id="name"
-                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
+                      className="w-full min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Restaurant name"
@@ -361,12 +362,15 @@ const RestaurantDetails = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="address">
+                    <label
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
+                      htmlFor="address"
+                    >
                       Address
                     </label>
                     <input
                       id="address"
-                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
+                      className="w-full min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Full address"
@@ -374,17 +378,20 @@ const RestaurantDetails = () => {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="deliveryFee">
+                    <label
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
+                      htmlFor="deliveryFee"
+                    >
                       Delivery Fee
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base sm:text-sm text-gray-400">
                         ₪
                       </span>
                       <input
                         id="deliveryFee"
                         type="number"
-                        className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-7 pr-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
+                        className="w-full min-h-11 rounded-xl border border-gray-200 bg-white py-2 pl-7 pr-3 text-base sm:text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
                         value={deliveryFee}
                         onChange={(e) => setDeliveryFee(e.target.valueAsNumber)}
                         min={0}
@@ -393,17 +400,20 @@ const RestaurantDetails = () => {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="serviceFee">
+                    <label
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
+                      htmlFor="serviceFee"
+                    >
                       Service Fee
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base sm:text-sm text-gray-400">
                         ₪
                       </span>
                       <input
                         id="serviceFee"
                         type="number"
-                        className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-7 pr-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
+                        className="w-full min-h-11 rounded-xl border border-gray-200 bg-white py-2 pl-7 pr-3 text-base sm:text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
                         value={serviceFee}
                         onChange={(e) => setServiceFee(e.target.valueAsNumber)}
                         min={0}
@@ -412,7 +422,10 @@ const RestaurantDetails = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700" htmlFor="rating">
+                    <label
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
+                      htmlFor="rating"
+                    >
                       Rating
                     </label>
                     <div className="flex items-center gap-3">
@@ -420,7 +433,7 @@ const RestaurantDetails = () => {
                         id="rating"
                         type="number"
                         step="0.1"
-                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
+                        className="w-full min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 shadow-sm outline-none transition focus:border-gray-900/20 focus:ring-4 focus:ring-gray-900/10"
                         value={rating}
                         onChange={(e) => setRating(e.target.valueAsNumber)}
                         min={0}
@@ -434,13 +447,14 @@ const RestaurantDetails = () => {
                 </div>
               </div>
 
-              <UploadImg handleCallBack={getBannerFile} id={`restaurantBanner-${selectedRestaurant?.id ?? "x"}`} />
+              <UploadImg
+                handleCallBack={getBannerFile}
+                id={`restaurantBanner-${selectedRestaurant?.id ?? "x"}`}
+              />
 
               <button
                 type="submit"
-                className="mt-4 text-white inline-flex items-center bg-green-600
-                  hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
-                  font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                className="w-full sm:w-auto min-h-11 text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
               >
                 Save Details
               </button>

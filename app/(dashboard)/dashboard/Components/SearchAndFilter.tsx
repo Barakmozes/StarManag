@@ -8,9 +8,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ReadonlyURLSearchParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  ReadonlyURLSearchParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import toast from "react-hot-toast";
-import { useClient, useQuery, type OperationResult } from "@urql/next";;
+import { useClient, useQuery, type OperationResult } from "@urql/next";
 import gql from "graphql-tag";
 import { HiOutlineSearch, HiOutlineUpload } from "react-icons/hi";
 import { HiChevronDown } from "react-icons/hi2";
@@ -347,7 +352,8 @@ const SearchAndFilter = () => {
 
   const hasActiveFilters = useMemo(() => {
     const hasQ = !!searchValue.trim();
-    const hasMenuFilters = isMenuPage && (categoryValue !== "all" || priceValue !== "all");
+    const hasMenuFilters =
+      isMenuPage && (categoryValue !== "all" || priceValue !== "all");
     const hasOrderFilters = isOrdersPage && !!statusValue;
     return hasQ || hasMenuFilters || hasOrderFilters;
   }, [searchValue, isMenuPage, categoryValue, priceValue, isOrdersPage, statusValue]);
@@ -611,14 +617,13 @@ const SearchAndFilter = () => {
   /* ---------------------------------- render ---------------------------------- */
 
   return (
-    <div className="flex flex-col md:flex-row z-10 items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+    <div className="z-10 flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
       {/* Search */}
-      <div className="w-full md:w-1/2">
+      <div className="w-full md:max-w-xl">
         <form
           className="flex items-center"
           onSubmit={(e) => {
             e.preventDefault();
-            // flush immediately on Enter
             updateUrlParams({ search: searchValue }, { resetPagination: true });
           }}
         >
@@ -627,15 +632,15 @@ const SearchAndFilter = () => {
           </label>
 
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <HiOutlineSearch aria-hidden="true" className="w-5 h-5 text-gray-500" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <HiOutlineSearch aria-hidden="true" className="h-5 w-5 text-gray-500" />
             </div>
 
             <input
               id="dashboard-search"
               type="text"
               autoComplete="off"
-              className="bg-gray-50 border border-gray-300 text-gray-600 text-sm rounded-lg block w-full pl-10 pr-10 p-2"
+              className="block h-11 w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-12 text-sm text-gray-700 shadow-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -645,7 +650,7 @@ const SearchAndFilter = () => {
               <button
                 type="button"
                 aria-label="Clear search"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-700"
+                className="absolute inset-y-0 right-0 inline-flex h-11 w-11 items-center justify-center rounded-r-lg text-gray-400 transition hover:text-gray-700"
                 onClick={() => {
                   setSearchValue("");
                   updateUrlParams({ search: "" }, { resetPagination: true });
@@ -658,48 +663,47 @@ const SearchAndFilter = () => {
         </form>
       </div>
 
-      {/* Actions */}
-      <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center md:space-x-3 flex-shrink-0">
+      {/* Actions / Filters */}
+      <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end md:w-auto">
         {isMenuPage && (
           <>
-            <div className="flex items-center space-x-3 w-full md:w-auto">
+            <div className="w-full sm:w-auto">
               <AdminAddMenu />
             </div>
 
-            <div className="flex items-center space-x-3 w-full md:w-auto">
+            <div className="w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleExport}
                 disabled={exporting}
-                className="text-white inline-flex items-center whitespace-nowrap bg-green-600 hover:bg-green-700
-                focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center
-                disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-lg bg-green-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
-                <HiOutlineUpload className="mr-1 -ml-1 w-4 h-4" />
+                <HiOutlineUpload className="mr-1 -ml-1 h-4 w-4" />
                 {exporting ? "Exporting…" : "Export"}
               </button>
             </div>
 
             {/* Price dropdown */}
-            <div ref={priceRef} className="relative inline-block bg-white cursor-pointer">
+            <div ref={priceRef} className="relative w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setPriceOpen((v) => !v)}
-                className="md:w-auto flex items-center justify-center py-2 px-4 text-sm text-gray-900
-                focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg border-b-2 border-gray-400 bg-white px-4 py-2 text-sm text-gray-900 transition-colors hover:bg-gray-100 hover:text-green-700 focus:outline-none sm:w-auto sm:justify-center"
                 aria-expanded={priceOpen}
               >
-                Price
-                <HiChevronDown className="ml-1 mr-1.5 w-5 h-5" />
+                <span>Price</span>
+                <HiChevronDown className="ml-1.5 h-5 w-5" />
               </button>
 
               {priceOpen && (
-                <div className="absolute mt-2 -mr-1 w-56 bg-white rounded-md shadow-lg z-10">
-                  <div className="text-center py-3">
-                    <h3>Filter by Price</h3>
+                <div className="absolute left-0 right-0 z-20 mt-2 w-full max-w-[calc(100vw-2rem)] rounded-md bg-white shadow-lg sm:right-auto sm:w-56">
+                  <div className="border-b border-slate-100 py-3 text-center">
+                    <h3 className="text-sm font-medium text-slate-700">
+                      Filter by Price
+                    </h3>
                   </div>
 
-                  <ul className="space-y-2 text-sm p-3">
+                  <ul className="max-h-[70vh] space-y-2 overflow-auto p-3 text-sm">
                     {priceOptions.map((opt) => (
                       <li key={opt.key} className="flex items-center">
                         <input
@@ -707,12 +711,14 @@ const SearchAndFilter = () => {
                           name="price-filter"
                           checked={priceValue === opt.key}
                           onChange={() => {
-                            updateUrlParams({ price: opt.key }, { resetPagination: true });
+                            updateUrlParams(
+                              { price: opt.key },
+                              { resetPagination: true }
+                            );
                             setPriceOpen(false);
                           }}
-                          className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                          className="h-4 w-4 rounded border-gray-300 bg-gray-100 accent-green-600 focus:ring-green-500"
                         />
-
                         <label className="ml-2 text-sm font-medium text-gray-600">
                           {opt.label}
                         </label>
@@ -724,25 +730,26 @@ const SearchAndFilter = () => {
             </div>
 
             {/* Category dropdown */}
-            <div ref={catRef} className="relative inline-block bg-white cursor-pointer">
+            <div ref={catRef} className="relative w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setCatOpen((v) => !v)}
-                className="md:w-auto flex items-center justify-center py-2 px-4 text-sm text-gray-900
-                focus:outline-none bg-white border-b-2 border-gray-400 hover:bg-gray-100 hover:text-green-700"
+                className="flex min-h-[44px] w-full items-center justify-between rounded-lg border-b-2 border-gray-400 bg-white px-4 py-2 text-sm text-gray-900 transition-colors hover:bg-gray-100 hover:text-green-700 focus:outline-none sm:w-auto sm:justify-center"
                 aria-expanded={catOpen}
               >
-                Category
-                <HiChevronDown className="ml-1 mr-1.5 w-5 h-5" />
+                <span>Category</span>
+                <HiChevronDown className="ml-1.5 h-5 w-5" />
               </button>
 
               {catOpen && (
-                <div className="absolute mt-2 -mr-1 w-56 bg-white rounded-md shadow-lg z-10">
-                  <div className="text-center py-3">
-                    <h3>Filter by Category</h3>
+                <div className="absolute left-0 right-0 z-20 mt-2 w-full max-w-[calc(100vw-2rem)] rounded-md bg-white shadow-lg sm:right-auto sm:w-56">
+                  <div className="border-b border-slate-100 py-3 text-center">
+                    <h3 className="text-sm font-medium text-slate-700">
+                      Filter by Category
+                    </h3>
                   </div>
 
-                  <ul className="space-y-2 text-sm p-3 max-h-64 overflow-auto">
+                  <ul className="max-h-[70vh] space-y-2 overflow-auto p-3 text-sm">
                     {categoryOptions.map((c) => (
                       <li key={c} className="flex items-center">
                         <input
@@ -750,12 +757,14 @@ const SearchAndFilter = () => {
                           name="category-filter"
                           checked={categoryValue === c}
                           onChange={() => {
-                            updateUrlParams({ category: c }, { resetPagination: true });
+                            updateUrlParams(
+                              { category: c },
+                              { resetPagination: true }
+                            );
                             setCatOpen(false);
                           }}
-                          className="w-4 h-4 accent-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                          className="h-4 w-4 rounded border-gray-300 bg-gray-100 accent-green-600 focus:ring-green-500"
                         />
-
                         <label className="ml-2 text-sm font-medium text-gray-600">
                           {c === "all" ? "All" : c}
                         </label>
@@ -769,16 +778,14 @@ const SearchAndFilter = () => {
         )}
 
         {isOrdersPage && (
-          <div className="flex items-center space-x-3 w-full md:w-auto">
+          <div className="w-full sm:w-auto">
             <button
               type="button"
               onClick={handleExport}
               disabled={exporting}
-              className="text-white inline-flex items-center whitespace-nowrap bg-green-600 hover:bg-green-700
-              focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center
-              disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-lg bg-green-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              <HiOutlineUpload className="mr-1 -ml-1 w-4 h-4" />
+              <HiOutlineUpload className="mr-1 -ml-1 h-4 w-4" />
               {exporting ? "Exporting…" : "Export"}
             </button>
           </div>
@@ -788,8 +795,7 @@ const SearchAndFilter = () => {
           <button
             type="button"
             onClick={clearAll}
-            className="text-gray-700 inline-flex items-center whitespace-nowrap bg-gray-100 hover:bg-gray-200
-            focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-4 py-2.5 text-center"
+            className="inline-flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-lg bg-gray-100 px-4 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-200 sm:w-auto"
           >
             Clear
           </button>
@@ -797,9 +803,9 @@ const SearchAndFilter = () => {
       </div>
 
       {/* Right-side filters */}
-      <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+      <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
         {isOrdersPage && (
-          <div className="flex items-center space-x-3 w-full md:w-auto">
+          <div className="w-full md:w-auto">
             <OrdersFilter />
           </div>
         )}
