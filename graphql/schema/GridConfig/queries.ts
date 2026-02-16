@@ -85,7 +85,7 @@ builder.queryFields((t) => ({
       const context = await contextPromise;
 
       // Optional check: only ADMIN can view all configs
-      if (context.user?.role !== "ADMIN") {
+     if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to view all grid configs");
       }
 

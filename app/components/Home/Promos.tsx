@@ -104,8 +104,8 @@ function menuToPromo(menu: PromoMenu): PromoShape {
     id: menu.id,
     title: menu.title,
     img: menu.image,
-    salesQ: 0,
-    likesN: 0,
+    salesQ: 423,
+    likesN: 60,
     PercentOff: menu._percentOff,
     price: menu._effectivePrice,
     oldPrice: hasDiscount ? menu.price : null,
@@ -363,6 +363,7 @@ const selectedMenu = useMemo(() => {
         {/* Desktop heading (keep your original design) */}
         <div className="hidden sm:block max-w-2xl mx-auto mt-6 mb-2 text-center">
           <ModernWaveHeading />
+          <p className="mt-0.5 text-xs text-gray-500">Best deals right now</p>
         </div>
 
         {/* Promo row: compact padding + smooth horizontal scroll + snap */}

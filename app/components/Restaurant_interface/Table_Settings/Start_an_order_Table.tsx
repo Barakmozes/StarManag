@@ -1,34 +1,24 @@
-// app\components\Restaurant_interface\Table_Settings\Start_an_order_Table.tsx
-
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation"; // Next.js14 App Router
-import { useCartStore } from "@/lib/store"; // Adjust the import path as needed
-import { Table } from "@prisma/client"; // Adjust if you have a local Table type
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/lib/store";
+
+type MinimalTable = {
+  id: string;
+  tableNumber: number;
+};
 
 interface StartAnOrderProps {
-  table: Table;
+  table: MinimalTable;
 }
 
 const StartAnOrder = ({ table }: StartAnOrderProps) => {
   const router = useRouter();
-
-  // Using selector functions to subscribe only to the actions we need
-  const setTableId = useCartStore((state) => state.setTableId);
-  const resetCart = useCartStore((state) => state.resetCart);
-  const setTableNumber = useCartStore((state) => state.setTableNumber);
+  const startOrderForTable = useCartStore((s) => s.startOrderForTable);
 
   const handleStartOrder = () => {
-    // 1) Clear or reset cart if you do NOT want leftover items
-    resetCart();
-
-    // 2) Set the new table ID in our cart store (for table-based ordering)
-    setTableId(table.id);
-    setTableNumber(table.tableNumber);
-
-    // 3) Navigate (or “scroll”) to #menuSection on the same page,
-    //    so the waiter/manager sees the existing Menu and can add items.
+    startOrderForTable(table.id, table.tableNumber);
     router.replace("/#menuSection");
   };
 
@@ -36,9 +26,9 @@ const StartAnOrder = ({ table }: StartAnOrderProps) => {
     <button
       onClick={handleStartOrder}
       type="button"
-      className="w-full min-h-[22px] py-1 px-1 mt-1 text-sm sm:text-base font-medium text-black bg-orange-400 rounded hover:bg-orange-500 transition disabled:bg-gray-400"
+      className="w-full relative z-[100] min-h-[44px] rounded-lg bg-orange-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 transition"
     >
-      Start an order
+      Start order
     </button>
   );
 };

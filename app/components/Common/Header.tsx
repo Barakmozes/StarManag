@@ -158,6 +158,26 @@ if (!identifier) {
           </button>
 
           {!["WAITER", "MANAGER"].includes(user?.role) && <LocationBtn />}
+          {/* Mobile-only compact Switch Role button (doesn't affect desktop) */}
+{user ? (
+  <div className="md:hidden flex items-center justify-end">
+    <button
+      type="button"
+      onClick={() => setIsRoleModalOpen(true)}
+      aria-label="Switch your role"
+      className="
+        inline-flex h-11 w-5 items-center justify-center
+        rounded-full bg-slate-200 text-gray-500
+        transition hover:bg-green-200 hover:text-green-600
+        active:scale-[0.98]
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2
+      "
+    >
+      <HiOutlinePencilSquare className="h-5 w-5" />
+    </button>
+  </div>
+) : null}
+
         </div>
 
    {/* Admin Dashboard link (desktop only, header-native style) */}
@@ -167,14 +187,20 @@ if (!identifier) {
     <div className="relative group">
       <Link
         href="/dashboard"
-        className="
-          inline-flex items-center justify-center
-          rounded-full bg-slate-200 px-4 py-2
-          text-sm font-semibold text-slate-700
-          shadow-sm transition
-          hover:bg-green-200 hover:text-green-700
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500
-        "
+     className="
+    inline-flex items-center justify-center gap-2
+    h-11
+    rounded-full
+    bg-slate-100/80 text-slate-700
+    px-3 sm:px-4
+    text-sm font-semibold
+    shadow-sm ring-1 ring-slate-200
+    transition
+    hover:bg-green-100 hover:text-green-700
+    active:scale-[0.98]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2
+    whitespace-nowrap
+  "
         aria-label="Go to Dashboard"
       >
         Dashboard
@@ -237,7 +263,7 @@ if (!identifier) {
         {/* Center Area - Zone Selector for Small Screens */}
         
         {["WAITER", "MANAGER"].includes(user?.role) && (
-          <div className="flex md:hidden items-center justify-center w-full">
+          <div className="md:hidden flex items-center justify-end justify-self-end">
             <select
               className="p-2 border rounded-lg text-gray-700 bg-white focus:ring focus:ring-green-300 w-full"
               value={selectedArea?.name || undefined}
@@ -268,8 +294,20 @@ if (!identifier) {
     <div className="relative group">
       <button
         type="button"
-        className="flex items-center gap-2 bg-slate-200 text-gray-500 px-4 py-1 rounded-full hover:bg-green-200 hover:text-green-600"
-        onClick={() => setIsRoleModalOpen(true)}
+ className="
+    inline-flex items-center justify-center gap-2
+    h-11
+    rounded-full
+    bg-slate-100/80 text-slate-700
+    px-3 sm:px-4
+    text-sm font-semibold
+    shadow-sm ring-1 ring-slate-200
+    transition
+    hover:bg-green-100 hover:text-green-700
+    active:scale-[0.98]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2
+    whitespace-nowrap
+  "        onClick={() => setIsRoleModalOpen(true)}
         aria-label="Switch your role"
       >
         <HiOutlinePencilSquare className="h-5 w-5" />

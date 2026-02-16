@@ -11,6 +11,7 @@ import {
   DeleteAreaMutation,
   DeleteAreaMutationVariables,
   GetAreasNameDescriptionDocument,
+  SortOrder,
 } from "@/graphql/generated";
 import toast from "react-hot-toast";
 
@@ -34,7 +35,7 @@ const DeleteZoneModal = ({ areas, areaSelectToDelete }: Props) => {
     query: GetAreasNameDescriptionDocument,
     pause: true,
     variables: {
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: SortOrder.Asc },
     },
   });
 
@@ -60,7 +61,8 @@ const DeleteZoneModal = ({ areas, areaSelectToDelete }: Props) => {
     try {
       const result = await deleteArea({ deleteAreaId: selectedAreaId });
       if (result.data?.deleteArea?.id) {
-        toast.success("area  successfully Delete and updated!", { duration: 800 });
+        const deletedName = result.data.deleteArea.name || "Zone";
+        toast.success(`${deletedName} deleted successfully.`, { duration: 1200 });
         reexecuteQuery({ requestPolicy: "network-only" });
       }
     } catch (error) {
@@ -86,7 +88,7 @@ const DeleteZoneModal = ({ areas, areaSelectToDelete }: Props) => {
 
       {/* The Delete Confirmation Modal */}
       <Modal isOpen={isOpen} closeModal={closeModal}>
-        <div className="relative w-[min(100vw-2rem,28rem)] max-w-md mx-auto bg-white rounded-lg shadow max-h-[90vh] overflow-y-auto overscroll-contain">
+        <div className="relative w-full max-w-lg md:max-w-4xl mx-auto bg-white rounded-xl shadow overflow-hidden">
           {/* Close */}
           <button
             type="button"

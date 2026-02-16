@@ -27,17 +27,19 @@ query GetTable($getTableId: String!) {
 
 query GetTables {
   getTables {
-    areaId
-    createdAt
-    diners
     id
-    position
+    tableNumber
+    diners
+    areaId
     reserved
     specialRequests
-    tableNumber
++   unpaidOrdersCount
+    position
+    createdAt
     updatedAt
   }
 }
+
 
 query GetTableOrder($tableId: String!) {
   getTableOrder(tableId: $tableId) {
@@ -133,3 +135,49 @@ mutation ToggleTableReservation($toggleTableReservationId: String!, $reserved: B
     reserved
   }
 }
+
+mutation CancelReservation($cancelReservationId: String!) {
+  cancelReservation(id: $cancelReservationId) {
+    id
+    createdByUserEmail
+    numOfDiners
+    reservationTime
+    status
+    table {
+      
+    }
+    tableId
+    updatedAt
+    userEmail
+    user {
+      name
+      email
+      profile {
+        phone
+      }
+    }
+  }
+}
+query GetReservations($status: ReservationStatus) {
+  getReservations(status: $status) {
+    createdAt
+    createdBy
+    id
+    numOfDiners
+    reservationTime
+    status
+    table {
+      tableNumber
+    }
+    tableId
+    updatedAt
+    userEmail
+    user {
+      name
+      profile {
+        phone
+      }
+    }
+  }
+}
+

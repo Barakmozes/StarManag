@@ -1,0 +1,23 @@
+query GetGridConfigByArea($areaId: String!) {
+  getGridConfigByArea(areaId: $areaId) {
+    areaId
+    gridSize
+    id
+  }
+}
+
+mutation AddGridConfig($areaId: String!, $gridSize: Int) {
+  addGridConfig(areaId: $areaId, gridSize: $gridSize) {
+    areaId
+    gridSize
+    id
+  }
+}
+
+mutation EditGridConfig($editGridConfigId: String!, $gridSize: Int) {
+  editGridConfig(id: $editGridConfigId, gridSize: $gridSize) {
+    areaId
+    gridSize
+    id
+  }
+}

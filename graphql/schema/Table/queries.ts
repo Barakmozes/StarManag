@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
+import { OrderStatus } from "@prisma/client";
 
 /**
  * Pothos Prisma Object: Table
@@ -39,6 +40,20 @@ builder.prismaObject("Table", {
     reservations: t.relation("reservations"),
     orders: t.relation("orders"),
     usageStats: t.relation("usageStats", { nullable: true }),
+
+    unpaidOrdersCount: t.int({
+      description: "Number of unpaid (not paid) orders for this table",
+      resolve: async (table, _args, ctx) => {
+        return ctx.prisma.order.count({
+          where: {
+            tableId: table.id,
+            paid: false,
+            status: { not: "CANCELLED" }, // optional but recommended
+          },
+        });
+      },
+    }),
+
 
     // Timestamps
     createdAt: t.expose("createdAt", { type: "DateTime" }),
@@ -106,33 +121,36 @@ builder.queryFields((t) => ({
    * "Active" typically excludes COMPLETED and CANCELLED orders,
    * but includes PENDING, PREPARING, etc.
    */
+/**
+   * getTableOrder
+   */
   getTableOrder: t.prismaField({
-    // We return an array of Order objects
     type: ["Order"],
     args: {
       tableId: t.arg.string({ required: true }),
     },
     resolve: async (query, _parent, args) => {
-      // Define which statuses you consider "active"
-      // (Add or remove as needed for your business logic)
-      const activeStatuses ="PREPARING";
+      // ✅ תיקון: שימוש ב-Enum של Prisma במקום מחרוזות רגילות
+      const activeStatuses = [
+        OrderStatus.CANCELLED,
+        OrderStatus.COLLECTED,
+        OrderStatus.DELIVERED,
+        OrderStatus.PENDING,
+        OrderStatus.PREPARING,
+        OrderStatus.READY,
+        OrderStatus.UNASSIGNED,
+        OrderStatus.SERVED // אופציונלי: תלוי אם את רוצה להציג גם מנות שהוגשו אך לא שולמו
+      ];
 
-      // Fetch all orders for the table that match these statuses
       const orders = await prisma.order.findMany({
-        ...query, // includes any selected fields from the Order object type
+        ...query,
         where: {
           tableId: args.tableId,
-          status: activeStatuses,
+          // כעת TypeScript יזהה שזהו המערך הנכון
+          status: { in: activeStatuses }, 
         },
-        // Example: Sort by most recent orders first
         orderBy: { createdAt: "desc" },
       });
-
-      // If no orders found, you could optionally throw an error or return empty array
-      if (!orders.length) {
-        // Optionally:
-        // throw new GraphQLError("No active orders found for this table");
-      }
 
       return orders;
     },

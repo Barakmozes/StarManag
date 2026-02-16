@@ -1,72 +1,91 @@
-import { Table } from "@prisma/client";
-import { useState } from "react";
-import { useQuery, useMutation } from "@urql/next";
-import {
-  GetTablesDocument,
-  ToggleTableReservationDocument,
-} from "@/graphql/generated";
+"use client";
+
+import React, { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useMutation } from "@urql/next";
+import { Table } from "@prisma/client";
 
-interface Props {
+import {
+  ToggleTableReservationDocument,
+  ToggleTableReservationMutation,
+  ToggleTableReservationMutationVariables,
+} from "@/graphql/generated";
+import { useRestaurantStore } from "@/lib/AreaStore";
+
+type Props = {
   table: Table;
-}
+};
 
-const ToggleReservation = ({ table }: Props) => {
-  const [reserved, setReserved] = useState(table.reserved);
+/**
+ * ToggleReservation
+ * ----------------
+ * FIXES:
+ * 1) Sends the NEW value to the mutation (previously it sent the old value).
+ * 2) Updates Zustand store so UI updates immediately.
+ * 3) Optimistic UI + revert on error.
+ */
+const ToggleReservation: React.FC<Props> = ({ table }) => {
+  const setTableReserved = useRestaurantStore((s) => s.setTableReserved);
 
-  // GraphQL mutation to update table position in DB
-  const [ToggleTableReservationResult, ToggleTableReservationTable] =
-    useMutation(ToggleTableReservationDocument);
+  const [{ fetching }, toggleReservation] = useMutation<
+    ToggleTableReservationMutation,
+    ToggleTableReservationMutationVariables
+  >(ToggleTableReservationDocument);
 
-  // Prepare re-fetch of all tables (so we see immediate update after deletion)
-  const [{ data }, reexecuteTables] = useQuery({
-    query: GetTablesDocument,
-    pause: true,
-  });
+  const handleToggle = useCallback(async () => {
+    if (fetching) return;
 
-  const handleToggleReservation = async () => {
-    // Save the new toggled value in a local variable
-    const newReserved = !reserved;
+    const prev = !!table.reserved;
+    const next = !prev;
 
-    // 1) Update the local state
-    setReserved(newReserved);
+    // Optimistic UI: update store immediately
+    setTableReserved(table.id, next);
 
-    try {
-      const result = await ToggleTableReservationTable({
-        toggleTableReservationId: table.id,
-        reserved: reserved,
-      });
+    const result = await toggleReservation({
+      toggleTableReservationId: table.id,
+      reserved: next,
+    });
 
-      if (result.data) {
-        // Show success toast
-        toast.success(
-          `Table #${result.data.toggleTableReservation.reserved}  successfully!`,
-          { duration: 1200 }
-        );
-        // Re-fetch all tables
-        reexecuteTables({ requestPolicy: "network-only" });
-      }
-    } catch (error) {
-      console.error("Error deleting table:", error);
-      toast.error("Failed to delete table.");
-    } finally {
+    if (result.error || !result.data?.toggleTableReservation) {
+      // Revert on failure
+      setTableReserved(table.id, prev);
+      console.error(result.error);
+      toast.error("Reservation update failed", { duration: 1600 });
+      return;
     }
-  };
+
+    const serverReserved = result.data.toggleTableReservation.reserved;
+    setTableReserved(table.id, serverReserved);
+
+    toast.success(
+      serverReserved
+        ? `Table #${table.tableNumber} marked as reserved`
+        : `Table #${table.tableNumber} released`,
+      { duration: 900 }
+    );
+  }, [fetching, setTableReserved, table.id, table.reserved, table.tableNumber, toggleReservation]);
+
+  const isReserved = !!table.reserved;
 
   return (
     <button
       type="button"
-      onClick={handleToggleReservation}
-      className={`inline-flex min-h-[44px] items-center justify-center rounded-lg px-2 py-1 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
-        reserved ? "bg-red-200 text-red-700" : "bg-green-200 text-green-700"
-      }`}
-      aria-label={`Mark table ${table.tableNumber} as ${
-        reserved ? "available" : "reserved"
-      }`}
+      onClick={handleToggle}
+      disabled={fetching}
+      className={
+        "w-full min-h-[44px] rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition " +
+        (fetching
+          ? "bg-gray-200 text-gray-600 cursor-wait"
+          : isReserved
+            ? "bg-red-600 text-white hover:bg-red-700"
+            : "bg-green-600 text-white hover:bg-green-700")
+      }
+      aria-pressed={isReserved}
+      aria-label={isReserved ? "Release reservation" : "Reserve table"}
     >
-      {reserved ? "Release" : "Reserve"}
+      {fetching ? "Updating..." : isReserved ? "Release" : "Reserve"}
     </button>
   );
 };
 
-export default ToggleReservation;
+export default React.memo(ToggleReservation);

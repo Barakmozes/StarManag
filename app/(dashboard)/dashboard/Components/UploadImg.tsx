@@ -1,63 +1,86 @@
 "use client";
 
 import React, { ChangeEvent, useCallback, useId, useState } from "react";
+import toast from "react-hot-toast";
 import { AiOutlineCloudUpload } from "react-icons/ai";
+
+type UploadImgVariant = "default" | "compact";
 
 type Props = {
   handleCallBack: (file: File) => void;
   id?: string;
+  variant?: UploadImgVariant;
+  title?: string;
+  helperText?: string;
+  maxSizeMB?: number;
+  className?: string;
 };
 
-const UploadImg = ({ handleCallBack, id }: Props) => {
+export default function UploadImg({
+  handleCallBack,
+  id,
+  variant = "default",
+  title = "Upload a new file",
+  helperText = "Accepted formats: .png, .jpg",
+  maxSizeMB = 50,
+  className,
+}: Props) {
   const autoId = useId();
-  const inputId = id ?? autoId;
+  const inputId = id ?? `upload-${autoId}`;
 
-  const [data, setData] = useState<{ image: string | null }>({ image: null });
-  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+
+  const dropZoneHeight = variant === "compact" ? "h-40" : "h-56";
+
+  const validateAndProcess = useCallback(
+    (file: File) => {
+      const sizeMB = file.size / 1024 / 1024;
+
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload an image file.");
+        return;
+      }
+      if (sizeMB > maxSizeMB) {
+        toast.error(`File size too big (max ${maxSizeMB}MB)`);
+        return;
+      }
+
+      handleCallBack(file);
+      setFileName(file.name);
+
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    },
+    [handleCallBack, maxSizeMB]
+  );
 
   const onChangePicture = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const nextFile = event.currentTarget.files && event.currentTarget.files[0];
-      if (nextFile) {
-        if (nextFile.size / 1024 / 1024 > 3) {
-          // toast.error('File size too big (max 3MB)')
-        } else {
-          handleCallBack(nextFile);
-          setFile(nextFile);
-
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setData((prev) => ({ ...prev, image: e.target?.result as string }));
-          };
-          reader.readAsDataURL(nextFile);
-        }
-      }
+      const file = event.currentTarget.files?.[0];
+      if (!file) return;
+      validateAndProcess(file);
+      event.currentTarget.value = ""; // allow re-select same file
     },
-    [handleCallBack],
+    [validateAndProcess]
   );
 
-  const hasImage = Boolean(data.image);
-
-  const overlayBase =
-    "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md transition-all";
-  const overlayPadding = "px-4 sm:px-10";
-  const overlayEmpty =
-    "bg-white opacity-100 hover:bg-gray-50 group-active:bg-gray-50";
-  const overlayWithImage =
-    "bg-white/80 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100 hover:backdrop-blur-md";
-  const overlayDrag = dragActive ? "border-2 border-black opacity-100" : "";
+  const hasImage = Boolean(preview);
 
   return (
-    <div className="w-full">
-      <div className="mb-4 space-y-1">
-        <h2 className="text-lg font-semibold sm:text-xl">Upload a new file</h2>
-        <p className="text-sm text-gray-500">Accepted formats: .png, .jpg</p>
-      </div>
+    <div className={className}>
+      {variant === "default" && (
+        <div className="mb-4 space-y-1">
+          <h2 className="text-lg font-semibold sm:text-xl">{title}</h2>
+          <p className="text-sm text-gray-500">{helperText}</p>
+        </div>
+      )}
 
       <label
         htmlFor={inputId}
-        className="group relative mt-2 flex h-48 w-full touch-manipulation cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 focus-within:ring-2 focus-within:ring-green-600 focus-within:ring-offset-2 sm:h-56"
+        className={`group relative mt-2 flex w-full ${dropZoneHeight} touch-manipulation cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 focus-within:ring-2 focus-within:ring-green-600 focus-within:ring-offset-2`}
       >
         <div
           className="absolute inset-0 z-[5] rounded-md"
@@ -80,80 +103,53 @@ const UploadImg = ({ handleCallBack, id }: Props) => {
             e.preventDefault();
             e.stopPropagation();
             setDragActive(false);
-
-            const droppedFile = e.dataTransfer.files && e.dataTransfer.files[0];
-            if (droppedFile) {
-              if (droppedFile.size / 1024 / 1024 > 50) {
-                // toast.error("File size too big (max 50MB)");
-              } else {
-                setFile(droppedFile);
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                  setData((prev) => ({
-                    ...prev,
-                    image: ev.target?.result as string,
-                  }));
-                };
-                reader.readAsDataURL(droppedFile);
-              }
-            }
+            const dropped = e.dataTransfer.files?.[0];
+            if (dropped) validateAndProcess(dropped);
           }}
         />
 
         <div
-          className={`${overlayBase} ${overlayPadding} ${
-            hasImage ? overlayWithImage : overlayEmpty
-          } ${overlayDrag}`}
+          className={[
+            "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md px-4 sm:px-10 transition-all",
+            dragActive ? "border-2 border-black" : "",
+            hasImage
+              ? "bg-white/80 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100 hover:backdrop-blur-md"
+              : "bg-white opacity-100 hover:bg-gray-50",
+          ].join(" ")}
         >
           <AiOutlineCloudUpload
-            className={`${
+            className={`h-7 w-7 text-gray-500 transition-all duration-75 ${
               dragActive ? "scale-110" : "scale-100"
-            } h-8 w-8 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95 sm:h-7 sm:w-7`}
+            } group-hover:scale-110 group-active:scale-95`}
           />
 
           <p className="mt-2 text-center text-sm text-gray-500">
-            {hasImage ? "Tap or click to replace." : "Drag and drop or click to upload."}
+            {hasImage ? "Tap or click to replace." : "Drag & drop or click to upload."}
           </p>
 
-          <p className="mt-2 text-center text-sm text-gray-500">
-            Max file size: 50MB
+          <p className="mt-2 text-center text-xs text-gray-500">
+            Max file size: {maxSizeMB}MB
           </p>
 
           <span className="sr-only">Photo upload</span>
         </div>
 
-        {data.image && (
+        {preview && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={data.image}
-            alt="Preview"
-            className="h-full w-full rounded-md object-cover"
-          />
+          <img src={preview} alt="Preview" className="h-full w-full object-cover" />
         )}
       </label>
 
-      {file?.name && (
-        <p className="mt-2 truncate text-xs text-gray-500">{file.name}</p>
-      )}
+      {fileName && <p className="mt-2 truncate text-xs text-gray-500">{fileName}</p>}
 
-      {hasImage && (
-        <p className="mt-1 text-xs text-gray-500 md:hidden">
-          Tip: tap the image preview to replace it.
-        </p>
-      )}
-
-      <div className="mt-1 flex rounded-md shadow-sm">
-        <input
-          id={inputId}
-          name="image"
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={onChangePicture}
-        />
-      </div>
+      <input
+        id={inputId}
+        name="image"
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={onChangePicture}
+      />
     </div>
   );
-};
-
-export default UploadImg;
+}

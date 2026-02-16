@@ -5,8 +5,71 @@ import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
 import { ReservationStatus } from "./enum"; // if using the ReservationStatus enum
 import { Role } from "@/graphql/schema/User/enum"; // or wherever your Role enum is
+import { Role as PrismaRole } from "@prisma/client";
 
+  
+  // --- addGuestReservation ---
 builder.mutationFields((t) => ({
+  /**
+   * addGuestReservation
+   * יצירת הזמנה לאורח מזדמן + יצירת משתמש פיקטיבי אם לא קיים.
+   */
+  addGuestReservation: t.prismaField({
+    type: "Reservation",
+    args: {
+      customerName: t.arg.string({ required: true }),
+      tableId: t.arg.string({ required: true }),
+      reservationTime: t.arg({ type: "DateTime", required: true }),
+      numOfDiners: t.arg.int({ required: true }),
+      createdBy: t.arg({ type: Role, required: true }),
+      phoneNumber: t.arg.string({ required: false }),
+    },
+    resolve: async (query, _parent, args, contextPromise) => {
+      const context = await contextPromise;
+      
+      // אבטחה
+      if (!context.user || (context.user.role !== "ADMIN" && context.user.role !== "MANAGER")) {
+        throw new GraphQLError("רק מנהלים מורשים לבצע הזמנת אורח ללא אימייל");
+      }
+
+      // יצירת אימייל פיקטיבי ייחודי
+      const guestId = Date.now().toString().slice(-6);
+      const safeName = args.customerName.trim().replace(/\s+/g, '_');
+      const guestEmail = `guest_${safeName}_${guestId}@internal.local`;
+
+      return prisma.reservation.create({
+        ...query,
+        data: {
+          // --- שדות רגילים ---
+          reservationTime: args.reservationTime,
+          numOfDiners: args.numOfDiners,
+          createdBy: args.createdBy,
+
+          // --- תיקון השגיאה: שימוש ב-RELATIONS בלבד ---
+          
+          // 1. במקום tableId: args.tableId, אנו משתמשים ב-connect
+          table: {
+            connect: { id: args.tableId }
+          },
+
+          // 2. יצירת/חיבור המשתמש הפיקטיבי
+          user: {
+            connectOrCreate: {
+              where: { email: guestEmail },
+              create: {
+                email: guestEmail,
+                name: args.customerName,
+                role: PrismaRole.USER,
+                // הסרתי את password כי השגיאה הראתה שהוא לא קיים ב-User שלך
+                // אם יש לך שדות חובה אחרים ב-User (כמו phone), הוסף אותם כאן
+              }
+            }
+          }
+        },
+      });
+    },
+  }),
+  // --- addReservation (רגיל) ---
   addReservation: t.prismaField({
     type: "Reservation",
     args: {
@@ -50,6 +113,8 @@ builder.mutationFields((t) => ({
       return reservation;
     },
   }),
+
+  
 
   /**
    * editReservation

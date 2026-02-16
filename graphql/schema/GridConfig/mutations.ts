@@ -25,7 +25,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to add GridConfig");
       }
 
@@ -66,7 +66,7 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+       if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to edit GridConfig");
       }
 
@@ -99,12 +99,13 @@ builder.mutationFields((t) => ({
       if (!context.user) {
         throw new GraphQLError("You must be logged in to perform this action");
       }
-      if (context.user.role !== "ADMIN") {
+      if (!["ADMIN", "MANAGER"].includes(context.user?.role ?? "")) {
         throw new GraphQLError("You are not authorized to delete GridConfig");
       }
 
       // Delete the record
       const deletedConfig = await prisma.gridConfig.delete({
+        ..._query,
         where: { id: args.id },
       });
       return deletedConfig;
