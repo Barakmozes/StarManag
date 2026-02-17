@@ -20,7 +20,7 @@ The app was built using the following technologies:
 - **Next-Auth/Authjs**: Authentication and session management.
 - **TypeScript**: Static type checking and reliability.
 - **TailwindCSS**: Utility-first CSS framework for rapid styling.
-- **Condition**: For state management.
+- **Zustand **: for state management.
 - **Payplus API**: Payment processing and checkout integration.
 - **MapBox**: Geocoding and maps for location-based features.
 - **Vercel**: Hosting and deployment platform for Next.js.
