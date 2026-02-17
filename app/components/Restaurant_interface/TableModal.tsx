@@ -234,7 +234,7 @@ export default function TableModal({
     {/* אינדיקטור הזמנות פעילות */}
     {activeOrders.length > 0 && (
       <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 animate-pulse shadow-sm">
-        {activeOrders.length} הזמנות
+        {activeOrders.length} מנות
       </span>
     )}
   </div>
@@ -269,14 +269,34 @@ export default function TableModal({
                                 <span className="text-lg font-black leading-none">{loadingOrders ? "-" : stats.totalAmount}</span>
                             </div>
                         </div>
+                            {/* --- פריטים / עגלה (לחצן פעיל) --- */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // מניעת סגירת מודל לא רצויה אם יש לוגיקה כזו
+                                    startOrderForTable(table.id, table.tableNumber); // 1. עדכון ה-State עם מספר השולחן
+                                    onClose(); // 2. סגירת המודל הנוכחי
+                                    router.push("/cart"); // 3. מעבר לדף העגלה
+                                }}
+                                className="flex-1 p-3 flex flex-col items-center justify-center transition-all duration-200 
+                                hover:bg-green-50 hover:scale-[1.02] active:scale-95 cursor-pointer group relative overflow-hidden"
+                                aria-label="פתח עגלה וצפה בפרטי הזמנה"
+                      >
+                          {/* כותרת משתנה בהובר */}
+                          <span className="text-[10px] text-slate-400 group-hover:text-green-600 font-bold uppercase mb-1 transition-colors">
+                              פתח הזמנה
+                          </span>
+                    
+                    {/* אייקון ומספר */}
+                    <div className="flex items-center gap-2 text-orange-500 group-hover:text-green-600 transition-colors">
+                        <BsBasket3 size={18} />
+                        <span className="text-xl font-black leading-none">
+                            {loadingOrders ? "-" : stats.totalItems}
+                        </span>
+                    </div>
 
-                        <div className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-slate-50 transition-colors">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase mb-1">פריטים</span>
-                            <div className="flex items-center gap-1 text-orange-500">
-                                <BsBasket3 />
-                                <span className="text-lg font-black leading-none">{loadingOrders ? "-" : stats.totalItems}</span>
-                            </div>
-                        </div>
+                    {/* אינדיקטור ויזואלי עדין ללחיצה */}
+                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-green-100 rounded-none transition-all" />
+                </button>
 
                         <div className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-slate-50 transition-colors">
                             <span className="text-[10px] text-slate-400 font-bold uppercase mb-1">זמן</span>

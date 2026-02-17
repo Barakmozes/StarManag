@@ -3,7 +3,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@urql/next";
 import toast from "react-hot-toast";
-
+// שימוש ב-Heroicons 2 המודרניים והנקיים
+import { 
+  HiSquares2X2,       // Overview: All
+  HiCheckCircle,      // Overview: Available
+  HiCurrencyDollar,   // Overview: Unpaid
+  HiMagnifyingGlass,  // Search
+  HiMap,              // Empty State icon
+  HiPencilSquare,     // Edit Icon
+  HiTrash,            // Delete Icon
+  HiPlus              // Add Icon
+} from "react-icons/hi2";
 import {
   BasicArea,
   GetAreasNameDescriptionDocument,
@@ -33,8 +43,7 @@ import TablesSection from "./TablesSection";
 import TableModal from "./TableModal";
 import TableCard from "./TableCard";
 
-type OverviewMode = "NONE" | "ALL" | "AVAILABLE";
-
+type OverviewMode = "NONE" | "ALL" | "AVAILABLE" | "UNPAID";
 export default function ZoneRestaurant() {
   const canManage = true;
   const canEditLayout = canManage; 
@@ -269,39 +278,57 @@ export default function ZoneRestaurant() {
               </p>
             </div>
 
-            {/* Quick overview buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                className={[
-                  "min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold border transition",
-                  overviewMode === "ALL"
-                    ? "border-blue-200 bg-blue-50 text-blue-800"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
-                ].join(" ")}
-                onClick={() => {
-                  setOverviewMode((m) => (m === "ALL" ? "NONE" : "ALL"));
-                  // If switching TO Overview, clear the specific area
-                  if (overviewMode !== "ALL") clearSelectedArea();
-                }}
-              >
-                Overview: All
-              </button>
+      {/* Quick overview buttons - Modern Pill Design */}
+<div className="flex flex-wrap items-center gap-2">
+  {[
+    {
+      mode: "ALL",
+      label: "All Tables",
+      icon: HiSquares2X2,
+      // צבעים מותאמים לכל כפתור
+      activeStyle: "border-blue-200 bg-blue-100 text-blue-800 ring-1 ring-blue-200",
+    },
+    {
+      mode: "AVAILABLE",
+      label: "Available",
+      icon: HiCheckCircle,
+      activeStyle: "border-emerald-200 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+    },
+    {
+      mode: "UNPAID",
+      label: "Unpaid",
+      icon: HiCurrencyDollar,
+      activeStyle: "border-amber-200 bg-amber-100 text-amber-800 ring-1 ring-amber-200",
+    },
+  ].map((btn) => {
+    const isActive = overviewMode === btn.mode;
+    const Icon = btn.icon;
 
-              <button
-                className={[
-                  "min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold border transition",
-                  overviewMode === "AVAILABLE"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
-                ].join(" ")}
-                onClick={() => {
-                  setOverviewMode((m) => (m === "AVAILABLE" ? "NONE" : "AVAILABLE"));
-                   // If switching TO Overview, clear the specific area
-                  if (overviewMode !== "AVAILABLE") clearSelectedArea();
-                }}
-              >
-                Overview: Available
-              </button>
+    return (
+      <button
+        key={btn.mode}
+        onClick={() => {
+          // לוגיקת הלחיצה
+          setOverviewMode((m) => (m === btn.mode ? "NONE" : (btn.mode as OverviewMode)));
+          if (!isActive) clearSelectedArea();
+        }}
+        className={[
+          // עיצוב בסיסי לכל הכפתורים
+          "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all duration-200 shadow-sm",
+          "min-h-[40px] focus:outline-none focus:ring-2 focus:ring-offset-1",
+          // בדיקה: האם הכפתור פעיל או לא?
+          isActive
+            ? btn.activeStyle + " shadow-inner" // עיצוב פעיל (מתוך המערך)
+            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900", // עיצוב לא פעיל
+        ].join(" ")}
+      >
+        <Icon size={18} className={isActive ? "opacity-100" : "opacity-60"} />
+        <span>{btn.label}</span>
+      </button>
+    );
+  })}
+              
+              
 
               {canManage && (
                 <>
@@ -367,13 +394,19 @@ export default function ZoneRestaurant() {
               <div className="h-[65vh] rounded-xl border border-gray-200 bg-gray-50 animate-pulse" />
             </div>
           )}
-
-          {/* Overview Mode View */}
+{/* Overview Mode View */}
           {!loading && overviewMode !== "NONE" && (
             <div className="mt-4 space-y-6">
               {Object.entries(groupedTables).map(([areaId, group]) => {
                 const areaName = areas.find((a) => a.id === areaId)?.name ?? "Unknown zone";
-                const list = overviewMode === "AVAILABLE" ? group.filter((t) => !t.reserved) : group;
+                
+                // לוגיקת הסינון המעודכנת:
+                const list = 
+                  overviewMode === "AVAILABLE" 
+                    ? group.filter((t) => !t.reserved) 
+                    : overviewMode === "UNPAID" 
+                      ? group.filter((t) => t.reserved) // מציג רק תפוסים/לא שולמו
+                      : group; // מציג הכל
 
                 if (list.length === 0) return null;
 
