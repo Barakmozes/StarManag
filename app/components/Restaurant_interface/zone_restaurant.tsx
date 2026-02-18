@@ -4,15 +4,16 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@urql/next";
 import toast from "react-hot-toast";
 // שימוש ב-Heroicons 2 המודרניים והנקיים
-import { 
-  HiSquares2X2,       // Overview: All
-  HiCheckCircle,      // Overview: Available
-  HiCurrencyDollar,   // Overview: Unpaid
-  HiMagnifyingGlass,  // Search
-  HiMap,              // Empty State icon
-  HiPencilSquare,     // Edit Icon
-  HiTrash,            // Delete Icon
-  HiPlus              // Add Icon
+import {
+  HiSquares2X2, // Overview: All
+  HiCheckCircle, // Overview: Available
+  HiCurrencyDollar, // Overview: Unpaid
+  HiMagnifyingGlass, // Search
+  HiMap, // Empty State icon
+  HiPencilSquare, // Edit Icon
+  HiTrash, // Delete Icon
+  HiPlus,
+  HiOutlineMagnifyingGlass, // Add Icon
 } from "react-icons/hi2";
 import {
   BasicArea,
@@ -42,11 +43,13 @@ import FloorToolbar from "./FloorToolbar";
 import TablesSection from "./TablesSection";
 import TableModal from "./TableModal";
 import TableCard from "./TableCard";
+import { HiViewBoards } from "react-icons/hi";
+import { BsSearch } from "react-icons/bs";
 
 type OverviewMode = "NONE" | "ALL" | "AVAILABLE" | "UNPAID";
 export default function ZoneRestaurant() {
   const canManage = true;
-  const canEditLayout = canManage; 
+  const canEditLayout = canManage;
 
   // Zustand store
   const selectedArea = useRestaurantStore((s) => s.selectedArea);
@@ -85,7 +88,10 @@ export default function ZoneRestaurant() {
 
   // --- Queries & Mutations ---
 
-  const [areasResult] = useQuery<GetAreasNameDescriptionQuery, GetAreasNameDescriptionQueryVariables>({
+  const [areasResult] = useQuery<
+    GetAreasNameDescriptionQuery,
+    GetAreasNameDescriptionQueryVariables
+  >({
     query: GetAreasNameDescriptionDocument,
     variables: { orderBy: { createdAt: SortOrder.Asc } },
   });
@@ -104,7 +110,10 @@ export default function ZoneRestaurant() {
     pause: true,
   });
 
-  const [gridRes] = useQuery<GetGridConfigByAreaQuery, GetGridConfigByAreaQueryVariables>({
+  const [gridRes] = useQuery<
+    GetGridConfigByAreaQuery,
+    GetGridConfigByAreaQueryVariables
+  >({
     query: GetGridConfigByAreaDocument,
     variables: { areaId: selectedArea?.id ?? "" },
     pause: !selectedArea?.id,
@@ -142,16 +151,28 @@ export default function ZoneRestaurant() {
     const currentOverviewMode = overviewModeRef.current;
 
     // Handle deletion: if selected area no longer exists
-    if (currentSelectedArea && !list.some((a) => a.id === currentSelectedArea.id)) {
+    if (
+      currentSelectedArea &&
+      !list.some((a) => a.id === currentSelectedArea.id)
+    ) {
       clearSelectedArea();
       setOverviewMode("NONE");
     }
 
     // Auto select first zone if nothing is selected and not in overview mode
-    if (!currentSelectedArea && list.length > 0 && currentOverviewMode === "NONE") {
+    if (
+      !currentSelectedArea &&
+      list.length > 0 &&
+      currentOverviewMode === "NONE"
+    ) {
       setSelectedArea(list[0].id);
     }
-  }, [areasResult.data?.getAreasNameDescription, setAreas, setSelectedArea, clearSelectedArea]);
+  }, [
+    areasResult.data?.getAreasNameDescription,
+    setAreas,
+    setSelectedArea,
+    clearSelectedArea,
+  ]);
 
   // 3. Hydration of Tables
   useEffect(() => {
@@ -181,7 +202,10 @@ export default function ZoneRestaurant() {
 
   // --- Memoized Data ---
 
-  const dirtyCount = useMemo(() => tables.filter((t) => t.dirty).length, [tables]);
+  const dirtyCount = useMemo(
+    () => tables.filter((t) => t.dirty).length,
+    [tables],
+  );
   const canUndo = !!lastMoveRef.current;
 
   const countsByAreaId = useMemo(() => {
@@ -207,8 +231,11 @@ export default function ZoneRestaurant() {
   }, [tables]);
 
   const selectedTable = useMemo(
-    () => (selectedTableId ? tables.find((t) => t.id === selectedTableId) ?? null : null),
-    [tables, selectedTableId]
+    () =>
+      selectedTableId
+        ? (tables.find((t) => t.id === selectedTableId) ?? null)
+        : null,
+    [tables, selectedTableId],
   );
 
   // --- Handlers ---
@@ -278,69 +305,113 @@ export default function ZoneRestaurant() {
               </p>
             </div>
 
-      {/* Quick overview buttons - Modern Pill Design */}
-<div className="flex flex-wrap items-center gap-2">
-  {[
-    {
-      mode: "ALL",
-      label: "All Tables",
-      icon: HiSquares2X2,
-      // צבעים מותאמים לכל כפתור
-      activeStyle: "border-blue-200 bg-blue-100 text-blue-800 ring-1 ring-blue-200",
-    },
-    {
-      mode: "AVAILABLE",
-      label: "Available",
-      icon: HiCheckCircle,
-      activeStyle: "border-emerald-200 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
-    },
-    {
-      mode: "UNPAID",
-      label: "Unpaid",
-      icon: HiCurrencyDollar,
-      activeStyle: "border-amber-200 bg-amber-100 text-amber-800 ring-1 ring-amber-200",
-    },
-  ].map((btn) => {
-    const isActive = overviewMode === btn.mode;
-    const Icon = btn.icon;
+            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl shadow-sm mb-4">
+              {/* --- Left Side: Filters (English) --- */}
+              <div className="flex w-full md:w-auto p-0.5 rounded-lg overflow-x-auto scrollbar-hide">
+                <div className="flex w-full md:w-auto items-center gap-1">
+                  {[
+                    {
+                      mode: "ALL",
+                      label: "All Tables",
+                      icon: HiSquares2X2,
+                      activeColor:
+                        "border-blue-200 bg-blue-100 text-blue-800 ring-1 ring-blue-200",
+                    },
+                    {
+                      mode: "AVAILABLE",
+                      label: "Available",
+                      icon: HiCheckCircle,
+                      activeColor:
+                        "border-emerald-200 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+                    },
+                    {
+                      mode: "UNPAID",
+                      label: "Unpaid",
+                      icon: HiCurrencyDollar,
+                      activeColor:
+                        "border-amber-200 bg-amber-100 text-amber-800 ring-1 ring-amber-200",
+                    },
+                  ].map((btn) => {
+                    const isActive = overviewMode === btn.mode;
+                    const Icon = btn.icon;
 
-    return (
-      <button
-        key={btn.mode}
-        onClick={() => {
-          // לוגיקת הלחיצה
-          setOverviewMode((m) => (m === btn.mode ? "NONE" : (btn.mode as OverviewMode)));
-          if (!isActive) clearSelectedArea();
-        }}
-        className={[
-          // עיצוב בסיסי לכל הכפתורים
-          "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all duration-200 shadow-sm",
-          "min-h-[40px] focus:outline-none focus:ring-2 focus:ring-offset-1",
-          // בדיקה: האם הכפתור פעיל או לא?
-          isActive
-            ? btn.activeStyle + " shadow-inner" // עיצוב פעיל (מתוך המערך)
-            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900", // עיצוב לא פעיל
-        ].join(" ")}
-      >
-        <Icon size={18} className={isActive ? "opacity-100" : "opacity-60"} />
-        <span>{btn.label}</span>
-      </button>
-    );
-  })}
-              
-              
+                    return (
+                      <button
+                        key={btn.mode}
+                        onClick={() => {
+                          setOverviewMode((m) =>
+                            m === btn.mode
+                              ? "NONE"
+                              : (btn.mode as OverviewMode),
+                          );
+                          if (!isActive) clearSelectedArea();
+                        }}
+                        className={`
+              relative flex-1 md:flex-none flex items-center justify-center gap-1.5 
+              px-4 py-2 min-h-[40px]  text-sm font-medium  rounded-full border transition-all duration-200 whitespace-nowrap
+              ${
+                isActive
+                  ? btn.activeColor
+                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900"
+              }
+            `}
+                      >
+                        <Icon
+                          size={16}
+                          className={isActive ? "opacity-100" : "opacity-70"}
+                        />
+                        <span>{btn.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
+              {/* --- Right Side: Admin Actions --- */}
               {canManage && (
-                <>
-                  <AddTableModal allAreas={areas} areaSelectID={selectedArea} />
-                  <AddZoneForm />
+                <div className="flex w-full md:w-auto items-center justify-end gap-2 px-1">
+                  {/* 1. Add Table Button (High Emphasis) */}
+
+              
+                      <AddTableModal
+                        allAreas={areas}
+                        areaSelectID={selectedArea}
+                      />
+                 
+                    
+               
+
+                  {/* 2. Add Zone Button (Medium Emphasis) */}
+
+                
+                      <AddZoneForm />
+                  
+                 
+
+                  {/* 3. Context Actions (Only if area selected) */}
                   {selectedArea && (
                     <>
-                      <EditZoneModal areas={areas} areaSelectToEdit={selectedArea} />
-                      <DeleteZoneModal areas={areas} areaSelectToDelete={selectedArea} />
+                      <div className="w-px h-5 bg-slate-200 mx-0.5" />{" "}
+                      {/* Divider */}
+                      <button
+                        className="p-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        title="Edit Zone"
+                      >
+                        <HiViewBoards size={18} />
+                      </button>
+                     
+                          <DeleteZoneModal
+                            areas={areas}
+                            areaSelectToDelete={selectedArea}
+                          />
+                      
+                      <EditZoneModal
+                            areas={areas}
+                            areaSelectToEdit={selectedArea}
+                          />
                     </>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -362,6 +433,7 @@ export default function ZoneRestaurant() {
           )}
 
           {/* Toolbar */}
+            {overviewMode === "NONE" && (
           <FloorToolbar
             scale={scale}
             onZoomIn={() => adjustScale(0.1)}
@@ -379,6 +451,7 @@ export default function ZoneRestaurant() {
             canUndo={canUndo}
             onUndo={handleUndo}
           />
+            )}
         </div>
 
         {/* Content */}
@@ -394,45 +467,108 @@ export default function ZoneRestaurant() {
               <div className="h-[65vh] rounded-xl border border-gray-200 bg-gray-50 animate-pulse" />
             </div>
           )}
+          {/* Overview Mode View */}
 {/* Overview Mode View */}
-          {!loading && overviewMode !== "NONE" && (
-            <div className="mt-4 space-y-6">
-              {Object.entries(groupedTables).map(([areaId, group]) => {
-                const areaName = areas.find((a) => a.id === areaId)?.name ?? "Unknown zone";
-                
-                // לוגיקת הסינון המעודכנת:
-                const list = 
-                  overviewMode === "AVAILABLE" 
-                    ? group.filter((t) => !t.reserved) 
-                    : overviewMode === "UNPAID" 
-                      ? group.filter((t) => t.reserved) // מציג רק תפוסים/לא שולמו
-                      : group; // מציג הכל
+{!loading && overviewMode !== "NONE" && (
+  <div className="mt-4 space-y-6">
+    
+    {/* 1. Search Bar Only (No Dropdown) */}
+      <div className="w-full">
+        <label className="sr-only" htmlFor="areaSearch">
+          Search zones
+        </label>
+        <div className="relative">
+          <HiOutlineMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            id="areaSearch"
+          value={areaSearch}
+            onChange={(e) => setAreaSearch(e.target.value)}
+            placeholder="Search zones…"
+            className="w-full min-h-[44px] rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+    </div>
 
-                if (list.length === 0) return null;
+    {/* 2. Table Lists Grouped by Area */}
+    <div className="space-y-8">
+      {Object.entries(groupedTables).map(([areaId, group]) => {
+        const areaName =
+          areas.find((a) => a.id === areaId)?.name ?? "Unknown zone";
 
-                return (
-                  <div key={areaId}>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-gray-900">{areaName}</h2>
-                      <span className="text-sm text-gray-600">{list.length} tables</span>
-                    </div>
+        // --- FILTER LEVEL 1: Search Text ---
+        // אם יש טקסט בחיפוש, מציג רק אזורים ששמם מכיל את הטקסט
+        if (
+          areaSearch &&
+          !areaName.toLowerCase().includes(areaSearch.toLowerCase())
+        ) {
+          return null;
+        }
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {list.map((t) => (
-                        <button
-                          key={t.id}
-                          className="text-left"
-                          onClick={() => handleSelectTable(t.id)}
-                        >
-                          <TableCard table={t} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+        // --- FILTER LEVEL 2: Table Status (Overview Mode) ---
+        const list =
+          overviewMode === "AVAILABLE"
+            ? group.filter((t) => !t.reserved)
+            : overviewMode === "UNPAID"
+            ? group.filter((t) => t.reserved) // מציג רק תפוסים/לא שולמו
+            : group; // מציג הכל
+
+        // אם אין שולחנות באזור זה לאחר הסינון, מסתיר את האזור
+        if (list.length === 0) return null;
+
+        return (
+          <div 
+            key={areaId} 
+            className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
+          >
+            {/* Area Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-4 py-3">
+              <h2 className="text-lg font-bold text-gray-800">
+                {areaName}
+              </h2>
+              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                {list.length} שולחנות
+              </span>
             </div>
-          )}
+
+            {/* Tables Grid */}
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {list.map((t) => (
+                  <button
+                    key={t.id}
+                    className="w-full text-left transition-transform duration-200 hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg"
+                    onClick={() => handleSelectTable(t.id)}
+                  >
+                    <TableCard table={t} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Empty State Message (אם החיפוש לא מצא כלום) */}
+    {Object.entries(groupedTables).every(([areaId, group]) => {
+        const areaName = areas.find((a) => a.id === areaId)?.name ?? "";
+        // בדיקה ידנית האם הכל הוסתר ע"י החיפוש
+        const matchesSearch = !areaSearch || areaName.toLowerCase().includes(areaSearch.toLowerCase());
+        // בדיקה האם הכל הוסתר ע"י הפילטר (פנוי/תפוס)
+        const list = overviewMode === "AVAILABLE" ? group.filter(t => !t.reserved) : 
+                     overviewMode === "UNPAID" ? group.filter(t => t.reserved) : group;
+        
+        return !matchesSearch || list.length === 0;
+    }) && (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="rounded-full bg-gray-100 p-3 text-gray-400 mb-3">
+          <BsSearch size={24} />
+        </div>
+        <p className="text-gray-500 font-medium">לא נמצאו אזורים תואמים לחיפוש.</p>
+      </div>
+    )}
+  </div>
+)}
 
           {/* Single Zone View */}
           {!loading && overviewMode === "NONE" && selectedArea && (
@@ -447,7 +583,10 @@ export default function ZoneRestaurant() {
                   </p>
                   {canManage && (
                     <div className="mt-4 flex justify-center">
-                      <AddTableModal allAreas={areas} areaSelectID={selectedArea} />
+                      <AddTableModal
+                        allAreas={areas}
+                        areaSelectID={selectedArea}
+                      />
                     </div>
                   )}
                 </div>
@@ -460,7 +599,9 @@ export default function ZoneRestaurant() {
                   showGrid={showGrid}
                   isEditMode={isEditMode}
                   canEditLayout={canEditLayout}
-                  onMoveTable={(tableId, areaId, pos) => moveTable(tableId, areaId, pos)}
+                  onMoveTable={(tableId, areaId, pos) =>
+                    moveTable(tableId, areaId, pos)
+                  }
                   onMoveCommit={(m) => {
                     lastMoveRef.current = m;
                   }}
@@ -475,7 +616,9 @@ export default function ZoneRestaurant() {
           {/* Empty State (No Zone, No Overview) */}
           {!loading && overviewMode === "NONE" && !selectedArea && (
             <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 text-center">
-              <h3 className="text-lg font-semibold text-gray-900">Select a zone</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Select a zone
+              </h3>
               <p className="mt-1 text-sm text-gray-600">
                 Choose a zone to view and manage its floor layout.
               </p>
@@ -498,7 +641,9 @@ export default function ZoneRestaurant() {
         canManage={canManage}
         onMoveToArea={(tableId, newAreaId) => {
           moveTable(tableId, newAreaId, { x: 40, y: 40 });
-          toast.success("Moved table (unsaved). Save layout to persist.", { duration: 1400 });
+          toast.success("Moved table (unsaved). Save layout to persist.", {
+            duration: 1400,
+          });
         }}
       />
     </section>

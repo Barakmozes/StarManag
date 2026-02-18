@@ -225,7 +225,7 @@ export default function TablesSection({
       )}
 
       {/* Floating Toolbar */}
-      <div className="absolute top-6 right-6 flex flex-col gap-3 z-20 items-end">
+      <div className="absolute top-0 right-0 flex flex-col gap-3 z-20 items-end">
         
         {/* Mobile-only Quick Action */}
         <button 

@@ -1061,7 +1061,6 @@ export enum RevenueGroupBy {
 /** User roles in the system */
 export enum Role {
   Admin = 'ADMIN',
-  Chef = 'CHEF',
   Delivery = 'DELIVERY',
   Manager = 'MANAGER',
   User = 'USER',

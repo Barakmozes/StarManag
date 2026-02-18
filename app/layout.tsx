@@ -34,6 +34,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+    const graphqlApiKey = process.env.GRAPHQL_API_KEY as string;
   return (
     <html
       lang="en"
@@ -41,7 +42,7 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full scroll-smooth`}
     >
       <body className="min-h-full font-sans antialiased bg-white text-slate-900 selection:bg-green-100 selection:text-green-900">
-        <Providers>
+        <Providers graphqlApiKey={graphqlApiKey}>
           {/* שימוש ב-Main כדי להבטיח נגישות ומבנה סמנטי */}
           <main className="relative flex min-h-screen flex-col">
             {children}

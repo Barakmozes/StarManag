@@ -14,6 +14,7 @@ import {
   BasicArea,
 } from "@/graphql/generated";
 import { useRestaurantStore } from "@/lib/AreaStore";
+import { HiPlus } from "react-icons/hi2";
 
 export interface AddTableModalProps {
   allAreas: BasicArea[];
@@ -106,8 +107,9 @@ const AddTableModal: React.FC<AddTableModalProps> = ({ allAreas, areaSelectID })
       <button
         type="button"
         onClick={openModal}
-        className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 text-sm px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition"
-      >
+   className="   relative flex-1 md:flex-none flex items-center justify-center gap-1.5 
+              px-4 py-2 min-h-[40px]  text-sm font-medium  rounded-full border transition-all duration-200 whitespace-nowrap bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-blue-300 hover:text-gray-900"
+      ><HiPlus className="text-slate-300" size={16} />
         Add Table
       </button>
 
@@ -120,7 +122,7 @@ className="relative w-full max-w-lg md:max-w-4xl mx-auto bg-white rounded-xl sha
             onClick={closeModal}
             className="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition"
             aria-label="Close"
-          >
+          ><HiPlus className="text-slate-300" size={16} />
             <span aria-hidden="true">×</span>
           </button>
 
