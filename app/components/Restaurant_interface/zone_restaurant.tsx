@@ -307,8 +307,8 @@ export default function ZoneRestaurant() {
 
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl shadow-sm mb-4">
               {/* --- Left Side: Filters (English) --- */}
-              <div className="flex w-full md:w-auto p-0.5 rounded-lg overflow-x-auto scrollbar-hide">
-                <div className="flex w-full md:w-auto items-center gap-1">
+              <div className="flex w-full md:w-auto  rounded-lg overflow-x-auto scrollbar-hide">
+                <div className="flex w-full md:w-auto items-center gap-1 text-slate-700">
                   {[
                     {
                       mode: "ALL",
@@ -348,11 +348,11 @@ export default function ZoneRestaurant() {
                         }}
                         className={`
               relative flex-1 md:flex-none flex items-center justify-center gap-1.5 
-              px-4 py-2 min-h-[40px]  text-sm font-medium  rounded-full border transition-all duration-200 whitespace-nowrap
+              px-4 py-2 min-h-[40px]  text-sm font-semibold rounded-full border transition-all duration-200 whitespace-nowrap
               ${
                 isActive
                   ? btn.activeColor
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900"
+                  : "bg-white border-gray-200 text-slate-700 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900"
               }
             `}
                       >
@@ -369,7 +369,7 @@ export default function ZoneRestaurant() {
 
               {/* --- Right Side: Admin Actions --- */}
               {canManage && (
-                <div className="flex w-full md:w-auto items-center justify-end gap-2 px-1">
+                <div className="flex flex-wrap w-full md:w-auto items-center justify-end gap-2 px-1">
                   {/* 1. Add Table Button (High Emphasis) */}
 
               
