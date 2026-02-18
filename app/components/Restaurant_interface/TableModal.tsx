@@ -334,7 +334,7 @@ export default function TableModal({
                                 <BsChatLeftText /> הערות ודגשים
                             </h4>
                         </div>
-                        <form onSubmit={addSpecialRequest} className="flex gap-2 mb-2">
+                        <form onSubmit={addSpecialRequest} className="flex gap-2 mb-1">
                             <input 
                               type="text" value={reqInput} onChange={(e) => setReqInput(e.target.value)} disabled={isEditing}
                               className="flex-1 bg-white border border-amber-200 text-slate-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-amber-400" 
@@ -355,14 +355,14 @@ export default function TableModal({
                     </div>
 
                     {/* --- Future Reservations --- */}
-                    <div className="border-t border-slate-100 pt-4 mb-4">
-                        <h4 className="text-xs font-bold text-slate-800 mb-3">הזמנות עתידיות</h4>
+                    <div className="border-t border-slate-100  mb-1">
+                        <h4 className="text-xs font-bold text-slate-800 mb-1">הזמנות עתידיות</h4>
                         <TableReservations table={table} />
                     </div>
 
                     {/* --- Admin Footer --- */}
                     {canManage && (
-                       <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
+                       <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
                            <button onClick={handleOpenEdit} className="flex-1 py-2.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-100 border border-slate-200 flex items-center justify-center gap-2">
                                <BsGearFill /> ערוך
                            </button>
