@@ -11,8 +11,8 @@ function isAdminOrManagerOrDelivery(role?: string | null) {
 
 function isAdminOrManagerOrChef(role?: string | null) {
   const r = String(role ?? "").toUpperCase();
-  return r === "ADMIN" || r === "MANAGER" || r === "CHEF";
-}
+  return r === "ADMIN" || r === "MANAGER" ;
+}// || r === "CHEF"
 
 function normalizeOrderNumber(raw: unknown) {
   return (raw ?? "").toString().trim();

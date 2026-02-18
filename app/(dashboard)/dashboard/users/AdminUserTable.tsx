@@ -137,7 +137,7 @@ function mutateUrl(
 function roleBadgeClass(role: Role) {
   if (role === Role.Admin) return "bg-red-100 text-red-700";
   if (role === Role.Manager) return "bg-green-100 text-green-700";
-  if (role === Role.Chef) return "bg-orange-100 text-orange-700";
+  // if (role === Role.Chef) return "bg-orange-100 text-orange-700";
   if (role === Role.Waiter) return "bg-blue-100 text-blue-700";
   if (role === Role.Delivery) return "bg-purple-100 text-purple-700";
   return "bg-slate-100 text-slate-700";
@@ -301,7 +301,7 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
                   <option value={Role.User}>USER</option>
                   <option value={Role.Admin}>ADMIN</option>
                   <option value={Role.Manager}>MANAGER</option>
-                  <option value={Role.Chef}>CHEF</option>
+                  {/* <option value={Role.Chef}>CHEF</option> */}
                   <option value={Role.Waiter}>WAITER</option>
                   <option value={Role.Delivery}>DELIVERY</option>
                 </select>
@@ -476,7 +476,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
               <option value="">All roles</option>
               <option value={Role.Admin}>ADMIN</option>
               <option value={Role.Manager}>MANAGER</option>
-              <option value={Role.Chef}>CHEF</option>
+              {/* <option value={Role.Chef}>CHEF</option> */}
               <option value={Role.Waiter}>WAITER</option>
               <option value={Role.Delivery}>DELIVERY</option>
               <option value={Role.User}>USER</option>

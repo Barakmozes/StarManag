@@ -27,8 +27,9 @@ builder.prismaObject("Delivery", {
 
 function isDeliveryDashboardRole(role?: string | null) {
   const r = String(role ?? "").toUpperCase();
-  return r === "ADMIN" || r === "MANAGER" || r === "DELIVERY" || r === "CHEF";
-}
+  return r === "ADMIN" || r === "MANAGER" || r === "DELIVERY" ;
+}// || r === "CHEF"
+
 
 function normalizeSearch(raw: unknown) {
   return (raw ?? "").toString().trim();

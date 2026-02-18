@@ -83,7 +83,7 @@ export default function EditRoleForm({
   >(DELETE_USER);
 
   const ROLES: Role[] = useMemo(
-    () => [Role.User, Role.Admin, Role.Manager, Role.Chef, Role.Waiter, Role.Delivery],
+    () => [Role.User, Role.Admin, Role.Manager,  Role.Waiter, Role.Delivery],
     []
   );
 
