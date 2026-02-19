@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { HiPlus } from "react-icons/hi2";
 import { useMutation, useQuery } from "@urql/next";
@@ -102,7 +103,9 @@ const AdminAddMenu = () => {
       toast.error("Please enter a preparation type", { duration: 2000 });
       return;
     }
-    setPrepType((prev) => (prev.includes(value) ? prev : [...prev, value]));
+    if (!prepType.includes(value)) {
+      setPrepType((prev) => [...prev, value]);
+    }
     setPreparationInput("");
   };
 
@@ -150,7 +153,6 @@ const AdminAddMenu = () => {
       return;
     }
 
-    // ✅ allow clearing sellingPrice (null), keep validation if provided
     const selling =
       sellingPrice.trim() === "" ? null : Number(sellingPrice.trim());
 
@@ -177,8 +179,8 @@ const AdminAddMenu = () => {
         shortDescr: cleanedShort,
         prepType: cleanedPrep,
         price,
-        sellingPrice: selling, // ✅ null clears
-        onPromo, // ✅ NEW
+        sellingPrice: selling, 
+        onPromo, 
       } as any); // <- remove "as any" after codegen updates
 
       if (res.data?.addMenu?.id) {
@@ -200,107 +202,76 @@ const AdminAddMenu = () => {
     <>
       <button
         type="button"
-        className="w-full sm:w-auto min-h-[44px] text-white inline-flex items-center justify-center whitespace-nowrap bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-white bg-green-600 hover:bg-green-700 font-medium rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-green-500 whitespace-nowrap"
         onClick={openModal}
       >
-        <HiPlus className="mr-1 -ml-1 w-4 h-4" />
+        <HiPlus className="w-5 h-5" />
         Add Menu
       </button>
 
-      <Modal isOpen={isOpen} title={title || "Add Menu"} closeModal={closeModal}>
-        {/* Mobile-safe modal wrapper */}
-        <div className="w-[min(100vw-2rem,48rem)] max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-          <form onSubmit={handleAddMenu} className="p-3 sm:p-4">
+      <Modal isOpen={isOpen} title={title || "Add New Menu Item"} closeModal={closeModal}>
+        {/* Ensures inner scroll and fixes the double scrollbar bug visually */}
+        <div className="w-full max-w-4xl max-h-[85vh] overflow-y-auto sm:rounded-b-xl custom-scrollbar">
+          <form onSubmit={handleAddMenu} className="p-4 sm:p-6 space-y-6">
+            
             {catError && (
-              <div className="mb-3 text-sm text-red-600">
+              <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
                 Could not load categories. You can still try again by refreshing.
               </div>
             )}
 
             {noCategories && (
-              <div className="mb-4 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800">
-                <div className="font-semibold mb-1">No categories found</div>
-                <div className="mb-2">
+              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+                <div className="font-semibold text-base mb-1">No categories found</div>
+                <div className="mb-3">
                   Create at least one category in Settings before adding menus.
                 </div>
                 <Link
                   href="/dashboard/settings"
-                  className="underline underline-offset-2 text-orange-900"
+                  className="inline-flex items-center font-medium underline underline-offset-2 text-orange-900 hover:text-orange-700 transition-colors"
                 >
                   Go to Settings
                 </Link>
               </div>
             )}
 
-            <div className="grid gap-4 mb-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="title" className="form-label">
+            {/* Uploaded Image Preview Block */}
+            {image && (
+              <div className="w-full rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50 flex items-center justify-center p-2">
+                <Image
+                  src={image}
+                  alt={title || "Menu preview"}
+                  width={720}
+                  height={400}
+                  className="h-40 sm:h-52 w-full object-cover rounded-lg"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="space-y-1.5">
+                <label htmlFor="title" className="text-sm font-medium text-gray-700">
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="title"
-                  className="form-input min-h-[44px]"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={noCategories}
+                  placeholder="e.g., Spicy Chicken Burger"
                 />
               </div>
 
-              <div>
-                <label htmlFor="price" className="form-label">
-                  Price <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  className="form-input min-h-[44px]"
-                  placeholder="$"
-                  value={price}
-                  min={0}
-                  step={0.01}
-                  onChange={(e) => setPrice(e.target.valueAsNumber)}
-                  disabled={noCategories}
-                />
-              </div>
-
-              {/* ✅ promo toggle */}
-              <div className="flex items-center justify-between sm:justify-start gap-3">
-                <label className="form-label mb-0">On Promo</label>
-                <input
-                  type="checkbox"
-                  className="w-6 h-6 accent-green-600 rounded"
-                  checked={onPromo}
-                  onChange={(e) => setOnPromo(e.target.checked)}
-                  disabled={noCategories}
-                  aria-label="Toggle promo"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="sellingPrice" className="form-label">
-                  Selling Price (optional)
-                </label>
-                <input
-                  type="number"
-                  id="sellingPrice"
-                  className="form-input min-h-[44px]"
-                  placeholder="$"
-                  value={sellingPrice}
-                  min={0}
-                  step={0.01}
-                  onChange={(e) => setSellingPrice(e.target.value)}
-                  disabled={noCategories}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="category" className="form-label">
+              <div className="space-y-1.5">
+                <label htmlFor="category" className="text-sm font-medium text-gray-700">
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="category"
-                  className="form-input min-h-[44px]"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-500"
                   onChange={(e) => setCategoryTitle(e.target.value)}
                   value={categoryTitle}
                   disabled={noCategories || catFetching}
@@ -315,54 +286,111 @@ const AdminAddMenu = () => {
                 </select>
               </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="longDescr" className="form-label">
-                  Long Description
+              <div className="space-y-1.5">
+                <label htmlFor="price" className="text-sm font-medium text-gray-700">
+                  Price <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  id="longDescr"
-                  rows={3}
-                  className="form-input"
-                  placeholder="Long description here"
-                  value={longDescr}
-                  onChange={(e) => setLongDescr(e.target.value)}
+                <input
+                  type="number"
+                  id="price"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                  placeholder="$0.00"
+                  value={price || ""}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setPrice(e.target.valueAsNumber)}
                   disabled={noCategories}
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="shortDescr" className="form-label">
+              <div className="space-y-1.5">
+                <label htmlFor="sellingPrice" className="text-sm font-medium text-gray-700">
+                  Selling Price <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="number"
+                  id="sellingPrice"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                  placeholder="Optional discount price"
+                  value={sellingPrice}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                  disabled={noCategories}
+                />
+              </div>
+
+              {/* Promo Checkbox full span styled */}
+              <div className="flex items-center gap-3 sm:col-span-2 p-3 bg-gray-50/80 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  id="onPromo"
+                  className="w-5 h-5 text-green-600 bg-white border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  checked={onPromo}
+                  onChange={(e) => setOnPromo(e.target.checked)}
+                  disabled={noCategories}
+                />
+                <label 
+                  htmlFor="onPromo" 
+                  className={`text-sm font-medium text-gray-800 select-none ${noCategories ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                >
+                  Highlight as Promotional Item
+                </label>
+              </div>
+
+              <div className="sm:col-span-2 space-y-1.5">
+                <label htmlFor="shortDescr" className="text-sm font-medium text-gray-700">
                   Short Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="shortDescr"
-                  rows={3}
-                  className="form-input"
-                  placeholder="Short description here"
+                  rows={2}
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors resize-none disabled:bg-gray-100 disabled:text-gray-500"
+                  placeholder="Brief description for quick reading"
                   value={shortDescr}
                   onChange={(e) => setShortDescr(e.target.value)}
                   disabled={noCategories}
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="form-label">
+              <div className="sm:col-span-2 space-y-1.5">
+                <label htmlFor="longDescr" className="text-sm font-medium text-gray-700">
+                  Long Description
+                </label>
+                <textarea
+                  id="longDescr"
+                  rows={3}
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors resize-none disabled:bg-gray-100 disabled:text-gray-500"
+                  placeholder="Detailed description of the item"
+                  value={longDescr}
+                  onChange={(e) => setLongDescr(e.target.value)}
+                  disabled={noCategories}
+                />
+              </div>
+
+              <div className="sm:col-span-2 space-y-2.5">
+                <label className="text-sm font-medium text-gray-700">
                   Preparation Types <span className="text-red-500">*</span>
                 </label>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    className="form-input min-h-[44px] flex-1"
+                    className="flex-1 px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors disabled:bg-gray-100 disabled:text-gray-500"
                     value={preparationInput}
                     onChange={(e) => setPreparationInput(e.target.value)}
-                    placeholder="Enter text"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addPreparation();
+                      }
+                    }}
+                    placeholder="E.g., Medium Rare, Extra Spicy..."
                     disabled={noCategories}
                   />
-
                   <button
                     type="button"
-                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                    className="w-full sm:w-auto px-6 py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-green-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     onClick={addPreparation}
                     disabled={noCategories}
                   >
@@ -371,34 +399,47 @@ const AdminAddMenu = () => {
                 </div>
 
                 {prepType.length > 0 && (
-                  <ul className="list-none flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     {prepType.map((value) => (
-                      <li key={value}>
+                      <span
+                        key={value}
+                        className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 text-sm font-medium px-3 py-1.5 rounded-full"
+                      >
+                        {value}
                         <button
                           type="button"
                           onClick={() => removePreparation(value)}
-                          className="bg-green-100 text-green-700 text-xs font-medium px-3 py-1 rounded hover:bg-green-200"
-                          title="Click to remove"
+                          className="hover:text-green-900 focus:outline-none transition-colors font-bold text-lg leading-none"
+                          aria-label={`Remove ${value}`}
                         >
-                          {value}
+                          &times;
                         </button>
-                      </li>
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             </div>
 
-            <UploadImg handleCallBack={getMenuImageFile} id="addAdminMenu" />
+            {/* Image upload section */}
+            <div className="pt-3 border-t border-gray-100">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Image <span className="text-red-500">*</span>
+              </label>
+              <UploadImg handleCallBack={getMenuImageFile} id="addAdminMenuImg" />
+            </div>
 
-            <button
-              type="submit"
-              disabled={noCategories}
-              className="w-full sm:w-auto min-h-[44px] text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-60 mt-4"
-            >
-              <HiPlus className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-              Add Menu
-            </button>
+            {/* Action Buttons */}
+            <div className="pt-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={noCategories}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 text-white bg-green-600 hover:bg-green-700 font-semibold rounded-xl shadow-sm hover:shadow transition-all focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <HiPlus className="w-5 h-5" />
+                Add Menu Item
+              </button>
+            </div>
           </form>
         </div>
       </Modal>

@@ -39,7 +39,7 @@ type MenuLike = {
   sellingPrice?: number | null;
   prepType: string[];
   image: string;
-  onPromo?: boolean; // ✅ make sure your menu object includes this
+  onPromo?: boolean;
 };
 
 function extractSupabaseFilename(urlOrName: string): string | null {
@@ -65,7 +65,6 @@ const AdminEditMenu = ({ menu }: Props) => {
   const [shortDescr, setShortDescr] = useState(menu.shortDescr);
   const [price, setPrice] = useState(menu.price);
 
-  // ✅ promo fields
   const [onPromo, setOnPromo] = useState(!!menu.onPromo);
   const [sellingPrice, setSellingPrice] = useState<string>(
     typeof menu.sellingPrice === "number" ? String(menu.sellingPrice) : ""
@@ -95,7 +94,9 @@ const AdminEditMenu = ({ menu }: Props) => {
       toast.error("Please enter a preparation type", { duration: 2000 });
       return;
     }
-    setPrepType((prev) => (prev.includes(value) ? prev : [...prev, value]));
+    if (!prepType.includes(value)) {
+      setPrepType((prev) => [...prev, value]);
+    }
     setPreparationInput("");
   };
 
@@ -180,9 +181,9 @@ const AdminEditMenu = ({ menu }: Props) => {
         shortDescr: cleanedShort,
         prepType: cleanedPrep,
         price,
-        sellingPrice: selling, // ✅ null clears
-        onPromo, // ✅ NEW
-      }); // <- remove after codegen updates
+        sellingPrice: selling, 
+        onPromo, 
+      });
 
       if (res.data?.editMenu?.id) {
         toast.success("Menu Edited Successfully", { id: toastId, duration: 1200 });
@@ -205,103 +206,50 @@ const AdminEditMenu = ({ menu }: Props) => {
       <button
         type="button"
         onClick={openModal}
-        className="inline-flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-md hover:bg-slate-100 transition"
+        className="inline-flex items-center justify-center h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-slate-100 transition-colors"
         aria-label={`Edit ${menu.title}`}
       >
-        <HiOutlinePencil className="h-6 w-6 text-green-600" />
+        <HiOutlinePencil className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
       </button>
 
-      <Modal isOpen={isOpen} title={title} closeModal={closeModal}>
-        {/* Mobile-safe modal wrapper */}
-        <div className="w-[min(100vw-2rem,48rem)] max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-          <form onSubmit={handleEditMenu} className="p-3 sm:p-4">
-            <div className="grid gap-4 mb-4 sm:grid-cols-2">
-              <div className="sm:col-span-2 border-gray-300">
-                <Image
-                  src={image}
-                  alt={title}
-                  width={720}
-                  height={400}
-                  className="h-32 sm:h-40 w-full object-cover rounded-md"
-                />
-              </div>
+      <Modal isOpen={isOpen} title={`Edit Menu: ${menu.title}`} closeModal={closeModal}>
+        {/* Ensures inner scroll and fixes the double scrollbar bug visually */}
+        <div className="w-full max-w-4xl max-h-[85vh] overflow-y-auto sm:rounded-b-xl custom-scrollbar">
+          <form onSubmit={handleEditMenu} className="p-4 sm:p-6 space-y-6">
+            
+            {/* Image Preview Block */}
+            <div className="w-full rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50 flex items-center justify-center p-2">
+              <Image
+                src={image}
+                alt={title}
+                width={720}
+                height={400}
+                className="h-40 sm:h-52 w-full object-cover rounded-lg"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="title" className="form-label">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="space-y-1.5">
+                <label htmlFor="title" className="text-sm font-medium text-gray-700">
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="title"
-                  className="form-input min-h-[44px]"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label htmlFor="price" className="form-label">
-                  Price <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  className="form-input min-h-[44px]"
-                  placeholder="$"
-                  value={price}
-                  min={0}
-                  step={0.01}
-                  onChange={(e) => setPrice(e.target.valueAsNumber)}
-                />
-              </div>
-
-              {/* ✅ promo toggle */}
-              <div className="flex items-center justify-between sm:justify-start gap-3">
-                <label className="form-label mb-0">On Promo</label>
-                <input
-                  type="checkbox"
-                  className="w-6 h-6 accent-green-600 rounded"
-                  checked={onPromo}
-                  onChange={(e) => setOnPromo(e.target.checked)}
-                  aria-label="Toggle promo"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="sellingPrice" className="form-label mb-0">
-                    Selling Price (optional)
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleResetPromo}
-                    className="text-xs text-gray-600 hover:text-gray-900 underline underline-offset-2 min-h-[44px] px-2 -mr-2"
-                  >
-                    Reset
-                  </button>
-                </div>
-
-                <input
-                  type="number"
-                  id="sellingPrice"
-                  className="form-input min-h-[44px]"
-                  placeholder="$"
-                  value={sellingPrice}
-                  min={0}
-                  step={0.01}
-                  onChange={(e) => setSellingPrice(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="category" className="form-label">
+              <div className="space-y-1.5">
+                <label htmlFor="category" className="text-sm font-medium text-gray-700">
                   Category <span className="text-red-500">*</span>
                 </label>
-
                 <select
                   id="category"
-                  className="form-input min-h-[44px]"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors bg-white"
                   onChange={(e) => setCategoryTitle(e.target.value)}
                   value={categoryTitle}
                   disabled={catFetching}
@@ -311,9 +259,7 @@ const AdminEditMenu = ({ menu }: Props) => {
                     !categories.some((c) => c.title === categoryTitle) && (
                       <option value={categoryTitle}>{categoryTitle} (current)</option>
                     )}
-
                   {catFetching && <option>Loading categories…</option>}
-
                   {!catFetching &&
                     categories.map((cat) => (
                       <option key={cat.id} value={cat.title}>
@@ -323,50 +269,111 @@ const AdminEditMenu = ({ menu }: Props) => {
                 </select>
               </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="longDescr" className="form-label">
-                  Long Description
+              <div className="space-y-1.5">
+                <label htmlFor="price" className="text-sm font-medium text-gray-700">
+                  Price <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  id="longDescr"
-                  rows={3}
-                  className="form-input"
-                  placeholder="Long description here"
-                  value={longDescr}
-                  onChange={(e) => setLongDescr(e.target.value)}
+                <input
+                  type="number"
+                  id="price"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                  placeholder="$"
+                  value={price}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setPrice(e.target.valueAsNumber)}
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="shortDescr" className="form-label">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="sellingPrice" className="text-sm font-medium text-gray-700">
+                    Selling Price
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleResetPromo}
+                    className="text-xs text-green-600 hover:text-green-800 font-medium transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  id="sellingPrice"
+                  className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                  placeholder="Optional"
+                  value={sellingPrice}
+                  min={0}
+                  step={0.01}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                />
+              </div>
+
+              {/* Promo Checkbox full span styled */}
+              <div className="flex items-center gap-3 sm:col-span-2 p-3 bg-gray-50/80 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  id="onPromo"
+                  className="w-5 h-5 text-green-600 bg-white border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer transition-all"
+                  checked={onPromo}
+                  onChange={(e) => setOnPromo(e.target.checked)}
+                />
+                <label htmlFor="onPromo" className="text-sm font-medium text-gray-800 cursor-pointer select-none">
+                  Highlight as Promotional Item
+                </label>
+              </div>
+
+              <div className="sm:col-span-2 space-y-1.5">
+                <label htmlFor="shortDescr" className="text-sm font-medium text-gray-700">
                   Short Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="shortDescr"
-                  rows={3}
-                  className="form-input"
-                  placeholder="Short description here"
+                  rows={2}
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors resize-none"
+                  placeholder="Brief description for quick reading"
                   value={shortDescr}
                   onChange={(e) => setShortDescr(e.target.value)}
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="form-label">
+              <div className="sm:col-span-2 space-y-1.5">
+                <label htmlFor="longDescr" className="text-sm font-medium text-gray-700">
+                  Long Description
+                </label>
+                <textarea
+                  id="longDescr"
+                  rows={3}
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors resize-none"
+                  placeholder="Detailed description of the item"
+                  value={longDescr}
+                  onChange={(e) => setLongDescr(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2 space-y-2.5">
+                <label className="text-sm font-medium text-gray-700">
                   Preparation Types <span className="text-red-500">*</span>
                 </label>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    className="form-input min-h-[44px] flex-1"
+                    className="flex-1 px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                     value={preparationInput}
                     onChange={(e) => setPreparationInput(e.target.value)}
-                    placeholder="Enter text"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addPreparation();
+                      }
+                    }}
+                    placeholder="E.g., Medium Rare, Extra Spicy..."
                   />
                   <button
                     type="button"
-                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                    className="w-full sm:w-auto px-6 py-2.5 text-white bg-green-600 rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-green-500"
                     onClick={addPreparation}
                   >
                     Add
@@ -374,33 +381,44 @@ const AdminEditMenu = ({ menu }: Props) => {
                 </div>
 
                 {prepType.length > 0 && (
-                  <ul className="list-none flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     {prepType.map((value) => (
-                      <li key={value}>
+                      <span
+                        key={value}
+                        className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 text-sm font-medium px-3 py-1.5 rounded-full"
+                      >
+                        {value}
                         <button
                           type="button"
                           onClick={() => removePreparation(value)}
-                          className="bg-green-100 text-green-700 text-xs font-medium px-3 py-1 rounded hover:bg-green-200"
-                          title="Click to remove"
+                          className="hover:text-green-900 focus:outline-none transition-colors font-bold text-lg leading-none"
+                          aria-label={`Remove ${value}`}
                         >
-                          {value}
+                          &times;
                         </button>
-                      </li>
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             </div>
 
-            <UploadImg handleCallBack={replaceMenuImage} id="editAdminImg" />
+            {/* Image upload section */}
+            <div className="pt-3 border-t border-gray-100">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Update Image</label>
+              <UploadImg handleCallBack={replaceMenuImage} id={`editImg-${menu.id}`} />
+            </div>
 
-            <button
-              type="submit"
-              className="w-full sm:w-auto min-h-[44px] text-white inline-flex items-center justify-center bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-4"
-            >
-              <HiOutlinePencil className="mr-1 -ml-1 w-4 h-4" fill="currentColor" />
-              Edit Menu
-            </button>
+            {/* Action Buttons */}
+            <div className="pt-4 flex justify-end">
+              <button
+                type="submit"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 text-white bg-green-600 hover:bg-green-700 font-semibold rounded-xl shadow-sm hover:shadow transition-all focus:ring-2 focus:ring-offset-2 focus:ring-green-600"
+              >
+                <HiOutlinePencil className="w-5 h-5" />
+                Save Changes
+              </button>
+            </div>
           </form>
         </div>
       </Modal>
