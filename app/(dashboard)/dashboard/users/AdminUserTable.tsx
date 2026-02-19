@@ -6,14 +6,20 @@ import { gql, useMutation, useQuery } from "@urql/next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { GoChevronDown } from "react-icons/go";
-import { HiMagnifyingGlass, HiOutlinePlus, HiArrowPath } from "react-icons/hi2";
+import { HiOutlinePlus, HiArrowPath, HiOutlineBell } from "react-icons/hi2";
 
 import TableWrapper from "../Components/TableWrapper";
 import EditRoleModal from "./EditRoleModal";
 import Modal from "@/app/components/Common/Modal";
 import UploadImg from "../Components/UploadImg";
 import { SupabaseImageUpload } from "@/lib/supabaseStorage";
-import { Role } from "@/graphql/generated";
+import { 
+  Role, 
+  AddNotificationDocument, 
+  type AddNotificationMutation, 
+  type AddNotificationMutationVariables 
+} from "@/graphql/generated";
+
 
 /* -------------------------------- GraphQL -------------------------------- */
 
@@ -37,7 +43,6 @@ const ADD_PROFILE = gql`
       id
       name
       img
-      # NOTE: In your schema Profile.email is a relation to User (field name is "email")
       email {
         id
         email
@@ -137,10 +142,149 @@ function mutateUrl(
 function roleBadgeClass(role: Role) {
   if (role === Role.Admin) return "bg-red-100 text-red-700";
   if (role === Role.Manager) return "bg-green-100 text-green-700";
-  // if (role === Role.Chef) return "bg-orange-100 text-orange-700";
   if (role === Role.Waiter) return "bg-blue-100 text-blue-700";
   if (role === Role.Delivery) return "bg-purple-100 text-purple-700";
   return "bg-slate-100 text-slate-700";
+}
+
+/* ------------------------------ Notify Modal ------------------------------ */
+
+function NotifyUserAction({ user }: { user: UserRow }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("INFO");
+  const [priority, setPriority] = useState("NORMAL");
+
+  const [{ fetching, }, executeMutation] = useMutation<
+    AddNotificationMutation,
+    AddNotificationMutationVariables
+  >(AddNotificationDocument);
+
+  const close = () => {
+    setIsOpen(false);
+    setMessage("");
+    setType("INFO");
+    setPriority("NORMAL");
+   
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user.email) {
+      toast.error("This user does not have a valid email.");
+      return;
+    }
+
+    if (!message.trim()) {
+      toast.error("Message is required.");
+      return;
+    }
+
+    const res = await executeMutation({
+      userEmail: user.email,
+      type,
+      message: message.trim(),
+      priority: priority as any, 
+      status: "UNREAD" as any,   
+    });
+
+    if (res.error) {
+      toast.error(res.error.message || "Failed to send notification.");
+    } else {
+      
+      toast.success(`Notification sent to ${user.name || user.email}`);
+      close();
+        
+    }
+  };
+
+  if (!user.email) {
+    return (
+      <button disabled className="p-2 text-slate-300 cursor-not-allowed rounded-md">
+        <HiOutlineBell className="h-5 w-5" />
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+        title={`Notify ${user.name || user.email}`}
+      >
+        <HiOutlineBell className="h-5 w-5" />
+      </button>
+
+      <Modal isOpen={isOpen} closeModal={close} title={`Notify ${user.name || user.email}`}>
+        <div className="w-[min(100vw-2rem,34rem)] max-w-full mx-auto max-h-[90vh] overflow-y-auto overscroll-contain p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">Type</label>
+                <div className="relative inline-block w-full">
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-slate-300 px-4 py-2 pr-8 leading-tight focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="INFO">Information</option>
+                    <option value="ALERT">Alert</option>
+                    <option value="PROMO">Promotion</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                    <GoChevronDown />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Priority</label>
+                <div className="relative inline-block w-full">
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="min-h-[44px] block w-full rounded-md appearance-none bg-white border border-slate-300 px-4 py-2 pr-8 leading-tight focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="NORMAL">Normal</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                    <GoChevronDown />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label">
+                Message <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                className="form-input min-h-[100px] resize-none focus:border-blue-500"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write your personalized notification here..."
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+              disabled={fetching}
+            >
+              <HiOutlineBell className="w-5 h-5" />
+              {fetching ? "Sending..." : "Send Notification"}
+            </button>
+          </form>
+        </div>
+      </Modal>
+    </>
+  );
 }
 
 /* ------------------------------ Add User Modal ---------------------------- */
@@ -195,7 +339,6 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
       let imgUrl: string | undefined;
       if (file) imgUrl = await SupabaseImageUpload(file);
 
-      // Create profile (and in your backend it may also create/connect the user by email)
       const res = await addProfile({
         email: normalizedEmail,
         name: name.trim() || undefined,
@@ -205,10 +348,8 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
 
       if (res.error) throw res.error;
 
-      // Try to get created user id from the profile relation (Profile.email -> User)
       const createdUserId = res.data?.addProfile?.email?.id;
 
-      // Update user fields (name/image) so the Users table displays nicely
       if (createdUserId) {
         const up = await updateUserProfile({
           id: createdUserId,
@@ -217,7 +358,6 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
         });
         if (up.error) throw up.error;
 
-        // Set role if not default
         if (role && role !== Role.User) {
           const rr = await editUserRole({ id: createdUserId, role });
           if (rr.error) throw rr.error;
@@ -239,7 +379,7 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
     <>
       <button
         type="button"
-        className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md bg-green-800 px-4 py-2 text-white hover:bg-green-700"
+        className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md bg-green-800 px-4 py-2 text-white hover:bg-green-700 transition-colors"
         onClick={() => setIsOpen(true)}
       >
         <HiOutlinePlus className="h-5 w-5" />
@@ -247,8 +387,7 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
       </button>
 
       <Modal isOpen={isOpen} closeModal={close} title="Add User">
-        {/* Mobile-safe modal wrapper */}
-        <div className="w-[min(100vw-2rem,34rem)] max-w-full mx-auto max-h-[90vh] overflow-y-auto overscroll-contain p-3 sm:p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <div className="w-[min(100vw-2rem,34rem)] max-w-full mx-auto   overscroll-contain p-3 sm:p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="form-label">Name</label>
@@ -301,7 +440,6 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
                   <option value={Role.User}>USER</option>
                   <option value={Role.Admin}>ADMIN</option>
                   <option value={Role.Manager}>MANAGER</option>
-                  {/* <option value={Role.Chef}>CHEF</option> */}
                   <option value={Role.Waiter}>WAITER</option>
                   <option value={Role.Delivery}>DELIVERY</option>
                 </select>
@@ -315,7 +453,7 @@ function AddUserModal({ canAdd, onCreated }: { canAdd: boolean; onCreated: () =>
 
             <button
               type="submit"
-              className="form-button w-full min-h-[44px]"
+              className="form-button w-full min-h-[44px] bg-green-600 hover:bg-green-700 transition-colors mb-2"
               disabled={saving}
             >
               {saving ? "Saving..." : "Create"}
@@ -346,14 +484,12 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
 
   const refetch = () => reexecuteQuery({ requestPolicy: "network-only" });
 
-  // URL state
   const qParam = sp.get("q") ?? "";
   const roleParam = sp.get("role");
   const sortParam = sp.get("sort") ?? "createdAt_desc";
   const page = clampInt(sp.get("page"), 1, 1, 9999);
   const take = clampInt(sp.get("take"), 20, 5, 100);
 
-  // Search draft (debounced URL update)
   const [qDraft, setQDraft] = useState(qParam);
   useEffect(() => setQDraft(qParam), [qParam]);
 
@@ -363,7 +499,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         const trimmed = qDraft.trim();
         if (trimmed) next.set("q", trimmed);
         else next.delete("q");
-        next.delete("page"); // reset page on search change
+        next.delete("page");
       });
     }, 350);
 
@@ -388,7 +524,6 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
       list = list.filter((u) => u.role === roleParam);
     }
 
-    // Sorting (client-side)
     switch (sortParam) {
       case "name_asc":
         list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
@@ -444,22 +579,8 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
 
   return (
     <TableWrapper title="All Users">
-      {/* Toolbar */}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          {/* Search */}
-          <div className="relative w-full sm:w-[320px]">
-            <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input
-              className="min-h-[44px] w-full rounded-md border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 focus:outline-none"
-              placeholder="Search name/email..."
-              value={qDraft}
-              onChange={(e) => setQDraft(e.target.value)}
-              inputMode="search"
-            />
-          </div>
-
-          {/* Role filter */}
           <div className="relative w-full sm:w-[210px]">
             <select
               value={roleParam ?? ""}
@@ -476,7 +597,6 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
               <option value="">All roles</option>
               <option value={Role.Admin}>ADMIN</option>
               <option value={Role.Manager}>MANAGER</option>
-              {/* <option value={Role.Chef}>CHEF</option> */}
               <option value={Role.Waiter}>WAITER</option>
               <option value={Role.Delivery}>DELIVERY</option>
               <option value={Role.User}>USER</option>
@@ -486,7 +606,6 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
             </div>
           </div>
 
-          {/* Sort */}
           <div className="relative w-full sm:w-[220px]">
             <select
               value={sortParam}
@@ -512,7 +631,6 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
             </div>
           </div>
 
-          {/* Page size */}
           <div className="relative w-full sm:w-[160px]">
             <select
               value={String(take)}
@@ -536,7 +654,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
 
           <button
             type="button"
-            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
             onClick={clearFilters}
           >
             Clear
@@ -546,7 +664,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
           <button
             type="button"
-            className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60 transition-colors"
             onClick={() => refetch()}
             disabled={fetching}
           >
@@ -554,12 +672,10 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
             Refresh
           </button>
 
-          {/* For safety: only ADMIN can create users */}
           <AddUserModal canAdd={currentUserRole === "ADMIN"} onCreated={refetch} />
         </div>
       </div>
 
-      {/* Info / Errors */}
       <div className="mb-3 text-sm text-slate-500 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <span>{fetching ? "Loading..." : `Showing ${pageItems.length} of ${total} result(s)`}</span>
         <span>
@@ -574,7 +690,7 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         </div>
       ) : null}
 
-      {/* Mobile cards */}
+      {/* Mobile view */}
       <div className="md:hidden space-y-3">
         {fetching && pageItems.length === 0 ? (
           Array.from({ length: 6 }).map((_, i) => (
@@ -632,14 +748,15 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
                   >
                     {user.role}
                   </span>
-
-                  <EditRoleModal
-                    user={user}
-                    currentUserId={currentUserId}
-                    onChanged={() => {
-                      refetch();
-                    }}
-                  />
+                  
+                  <div className="flex items-center gap-1">
+                    <NotifyUserAction user={user} />
+                    <EditRoleModal
+                      user={user}
+                      currentUserId={currentUserId}
+                      onChanged={() => refetch()}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -647,87 +764,82 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         )}
       </div>
 
-      {/* Desktop/table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full min-w-[720px] border text-left text-slate-500">
-          <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100">
+      {/* Desktop view */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-slate-200">
+        <table className="w-full min-w-[720px] text-left text-slate-500 bg-white">
+          <thead className="text-xs whitespace-nowrap text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
             <tr>
-              <th scope="col" className="px-3 lg:px-6 py-3">
-                Avatar
-              </th>
-              <th scope="col" className="px-3 lg:px-6 py-3">
-                Name
-              </th>
-              <th scope="col" className="px-3 lg:px-6 py-3">
-                Email
-              </th>
-              <th scope="col" className="px-3 lg:px-6 py-3">
-                Role
-              </th>
-              <th scope="col" className="px-3 lg:px-6 py-3">
-                Edit
-              </th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold">Avatar</th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold">Name</th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold">Email</th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold">Role</th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold text-center">Notify</th>
+              <th scope="col" className="px-3 lg:px-6 py-3 font-semibold text-center">Edit</th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
             {fetching && pageItems.length === 0 ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <tr className="bg-white" key={`skeleton-${i}`}>
-                  <td className="px-3 lg:px-6 py-2">
+                  <td className="px-3 lg:px-6 py-3">
                     <div className="h-12 w-12 rounded-full bg-slate-200 animate-pulse" />
                   </td>
-                  <td className="px-3 lg:px-6 py-2">
+                  <td className="px-3 lg:px-6 py-3">
                     <div className="h-4 w-44 bg-slate-200 animate-pulse rounded" />
                   </td>
-                  <td className="px-3 lg:px-6 py-2">
+                  <td className="px-3 lg:px-6 py-3">
                     <div className="h-4 w-60 bg-slate-200 animate-pulse rounded" />
                   </td>
-                  <td className="px-3 lg:px-6 py-2">
+                  <td className="px-3 lg:px-6 py-3">
                     <div className="h-4 w-24 bg-slate-200 animate-pulse rounded" />
                   </td>
-                  <td className="px-3 lg:px-6 py-2">
-                    <div className="h-9 w-9 bg-slate-200 animate-pulse rounded-md" />
+                  <td className="px-3 lg:px-6 py-3 text-center">
+                    <div className="h-9 w-9 bg-slate-200 animate-pulse rounded-md mx-auto" />
+                  </td>
+                  <td className="px-3 lg:px-6 py-3 text-center">
+                    <div className="h-9 w-9 bg-slate-200 animate-pulse rounded-md mx-auto" />
                   </td>
                 </tr>
               ))
             ) : pageItems.length === 0 ? (
               <tr className="bg-white">
-                <td className="px-3 lg:px-6 py-6" colSpan={5}>
+                <td className="px-3 lg:px-6 py-6 text-center text-slate-500" colSpan={6}>
                   No users found.
                 </td>
               </tr>
             ) : (
               pageItems.map((user) => (
-                <tr className="bg-white border-b last:border-b-0" key={user.id}>
-                  <td className="px-3 lg:px-6 py-2">
+                <tr className="bg-white hover:bg-slate-50 transition-colors" key={user.id}>
+                  <td className="px-3 lg:px-6 py-3">
                     <Image
                       src={user.image || "/img/humans/pro.jpg"}
                       width={50}
                       height={50}
                       alt="avatar"
-                      className="h-12 w-12 rounded-full object-cover"
+                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border border-slate-100"
                     />
                   </td>
-                  <td className="px-3 lg:px-6 py-2">{user.name || "-"}</td>
-                  <td className="px-3 lg:px-6 py-2 break-all">{user.email || "-"}</td>
-                  <td className="px-3 lg:px-6 py-2">
+                  <td className="px-3 lg:px-6 py-3 text-sm font-medium text-slate-800">{user.name || "-"}</td>
+                  <td className="px-3 lg:px-6 py-3 text-sm break-all">{user.email || "-"}</td>
+                  <td className="px-3 lg:px-6 py-3 text-sm">
                     <span
                       className={[
-                        "inline-flex px-2 py-1 rounded-md text-xs border border-slate-200",
+                        "inline-flex px-2 py-1 rounded-md text-xs font-medium border border-slate-200",
                         roleBadgeClass(user.role),
                       ].join(" ")}
                     >
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-3 lg:px-6 py-2 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-3 whitespace-nowrap text-center">
+                    <NotifyUserAction user={user} />
+                  </td>
+                  <td className="px-3 lg:px-6 py-3 whitespace-nowrap text-center">
                     <EditRoleModal
                       user={user}
                       currentUserId={currentUserId}
-                      onChanged={() => {
-                        refetch();
-                      }}
+                      onChanged={() => refetch()}
                     />
                   </td>
                 </tr>
@@ -737,25 +849,24 @@ const AdminUserTable = ({ currentUserId = null, currentUserRole = null }: Props)
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 ? (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
             disabled={safePage <= 1}
             onClick={() => setPage(safePage - 1)}
           >
-            Prev
+            Previous
           </button>
 
-          <div className="text-sm text-slate-500 text-center">
-            Page {safePage} / {totalPages}
+          <div className="text-sm font-medium text-slate-500 text-center">
+            Page {safePage} of {totalPages}
           </div>
 
           <button
             type="button"
-            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[44px] rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
             disabled={safePage >= totalPages}
             onClick={() => setPage(safePage + 1)}
           >

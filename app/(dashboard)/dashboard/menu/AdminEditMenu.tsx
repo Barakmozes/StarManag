@@ -214,7 +214,7 @@ const AdminEditMenu = ({ menu }: Props) => {
 
       <Modal isOpen={isOpen} title={`Edit Menu: ${menu.title}`} closeModal={closeModal}>
         {/* Ensures inner scroll and fixes the double scrollbar bug visually */}
-        <div className="w-full max-w-4xl max-h-[85vh] overflow-y-auto sm:rounded-b-xl custom-scrollbar">
+        <div className="w-full max-w-4xl  sm:rounded-b-xl custom-scrollbar">
           <form onSubmit={handleEditMenu} className="p-4 sm:p-6 space-y-6">
             
             {/* Image Preview Block */}

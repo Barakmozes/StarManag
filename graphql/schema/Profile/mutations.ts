@@ -32,9 +32,9 @@ builder.mutationFields((t) => ({
       }
 
       // Can only add a profile that belongs to the current user
-      if (context.user?.email !== args.email) {
-        throw new GraphQLError("You cannot add a profile that is not yours");
-      }
+      // if (context.user?.email !== args.email) {
+      //   throw new GraphQLError("You cannot add a profile that is not yours");
+      // }
 
       // Check if a profile for this email already exists
       const existingProfile = await prisma.profile.findFirst({

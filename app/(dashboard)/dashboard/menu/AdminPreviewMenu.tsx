@@ -32,70 +32,114 @@ const AdminPreviewMenu = ({ menu }: Props) => {
       <button
         type="button"
         onClick={openModal}
-        className="inline-flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-md hover:bg-slate-100 transition"
+        className="inline-flex items-center justify-center h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-slate-100 transition-colors"
         aria-label={`Preview ${menu.title}`}
       >
-        <HiOutlineEye className="h-6 w-6 text-slate-700" />
+        <HiOutlineEye className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600 hover:text-slate-900 transition-colors" />
       </button>
 
-      <Modal isOpen={isOpen} closeModal={closeModal} title={menu.title}>
-        {/* Mobile-safe modal wrapper */}
-        <div className="w-[min(100vw-2rem,40rem)] max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-          <div className="relative">
+      <Modal isOpen={isOpen} closeModal={closeModal} title="Menu Preview">
+        {/* Inner container with clean scrolling, avoids double scrollbars */}
+        <div className="w-full max-w-2xl  sm:rounded-b-xl custom-scrollbar flex flex-col bg-white">
+          
+          {/* Image Header Block */}
+          <div className="relative w-full h-52 sm:h-72 bg-gray-100 shrink-0 border-b border-gray-100">
             <Image
               src={menu.image}
               alt={menu.title}
-              width={960}
-              height={540}
-              className="h-48 sm:h-56 w-full object-cover rounded-t-lg"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 42rem"
+              priority
             />
+            {menu.onPromo && (
+              <div className="absolute top-4 left-4 bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md uppercase tracking-wider">
+                Promo Active
+              </div>
+            )}
           </div>
 
-          <div className="p-3 sm:p-4">
-            <div className="my-2">
-              <h3 className="font-semibold text-gray-600">Price:</h3>
-              {menu.sellingPrice ? (
-                <div className="flex items-center gap-2">
-                  <p className="text-slate-400 line-through">${menu.price}</p>
-                  <p className="text-green-600 font-semibold">${menu.sellingPrice}</p>
+          {/* Content Body */}
+          <div className="p-5 sm:p-7 space-y-6">
+            
+            {/* Top Info: Category, Title & Price */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+              <div className="flex-1">
+                <span className="inline-block bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-2 uppercase tracking-wide">
+                  {menu.category}
+                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                  {menu.title}
+                </h3>
+              </div>
+              
+              <div className="text-left sm:text-right shrink-0">
+                {menu.sellingPrice ? (
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3 sm:gap-0.5">
+                    <span className="text-2xl sm:text-3xl font-bold text-green-600">
+                      ${menu.sellingPrice.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-gray-400 line-through font-medium">
+                      ${menu.price.toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    ${menu.price.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* Descriptions Section */}
+            <div className="space-y-5">
+              {menu.shortDescr && (
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                    Short Description
+                  </h4>
+                  <p className="text-gray-800 font-medium leading-relaxed text-base sm:text-lg">
+                    {menu.shortDescr}
+                  </p>
                 </div>
-              ) : (
-                <p className="text-green-600 font-semibold">${menu.price}</p>
+              )}
+              
+              {menu.longDescr && (
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                    Detailed Description
+                  </h4>
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed whitespace-pre-line">
+                    {menu.longDescr}
+                  </p>
+                </div>
               )}
             </div>
 
-            <div className="my-2">
-              <h3 className="font-semibold text-gray-600">Long Description:</h3>
-              <p className="text-sm text-gray-400 break-words">
-                {menu.longDescr || "-"}
-              </p>
-            </div>
-
-            <div className="my-2">
-              <h3 className="font-semibold text-gray-600">Short Description:</h3>
-              <p className="text-sm text-gray-400 break-words">{menu.shortDescr}</p>
-            </div>
-
-            <div className="my-4">
-              <h3 className="font-semibold text-gray-600">Category:</h3>
-              <p className="text-gray-500 break-words">{menu.category}</p>
-            </div>
-
-            {menu.prepType?.length ? (
-              <div className="my-4">
-                <h3 className="font-semibold text-gray-600">Preparation Types:</h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {menu.prepType.map((p) => (
-                    <span
-                      key={p}
-                      className="bg-green-100 text-green-700 text-xs font-medium px-3 py-1 rounded"
-                    >
-                      {p}
-                    </span>
-                  ))}
+            {/* Preparation Types */}
+            {menu.prepType && menu.prepType.length > 0 && (
+              <>
+                <hr className="border-gray-100" />
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    Available Preparations
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {menu.prepType.map((p) => (
+                      <span
+                        key={p}
+                        className="bg-green-50 text-green-700 border border-green-200 text-sm font-medium px-3.5 py-1.5 rounded-full"
+                      >
+                        {p}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              </>
+            )}
+
           </div>
         </div>
       </Modal>
