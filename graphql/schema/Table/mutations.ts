@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
+import { OrderStatus } from "@prisma/client";
 
 /**
  * Mutation Fields for Table
@@ -164,6 +165,24 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("Table not found");
       }
 
+      if (!args.reserved) {
+        const unpaidOpenOrders = await prisma.order.count({
+          where: {
+            tableId: args.id,
+            paid: false,
+            status: {
+              notIn: [OrderStatus.CANCELLED, OrderStatus.COMPLETED],
+            },
+          },
+        });
+
+        if (unpaidOpenOrders > 0) {
+          throw new GraphQLError(
+            `Cannot release table #${table.tableNumber}: ${unpaidOpenOrders} unpaid order(s) remain`,
+          );
+        }
+      }
+
       // Update the reserved field
       const updatedTable = await prisma.table.update({
         where: { id: args.id },
@@ -211,24 +230,29 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("Table not found");
       }
 
-      // 3. Create the new Order
-      //    Typically set an initial status (e.g. PENDING, PREPARING) for a new in-restaurant order
-      const newOrder = await prisma.order.create({
-        ...query,
-        data: {
-          orderNumber: args.orderNumber,
-          cart: args.cart, // Ensure it's an array if needed
-          userName: args.userName,
-          userEmail: args.userEmail,
-          tableId: args.tableId, // Link to the table
-          status: "PREPARING",   // or "PENDING" or whichever status you use
-          serviceFee: args.serviceFee,
-          note: args.note ?? undefined,
-          discount: args.discount ?? undefined,
-          total: args.total,
-          paymentToken: args.paymentToken ?? undefined,
-        },
-      });
+      // 3. Create order + ensure table becomes occupied in one transaction.
+      const [newOrder] = await prisma.$transaction([
+        prisma.order.create({
+          ...query,
+          data: {
+            orderNumber: args.orderNumber,
+            cart: args.cart,
+            userName: args.userName,
+            userEmail: args.userEmail,
+            tableId: args.tableId,
+            status: "PREPARING",
+            serviceFee: args.serviceFee,
+            note: args.note ?? undefined,
+            discount: args.discount ?? undefined,
+            total: args.total,
+            paymentToken: args.paymentToken ?? undefined,
+          },
+        }),
+        prisma.table.update({
+          where: { id: args.tableId },
+          data: { reserved: true },
+        }),
+      ]);
 
       return newOrder;
     },
