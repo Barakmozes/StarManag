@@ -1512,7 +1512,7 @@ export type GetTableQuery = { __typename?: 'Query', getTable: { __typename?: 'Ta
 export type GetTablesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTablesQuery = { __typename?: 'Query', getTables: Array<{ __typename?: 'Table', areaId: string, createdAt: any, diners: number, id: string, position: any, reserved: boolean, specialRequests: Array<string>, tableNumber: number, updatedAt: any }> };
+export type GetTablesQuery = { __typename?: 'Query', getTables: Array<{ __typename?: 'Table', areaId: string, createdAt: any, diners: number, id: string, position: any, reserved: boolean, specialRequests: Array<string>, tableNumber: number, unpaidOrdersCount: number, updatedAt: any }> };
 
 export type GetTableOrderQueryVariables = Exact<{
   tableId: Scalars['String']['input'];
@@ -2485,6 +2485,7 @@ export const GetTablesDocument = gql`
     reserved
     specialRequests
     tableNumber
+    unpaidOrdersCount
     updatedAt
   }
 }

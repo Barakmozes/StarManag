@@ -190,6 +190,7 @@ export default function ZoneRestaurant() {
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
       dirty: false,
+      unpaidOrdersCount: t.unpaidOrdersCount ?? 0,
     }));
 
     setTables(fetched);
@@ -509,7 +510,7 @@ export default function ZoneRestaurant() {
           overviewMode === "AVAILABLE"
             ? group.filter((t) => !t.reserved)
             : overviewMode === "UNPAID"
-            ? group.filter((t) => t.reserved) // מציג רק תפוסים/לא שולמו
+            ? group.filter((t) => (t.unpaidOrdersCount ?? 0) > 0) // Tables with unpaid orders only
             : group; // מציג הכל
 
         // אם אין שולחנות באזור זה לאחר הסינון, מסתיר את האזור
@@ -556,7 +557,7 @@ export default function ZoneRestaurant() {
         const matchesSearch = !areaSearch || areaName.toLowerCase().includes(areaSearch.toLowerCase());
         // בדיקה האם הכל הוסתר ע"י הפילטר (פנוי/תפוס)
         const list = overviewMode === "AVAILABLE" ? group.filter(t => !t.reserved) : 
-                     overviewMode === "UNPAID" ? group.filter(t => t.reserved) : group;
+                     overviewMode === "UNPAID" ? group.filter(t => (t.unpaidOrdersCount ?? 0) > 0) : group;
         
         return !matchesSearch || list.length === 0;
     }) && (
