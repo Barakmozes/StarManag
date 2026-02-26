@@ -33,7 +33,7 @@ query GetTables {
     areaId
     reserved
     specialRequests
-+   unpaidOrdersCount
+    unpaidOrdersCount
     position
     createdAt
     updatedAt
