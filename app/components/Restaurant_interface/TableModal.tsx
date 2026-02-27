@@ -75,7 +75,10 @@ export default function TableModal({
     requestPolicy: 'cache-and-network', 
   });
 
-  const activeOrders = ordersData?.getTableOrder || [];
+  const activeOrders = useMemo(
+    () => ordersData?.getTableOrder ?? [],
+    [ordersData?.getTableOrder],
+  );
 
   // --- 2. חישוב נתונים ---
   const stats = useMemo(() => {
@@ -239,22 +242,10 @@ export default function TableModal({
     )}
   </div>
 
-  {/* צד שמאל: כפתור פעולה (מחליף את ToggleReservation הישן) */}
-  {/* אם הלוגיקה בתוך ToggleReservation, העתק את ה-className לכפתור שם */}
-  <button
-    onClick={() => { /* כאן תבוא הפונקציה של השינוי סטטוס */ }}
-    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95"
-  >
-    {/* אייקון משתנה בהתאם למצב */}
-    {table.reserved ? (
-      <>
-<ToggleReservation table={table}/>   </>
-    ) : (
-      <>
-<ToggleReservation table={table}/>         </>
-      
-    )}
-  </button>
+  {/* צד שמאל: כפתור פעולה */}
+  <div className="w-[140px]">
+    <ToggleReservation table={table as any} />
+  </div>
   
 
 </div>
@@ -265,8 +256,8 @@ export default function TableModal({
                         <div className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-slate-50 transition-colors">
                             <span className="text-[10px] text-slate-400 font-bold uppercase mb-1">לתשלום</span>
                             <div className="flex items-center gap-1 text-emerald-600">
-                               $ 
-                                <span className="text-lg font-black leading-none">{loadingOrders ? "-" : stats.totalAmount}</span>
+                               ₪
+                                <span className="text-lg font-black leading-none">{loadingOrders ? "-" : stats.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
                             {/* --- פריטים / עגלה (לחצן פעיל) --- */}

@@ -25,7 +25,7 @@ export default async function Home() {
           <Promos />
         </>
       ) : (
-        <ZoneRestaurant />
+        <ZoneRestaurant userRole={user?.role ?? null} />
       
       )}
    <Categories />

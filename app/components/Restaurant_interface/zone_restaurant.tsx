@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@urql/next";
 import toast from "react-hot-toast";
 // שימוש ב-Heroicons 2 המודרניים והנקיים
@@ -47,8 +47,12 @@ import { HiViewBoards } from "react-icons/hi";
 import { BsSearch } from "react-icons/bs";
 
 type OverviewMode = "NONE" | "ALL" | "AVAILABLE" | "UNPAID";
-export default function ZoneRestaurant() {
-  const canManage = true;
+type ZoneRestaurantProps = {
+  userRole?: string | null;
+};
+
+export default function ZoneRestaurant({ userRole }: ZoneRestaurantProps) {
+  const canManage = userRole === "ADMIN" || userRole === "MANAGER";
   const canEditLayout = canManage;
 
   // Zustand store
@@ -186,6 +190,7 @@ export default function ZoneRestaurant() {
       diners: t.diners,
       reserved: t.reserved,
       specialRequests: t.specialRequests ?? [],
+      unpaidOrdersCount: t.unpaidOrdersCount ?? 0,
       position: (t.position as any) ?? { x: 0, y: 0 },
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
@@ -207,6 +212,10 @@ export default function ZoneRestaurant() {
     [tables],
   );
   const canUndo = !!lastMoveRef.current;
+  const hasUnpaidOrders = useCallback(
+    (table: TableInStore) => (table.unpaidOrdersCount ?? 0) > 0,
+    [],
+  );
 
   const countsByAreaId = useMemo(() => {
     const map: Record<string, number> = {};
@@ -217,9 +226,10 @@ export default function ZoneRestaurant() {
   const visibleTables = useMemo(() => {
     if (overviewMode === "ALL") return tables;
     if (overviewMode === "AVAILABLE") return tables.filter((t) => !t.reserved);
+    if (overviewMode === "UNPAID") return tables.filter(hasUnpaidOrders);
     if (!selectedArea) return [];
     return tables.filter((t) => t.areaId === selectedArea.id);
-  }, [tables, selectedArea, overviewMode]);
+  }, [tables, selectedArea, overviewMode, hasUnpaidOrders]);
 
   const groupedTables = useMemo(() => {
     const groups: Record<string, TableInStore[]> = {};
@@ -509,7 +519,7 @@ export default function ZoneRestaurant() {
           overviewMode === "AVAILABLE"
             ? group.filter((t) => !t.reserved)
             : overviewMode === "UNPAID"
-            ? group.filter((t) => t.reserved) // מציג רק תפוסים/לא שולמו
+            ? group.filter(hasUnpaidOrders)
             : group; // מציג הכל
 
         // אם אין שולחנות באזור זה לאחר הסינון, מסתיר את האזור
@@ -556,7 +566,7 @@ export default function ZoneRestaurant() {
         const matchesSearch = !areaSearch || areaName.toLowerCase().includes(areaSearch.toLowerCase());
         // בדיקה האם הכל הוסתר ע"י הפילטר (פנוי/תפוס)
         const list = overviewMode === "AVAILABLE" ? group.filter(t => !t.reserved) : 
-                     overviewMode === "UNPAID" ? group.filter(t => t.reserved) : group;
+                     overviewMode === "UNPAID" ? group.filter(hasUnpaidOrders) : group;
         
         return !matchesSearch || list.length === 0;
     }) && (

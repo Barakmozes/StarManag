@@ -33,7 +33,7 @@ query GetTables {
     areaId
     reserved
     specialRequests
-+   unpaidOrdersCount
+    unpaidOrdersCount
     position
     createdAt
     updatedAt
@@ -144,7 +144,7 @@ mutation CancelReservation($cancelReservationId: String!) {
     reservationTime
     status
     table {
-      
+      tableNumber
     }
     tableId
     updatedAt

@@ -130,24 +130,14 @@ builder.queryFields((t) => ({
       tableId: t.arg.string({ required: true }),
     },
     resolve: async (query, _parent, args) => {
-      // ✅ תיקון: שימוש ב-Enum של Prisma במקום מחרוזות רגילות
-      const activeStatuses = [
-        OrderStatus.CANCELLED,
-        OrderStatus.COLLECTED,
-        OrderStatus.DELIVERED,
-        OrderStatus.PENDING,
-        OrderStatus.PREPARING,
-        OrderStatus.READY,
-        OrderStatus.UNASSIGNED,
-        OrderStatus.SERVED // אופציונלי: תלוי אם את רוצה להציג גם מנות שהוגשו אך לא שולמו
-      ];
-
       const orders = await prisma.order.findMany({
         ...query,
         where: {
           tableId: args.tableId,
-          // כעת TypeScript יזהה שזהו המערך הנכון
-          status: { in: activeStatuses }, 
+          paid: false,
+          status: {
+            notIn: [OrderStatus.CANCELLED, OrderStatus.COMPLETED],
+          },
         },
         orderBy: { createdAt: "desc" },
       });
