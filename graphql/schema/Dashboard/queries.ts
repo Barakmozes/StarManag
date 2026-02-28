@@ -1,6 +1,6 @@
 import { builder } from "../../builder";
 import prisma from "../../../lib/prisma";
-import { OrderStatus, Prisma, Role } from "@prisma/client";
+import { OrderStatus, Prisma, Role, TimeEntryStatus, ShiftStatus } from "@prisma/client";
 import { RevenueGroupByEnum } from "./enum";
 
 /* ---------------------------------------------
@@ -148,6 +148,36 @@ const DashboardRevenueCompareRef = builder
         type: [DashboardRevenueComparePointRef],
         resolve: (p) => p.points,
       }),
+    }),
+  });
+
+/* ---------------------------------------------
+ * Employee Dashboard KPIs
+ * -------------------------------------------- */
+
+type EmployeeDashboardKpisShape = {
+  totalShifts: number;
+  publishedShifts: number;
+  cancelledShifts: number;
+  totalHoursWorked: number;
+  avgHoursPerEmployee: number;
+  activeClockIns: number;
+  staffCount: number;
+  uniqueEmployeesWorked: number;
+};
+
+const EmployeeDashboardKpisRef = builder
+  .objectRef<EmployeeDashboardKpisShape>("EmployeeDashboardKpis")
+  .implement({
+    fields: (t) => ({
+      totalShifts: t.int({ resolve: (p) => p.totalShifts }),
+      publishedShifts: t.int({ resolve: (p) => p.publishedShifts }),
+      cancelledShifts: t.int({ resolve: (p) => p.cancelledShifts }),
+      totalHoursWorked: t.float({ resolve: (p) => p.totalHoursWorked }),
+      avgHoursPerEmployee: t.float({ resolve: (p) => p.avgHoursPerEmployee }),
+      activeClockIns: t.int({ resolve: (p) => p.activeClockIns }),
+      staffCount: t.int({ resolve: (p) => p.staffCount }),
+      uniqueEmployeesWorked: t.int({ resolve: (p) => p.uniqueEmployeesWorked }),
     }),
   });
 
@@ -592,6 +622,84 @@ builder.queryFields((t) => ({
         revenue: Number(r.revenue ?? 0),
         orders: Number(r.orders ?? 0),
       }));
+    },
+  }),
+
+  // Employee Dashboard KPIs
+  getEmployeeDashboardKpis: t.field({
+    type: EmployeeDashboardKpisRef,
+    args: {
+      from: t.arg({ type: "DateTime", required: true }),
+      to: t.arg({ type: "DateTime", required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const ctxVal = await ctx;
+      assertDashboardRole(ctxVal?.user?.role);
+
+      const from = asDate(args.from);
+      const to = asDate(args.to);
+
+      const [
+        totalShifts,
+        publishedShifts,
+        cancelledShifts,
+        timeEntries,
+        activeClockIns,
+        staffCount,
+      ] = await Promise.all([
+        prisma.shift.count({
+          where: { startTime: { gte: from }, endTime: { lte: to } },
+        }),
+        prisma.shift.count({
+          where: {
+            startTime: { gte: from },
+            endTime: { lte: to },
+            status: ShiftStatus.PUBLISHED,
+          },
+        }),
+        prisma.shift.count({
+          where: {
+            startTime: { gte: from },
+            endTime: { lte: to },
+            status: ShiftStatus.CANCELLED,
+          },
+        }),
+        prisma.timeEntry.findMany({
+          where: {
+            clockIn: { gte: from },
+            clockOut: { lte: to },
+            status: { in: [TimeEntryStatus.COMPLETED, TimeEntryStatus.EDITED] },
+          },
+          select: { hoursWorked: true, userEmail: true },
+        }),
+        prisma.timeEntry.count({
+          where: { status: TimeEntryStatus.ACTIVE },
+        }),
+        prisma.user.count({
+          where: {
+            role: { in: [Role.ADMIN, Role.MANAGER, Role.WAITER, Role.DELIVERY] },
+          },
+        }),
+      ]);
+
+      const totalHoursWorked = timeEntries.reduce(
+        (sum, e) => sum + (e.hoursWorked ?? 0),
+        0
+      );
+      const uniqueEmployeesWorked = new Set(timeEntries.map((e) => e.userEmail)).size;
+      const avgHoursPerEmployee =
+        uniqueEmployeesWorked > 0 ? totalHoursWorked / uniqueEmployeesWorked : 0;
+
+      return {
+        totalShifts,
+        publishedShifts,
+        cancelledShifts,
+        totalHoursWorked,
+        avgHoursPerEmployee,
+        activeClockIns,
+        staffCount,
+        uniqueEmployeesWorked,
+      };
     },
   }),
 

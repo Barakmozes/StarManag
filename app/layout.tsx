@@ -42,7 +42,7 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full scroll-smooth`}
     >
       <body className="min-h-full font-sans antialiased bg-white text-slate-900 selection:bg-green-100 selection:text-green-900">
-        <Providers graphqlApiKey={graphqlApiKey}>
+        <Providers >
           {/* שימוש ב-Main כדי להבטיח נגישות ומבנה סמנטי */}
           <main className="relative flex min-h-screen flex-col">
             {children}

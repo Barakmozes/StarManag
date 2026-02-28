@@ -1,0 +1,141 @@
+# --- ShiftTemplate Queries ---
+
+query GetShiftTemplates($active: Boolean) {
+  getShiftTemplates(active: $active) {
+    id
+    name
+    description
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    area {
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetShiftTemplate($id: String!) {
+  getShiftTemplate(id: $id) {
+    id
+    name
+    description
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    area {
+      name
+    }
+    shifts {
+      id
+      startTime
+      endTime
+      status
+      userEmail
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+# --- ShiftTemplate Mutations ---
+
+mutation CreateShiftTemplate(
+  $name: String!
+  $dayOfWeek: Int!
+  $startTime: String!
+  $endTime: String!
+  $defaultRole: Role
+  $areaId: String
+  $description: String
+) {
+  createShiftTemplate(
+    name: $name
+    dayOfWeek: $dayOfWeek
+    startTime: $startTime
+    endTime: $endTime
+    defaultRole: $defaultRole
+    areaId: $areaId
+    description: $description
+  ) {
+    id
+    name
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    createdAt
+  }
+}
+
+mutation EditShiftTemplate(
+  $id: String!
+  $name: String
+  $dayOfWeek: Int
+  $startTime: String
+  $endTime: String
+  $defaultRole: Role
+  $areaId: String
+  $description: String
+) {
+  editShiftTemplate(
+    id: $id
+    name: $name
+    dayOfWeek: $dayOfWeek
+    startTime: $startTime
+    endTime: $endTime
+    defaultRole: $defaultRole
+    areaId: $areaId
+    description: $description
+  ) {
+    id
+    name
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    description
+    updatedAt
+  }
+}
+
+mutation DeleteShiftTemplate($id: String!) {
+  deleteShiftTemplate(id: $id) {
+    id
+  }
+}
+
+mutation ToggleShiftTemplateActive($id: String!) {
+  toggleShiftTemplateActive(id: $id) {
+    id
+    active
+    updatedAt
+  }
+}
+
+mutation GenerateShiftsFromTemplate(
+  $templateId: String!
+  $weekStart: DateTime!
+  $userEmails: [String!]!
+) {
+  generateShiftsFromTemplate(
+    templateId: $templateId
+    weekStart: $weekStart
+    userEmails: $userEmails
+  )
+}

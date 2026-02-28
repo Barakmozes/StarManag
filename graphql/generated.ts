@@ -51,6 +51,17 @@ export type AreaOrderByInput = {
   createdAt?: InputMaybe<SortOrder>;
 };
 
+export type AttendanceSummary = {
+  __typename?: 'AttendanceSummary';
+  attendanceRate: Scalars['Float']['output'];
+  avgHoursPerShift: Scalars['Float']['output'];
+  lateCount: Scalars['Int']['output'];
+  missedCount: Scalars['Int']['output'];
+  overtimeHours: Scalars['Float']['output'];
+  shiftCount: Scalars['Int']['output'];
+  totalHours: Scalars['Float']['output'];
+};
+
 export type BasicArea = {
   __typename?: 'BasicArea';
   createdAt: Scalars['DateTime']['output'];
@@ -130,6 +141,18 @@ export type Delivery = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type EmployeeDashboardKpis = {
+  __typename?: 'EmployeeDashboardKpis';
+  activeClockIns: Scalars['Int']['output'];
+  avgHoursPerEmployee: Scalars['Float']['output'];
+  cancelledShifts: Scalars['Int']['output'];
+  publishedShifts: Scalars['Int']['output'];
+  staffCount: Scalars['Int']['output'];
+  totalHoursWorked: Scalars['Float']['output'];
+  totalShifts: Scalars['Int']['output'];
+  uniqueEmployeesWorked: Scalars['Int']['output'];
+};
+
 export type Favorite = {
   __typename?: 'Favorite';
   id: Scalars['String']['output'];
@@ -182,16 +205,23 @@ export type Mutation = {
   assignDriverToOrder: Delivery;
   callWaitlistEntry: Waitlist;
   cancelReservation: Reservation;
+  cancelShift: Shift;
   cancelWaitlistEntry: Waitlist;
+  clockIn: TimeEntry;
+  clockOut: TimeEntry;
   completeReservation: Reservation;
+  createShift: Shift;
+  createShiftTemplate: ShiftTemplate;
   deleteArea: Area;
   deleteCategory: Category;
   deleteGridConfig: GridConfig;
   deleteMenu: Menu;
   deleteNotification: Notification;
   deleteRestaurant: Restaurant;
+  deleteShiftTemplate: ShiftTemplate;
   deleteTable: Table;
   deleteTableUsage: TableUsage;
+  deleteTimeEntry: TimeEntry;
   deleteUser: User;
   editArea: Area;
   editCategory: Category;
@@ -202,18 +232,25 @@ export type Mutation = {
   editProfile: Profile;
   editReservation: Reservation;
   editRestaurant: Restaurant;
+  editShift: Shift;
+  editShiftTemplate: ShiftTemplate;
   editTable: Table;
+  editTimeEntry: TimeEntry;
   editUserRole: User;
+  /** Generate Shift records for a week from a template. Returns count of shifts created. */
+  generateShiftsFromTemplate: Scalars['Int']['output'];
   incrementUsageCount: TableUsage;
   markAllNotificationsAsRead: Scalars['Int']['output'];
   markDeliveryDelivered: Order;
   markDeliveryReady: Order;
   markNotificationAsRead: Notification;
   movePositionTable: Table;
+  publishShifts: Scalars['Int']['output'];
   removeDriverFromOrder: Scalars['Boolean']['output'];
   removeFavorite: Favorite;
   removeWaitlistEntry: Waitlist;
   seatWaitlistEntry: Waitlist;
+  toggleShiftTemplateActive: ShiftTemplate;
   toggleTableReservation: Table;
   updateManyTables: Array<Table>;
   updateNotification: Notification;
@@ -390,13 +427,50 @@ export type MutationCancelReservationArgs = {
 };
 
 
+export type MutationCancelShiftArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationCancelWaitlistEntryArgs = {
   id: Scalars['String']['input'];
 };
 
 
+export type MutationClockInArgs = {
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationClockOutArgs = {
+  note?: InputMaybe<Scalars['String']['input']>;
+  timeEntryId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationCompleteReservationArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationCreateShiftArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  endTime: Scalars['DateTime']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  shiftRole?: InputMaybe<Role>;
+  startTime: Scalars['DateTime']['input'];
+  userEmail: Scalars['String']['input'];
+};
+
+
+export type MutationCreateShiftTemplateArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  dayOfWeek: Scalars['Int']['input'];
+  defaultRole?: InputMaybe<Role>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endTime: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  startTime: Scalars['String']['input'];
 };
 
 
@@ -430,12 +504,22 @@ export type MutationDeleteRestaurantArgs = {
 };
 
 
+export type MutationDeleteShiftTemplateArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteTableArgs = {
   id: Scalars['String']['input'];
 };
 
 
 export type MutationDeleteTableUsageArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTimeEntryArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -524,6 +608,29 @@ export type MutationEditRestaurantArgs = {
 };
 
 
+export type MutationEditShiftArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  endTime?: InputMaybe<Scalars['DateTime']['input']>;
+  id: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  shiftRole?: InputMaybe<Role>;
+  startTime?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<ShiftStatus>;
+};
+
+
+export type MutationEditShiftTemplateArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  dayOfWeek?: InputMaybe<Scalars['Int']['input']>;
+  defaultRole?: InputMaybe<Role>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  startTime?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationEditTableArgs = {
   areaId?: InputMaybe<Scalars['String']['input']>;
   diners?: InputMaybe<Scalars['Int']['input']>;
@@ -535,9 +642,24 @@ export type MutationEditTableArgs = {
 };
 
 
+export type MutationEditTimeEntryArgs = {
+  clockIn?: InputMaybe<Scalars['DateTime']['input']>;
+  clockOut?: InputMaybe<Scalars['DateTime']['input']>;
+  id: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationEditUserRoleArgs = {
   id: Scalars['String']['input'];
   role: Role;
+};
+
+
+export type MutationGenerateShiftsFromTemplateArgs = {
+  templateId: Scalars['String']['input'];
+  userEmails: Array<Scalars['String']['input']>;
+  weekStart: Scalars['DateTime']['input'];
 };
 
 
@@ -574,6 +696,11 @@ export type MutationMovePositionTableArgs = {
 };
 
 
+export type MutationPublishShiftsArgs = {
+  ids: Array<Scalars['String']['input']>;
+};
+
+
 export type MutationRemoveDriverFromOrderArgs = {
   orderNumber: Scalars['String']['input'];
 };
@@ -591,6 +718,11 @@ export type MutationRemoveWaitlistEntryArgs = {
 
 
 export type MutationSeatWaitlistEntryArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationToggleShiftTemplateActiveArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -723,11 +855,13 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  getActiveClockIn?: Maybe<TimeEntry>;
   getAllTableUsages: Array<TableUsage>;
   getArea: Area;
   getAreas: Array<Area>;
   getAreasNameDescription: Array<BasicArea>;
   getAreasWithAvailability: Array<AreaAvailability>;
+  getAttendanceSummary: AttendanceSummary;
   getAvailableTables: Array<Table>;
   getAvailableTablesForReservation: Array<Table>;
   getCategories: Array<Category>;
@@ -738,6 +872,7 @@ export type Query = {
   getDashboardRevenue: Array<DashboardRevenuePoint>;
   getDashboardRevenueCompare: DashboardRevenueCompare;
   getDeliveryOrders: QueryGetDeliveryOrdersConnection;
+  getEmployeeDashboardKpis: EmployeeDashboardKpis;
   getFavorites: Array<Favorite>;
   getGridConfig: GridConfig;
   getGridConfigByArea?: Maybe<GridConfig>;
@@ -745,6 +880,8 @@ export type Query = {
   getMenu: Menu;
   getMenuUserFavorites: Array<Menu>;
   getMenus: QueryGetMenusConnection;
+  getMyShifts: QueryGetMyShiftsConnection;
+  getMyTimeEntries: QueryGetMyTimeEntriesConnection;
   getNotification: Notification;
   getNotifications: Array<Notification>;
   getOrder: Order;
@@ -756,12 +893,18 @@ export type Query = {
   getReservations: Array<Reservation>;
   getRestaurant: Restaurant;
   getRestaurants: Array<Restaurant>;
+  getShift: Shift;
+  getShiftTemplate: ShiftTemplate;
+  getShiftTemplates: Array<ShiftTemplate>;
+  getShifts: QueryGetShiftsConnection;
   getTable: Table;
   getTableOrder: Array<Order>;
   getTableReservations: Array<Reservation>;
   getTableUsage: TableUsage;
   getTableUsageByTable?: Maybe<TableUsage>;
   getTables: Array<Table>;
+  getTimeEntries: QueryGetTimeEntriesConnection;
+  getTimeEntry: TimeEntry;
   getUnreadNotificationsCount: Scalars['Int']['output'];
   getUser: User;
   getUserFavorites: Favorite;
@@ -771,7 +914,13 @@ export type Query = {
   getUsers: Array<User>;
   getWaitlist: Waitlist;
   getWaitlists: Array<Waitlist>;
+  getWeeklySchedule: Array<Shift>;
   searchRestaurants: Array<Restaurant>;
+};
+
+
+export type QueryGetActiveClockInArgs = {
+  userEmail?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -789,6 +938,13 @@ export type QueryGetAreasWithAvailabilityArgs = {
   date: Scalars['String']['input'];
   numOfDiners: Scalars['Int']['input'];
   time: Scalars['String']['input'];
+};
+
+
+export type QueryGetAttendanceSummaryArgs = {
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  userEmail?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -846,6 +1002,12 @@ export type QueryGetDeliveryOrdersArgs = {
 };
 
 
+export type QueryGetEmployeeDashboardKpisArgs = {
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+};
+
+
 export type QueryGetGridConfigArgs = {
   id: Scalars['String']['input'];
 };
@@ -872,6 +1034,26 @@ export type QueryGetMenusArgs = {
   before?: InputMaybe<Scalars['ID']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGetMyShiftsArgs = {
+  after?: InputMaybe<Scalars['ID']['input']>;
+  before?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  from: Scalars['DateTime']['input'];
+  last?: InputMaybe<Scalars['Int']['input']>;
+  to: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetMyTimeEntriesArgs = {
+  after?: InputMaybe<Scalars['ID']['input']>;
+  before?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  from: Scalars['DateTime']['input'];
+  last?: InputMaybe<Scalars['Int']['input']>;
+  to: Scalars['DateTime']['input'];
 };
 
 
@@ -934,6 +1116,34 @@ export type QueryGetRestaurantArgs = {
 };
 
 
+export type QueryGetShiftArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetShiftTemplateArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetShiftTemplatesArgs = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryGetShiftsArgs = {
+  after?: InputMaybe<Scalars['ID']['input']>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  from: Scalars['DateTime']['input'];
+  last?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<ShiftStatus>;
+  to: Scalars['DateTime']['input'];
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryGetTableArgs = {
   id: Scalars['String']['input'];
 };
@@ -957,6 +1167,23 @@ export type QueryGetTableUsageArgs = {
 
 export type QueryGetTableUsageByTableArgs = {
   tableId: Scalars['String']['input'];
+};
+
+
+export type QueryGetTimeEntriesArgs = {
+  after?: InputMaybe<Scalars['ID']['input']>;
+  before?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  from: Scalars['DateTime']['input'];
+  last?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<TimeEntryStatus>;
+  to: Scalars['DateTime']['input'];
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGetTimeEntryArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -999,6 +1226,12 @@ export type QueryGetWaitlistArgs = {
 };
 
 
+export type QueryGetWeeklyScheduleArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  weekStart: Scalars['DateTime']['input'];
+};
+
+
 export type QuerySearchRestaurantsArgs = {
   keyword: Scalars['String']['input'];
 };
@@ -1027,6 +1260,30 @@ export type QueryGetMenusConnectionEdge = {
   node: Menu;
 };
 
+export type QueryGetMyShiftsConnection = {
+  __typename?: 'QueryGetMyShiftsConnection';
+  edges: Array<Maybe<QueryGetMyShiftsConnectionEdge>>;
+  pageInfo: PageInfo;
+};
+
+export type QueryGetMyShiftsConnectionEdge = {
+  __typename?: 'QueryGetMyShiftsConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: Shift;
+};
+
+export type QueryGetMyTimeEntriesConnection = {
+  __typename?: 'QueryGetMyTimeEntriesConnection';
+  edges: Array<Maybe<QueryGetMyTimeEntriesConnectionEdge>>;
+  pageInfo: PageInfo;
+};
+
+export type QueryGetMyTimeEntriesConnectionEdge = {
+  __typename?: 'QueryGetMyTimeEntriesConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: TimeEntry;
+};
+
 export type QueryGetOrdersConnection = {
   __typename?: 'QueryGetOrdersConnection';
   edges: Array<Maybe<QueryGetOrdersConnectionEdge>>;
@@ -1037,6 +1294,30 @@ export type QueryGetOrdersConnectionEdge = {
   __typename?: 'QueryGetOrdersConnectionEdge';
   cursor: Scalars['String']['output'];
   node: Order;
+};
+
+export type QueryGetShiftsConnection = {
+  __typename?: 'QueryGetShiftsConnection';
+  edges: Array<Maybe<QueryGetShiftsConnectionEdge>>;
+  pageInfo: PageInfo;
+};
+
+export type QueryGetShiftsConnectionEdge = {
+  __typename?: 'QueryGetShiftsConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: Shift;
+};
+
+export type QueryGetTimeEntriesConnection = {
+  __typename?: 'QueryGetTimeEntriesConnection';
+  edges: Array<Maybe<QueryGetTimeEntriesConnectionEdge>>;
+  pageInfo: PageInfo;
+};
+
+export type QueryGetTimeEntriesConnectionEdge = {
+  __typename?: 'QueryGetTimeEntriesConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: TimeEntry;
 };
 
 export type Reservation = {
@@ -1094,6 +1375,52 @@ export enum Role {
   Waiter = 'WAITER'
 }
 
+export type Shift = {
+  __typename?: 'Shift';
+  area?: Maybe<Area>;
+  areaId?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  createdByEmail?: Maybe<Scalars['String']['output']>;
+  createdByUser?: Maybe<User>;
+  endTime: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  shiftRole?: Maybe<Role>;
+  startTime: Scalars['DateTime']['output'];
+  status: ShiftStatus;
+  template?: Maybe<ShiftTemplate>;
+  templateId?: Maybe<Scalars['String']['output']>;
+  timeEntries: Array<TimeEntry>;
+  updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userEmail: Scalars['String']['output'];
+};
+
+/** The status of a scheduled shift */
+export enum ShiftStatus {
+  Cancelled = 'CANCELLED',
+  Draft = 'DRAFT',
+  Published = 'PUBLISHED'
+}
+
+export type ShiftTemplate = {
+  __typename?: 'ShiftTemplate';
+  active: Scalars['Boolean']['output'];
+  area?: Maybe<Area>;
+  areaId?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  crossesMidnight: Scalars['Boolean']['output'];
+  dayOfWeek: Scalars['Int']['output'];
+  defaultRole?: Maybe<Role>;
+  description?: Maybe<Scalars['String']['output']>;
+  endTime: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  shifts: Array<Shift>;
+  startTime: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export enum SortOrder {
   Asc = 'asc',
   Desc = 'desc'
@@ -1129,6 +1456,38 @@ export type TableUsage = {
   usageCount: Scalars['Int']['output'];
 };
 
+export type TimeEntry = {
+  __typename?: 'TimeEntry';
+  clockIn: Scalars['DateTime']['output'];
+  clockOut?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  editedByEmail?: Maybe<Scalars['String']['output']>;
+  editedByUser?: Maybe<User>;
+  hoursWorked?: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  shift?: Maybe<Shift>;
+  shiftId?: Maybe<Scalars['String']['output']>;
+  status: TimeEntryStatus;
+  updatedAt: Scalars['DateTime']['output'];
+  user: User;
+  userEmail: Scalars['String']['output'];
+};
+
+/** The status of a time entry */
+export enum TimeEntryStatus {
+  Active = 'ACTIVE',
+  AutoClosed = 'AUTO_CLOSED',
+  Completed = 'COMPLETED',
+  Edited = 'EDITED'
+}
+
+/** Type of time entry event */
+export enum TimeEntryType {
+  ClockIn = 'CLOCK_IN',
+  ClockOut = 'CLOCK_OUT'
+}
+
 export type UpdateManyTablesInput = {
   areaId?: InputMaybe<Scalars['String']['input']>;
   diners?: InputMaybe<Scalars['Int']['input']>;
@@ -1142,6 +1501,8 @@ export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
   createdReservations?: Maybe<Array<Reservation>>;
+  createdShifts?: Maybe<Array<Shift>>;
+  editedTimeEntries?: Maybe<Array<TimeEntry>>;
   email?: Maybe<Scalars['String']['output']>;
   favorite?: Maybe<Favorite>;
   id: Scalars['ID']['output'];
@@ -1152,6 +1513,8 @@ export type User = {
   profile?: Maybe<Profile>;
   reservations?: Maybe<Array<Reservation>>;
   role: Role;
+  shifts?: Maybe<Array<Shift>>;
+  timeEntries?: Maybe<Array<TimeEntry>>;
   updatedAt: Scalars['DateTime']['output'];
   waitlists?: Maybe<Array<Waitlist>>;
 };
@@ -1353,6 +1716,14 @@ export type RemoveDriverFromOrderMutationVariables = Exact<{
 
 
 export type RemoveDriverFromOrderMutation = { __typename?: 'Mutation', removeDriverFromOrder: boolean };
+
+export type GetEmployeeDashboardKpisQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetEmployeeDashboardKpisQuery = { __typename?: 'Query', getEmployeeDashboardKpis: { __typename?: 'EmployeeDashboardKpis', totalShifts: number, publishedShifts: number, cancelledShifts: number, totalHoursWorked: number, avgHoursPerEmployee: number, activeClockIns: number, staffCount: number, uniqueEmployeesWorked: number } };
 
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
@@ -1612,6 +1983,147 @@ export type DeleteRestaurantMutationVariables = Exact<{
 
 export type DeleteRestaurantMutation = { __typename?: 'Mutation', deleteRestaurant: { __typename?: 'Restaurant', id: string } };
 
+export type GetShiftQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetShiftQuery = { __typename?: 'Query', getShift: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, note?: string | null, shiftRole?: Role | null, userEmail: string, createdByEmail?: string | null, templateId?: string | null, areaId?: string | null, createdAt: any, updatedAt: any, user: { __typename?: 'User', name?: string | null, email?: string | null, image?: string | null }, area?: { __typename?: 'Area', name: string } | null, timeEntries: Array<{ __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus }> } };
+
+export type GetShiftsQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  status?: InputMaybe<ShiftStatus>;
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetShiftsQuery = { __typename?: 'Query', getShifts: { __typename?: 'QueryGetShiftsConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetShiftsConnectionEdge', cursor: string, node: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, note?: string | null, shiftRole?: Role | null, userEmail: string, areaId?: string | null, templateId?: string | null, createdAt: any, user: { __typename?: 'User', name?: string | null, email?: string | null, image?: string | null }, area?: { __typename?: 'Area', name: string } | null } } | null> } };
+
+export type GetMyShiftsQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetMyShiftsQuery = { __typename?: 'Query', getMyShifts: { __typename?: 'QueryGetMyShiftsConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMyShiftsConnectionEdge', cursor: string, node: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, note?: string | null, shiftRole?: Role | null, areaId?: string | null, createdAt: any, area?: { __typename?: 'Area', name: string } | null, timeEntries: Array<{ __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus }> } } | null> } };
+
+export type GetWeeklyScheduleQueryVariables = Exact<{
+  weekStart: Scalars['DateTime']['input'];
+  areaId?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetWeeklyScheduleQuery = { __typename?: 'Query', getWeeklySchedule: Array<{ __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, note?: string | null, shiftRole?: Role | null, userEmail: string, areaId?: string | null, user: { __typename?: 'User', name?: string | null, email?: string | null, image?: string | null }, area?: { __typename?: 'Area', name: string } | null }> };
+
+export type CreateShiftMutationVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+  startTime: Scalars['DateTime']['input'];
+  endTime: Scalars['DateTime']['input'];
+  shiftRole?: InputMaybe<Role>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type CreateShiftMutation = { __typename?: 'Mutation', createShift: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, shiftRole?: Role | null, userEmail: string, areaId?: string | null, note?: string | null, createdAt: any } };
+
+export type EditShiftMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  startTime?: InputMaybe<Scalars['DateTime']['input']>;
+  endTime?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<ShiftStatus>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  shiftRole?: InputMaybe<Role>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type EditShiftMutation = { __typename?: 'Mutation', editShift: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, shiftRole?: Role | null, note?: string | null, areaId?: string | null, updatedAt: any } };
+
+export type CancelShiftMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type CancelShiftMutation = { __typename?: 'Mutation', cancelShift: { __typename?: 'Shift', id: string, status: ShiftStatus, updatedAt: any } };
+
+export type PublishShiftsMutationVariables = Exact<{
+  ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type PublishShiftsMutation = { __typename?: 'Mutation', publishShifts: number };
+
+export type GetShiftTemplatesQueryVariables = Exact<{
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetShiftTemplatesQuery = { __typename?: 'Query', getShiftTemplates: Array<{ __typename?: 'ShiftTemplate', id: string, name: string, description?: string | null, dayOfWeek: number, startTime: string, endTime: string, crossesMidnight: boolean, defaultRole?: Role | null, active: boolean, areaId?: string | null, createdAt: any, updatedAt: any, area?: { __typename?: 'Area', name: string } | null }> };
+
+export type GetShiftTemplateQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetShiftTemplateQuery = { __typename?: 'Query', getShiftTemplate: { __typename?: 'ShiftTemplate', id: string, name: string, description?: string | null, dayOfWeek: number, startTime: string, endTime: string, crossesMidnight: boolean, defaultRole?: Role | null, active: boolean, areaId?: string | null, createdAt: any, updatedAt: any, area?: { __typename?: 'Area', name: string } | null, shifts: Array<{ __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, userEmail: string }> } };
+
+export type CreateShiftTemplateMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+  dayOfWeek: Scalars['Int']['input'];
+  startTime: Scalars['String']['input'];
+  endTime: Scalars['String']['input'];
+  defaultRole?: InputMaybe<Role>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type CreateShiftTemplateMutation = { __typename?: 'Mutation', createShiftTemplate: { __typename?: 'ShiftTemplate', id: string, name: string, dayOfWeek: number, startTime: string, endTime: string, crossesMidnight: boolean, defaultRole?: Role | null, active: boolean, areaId?: string | null, createdAt: any } };
+
+export type EditShiftTemplateMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  dayOfWeek?: InputMaybe<Scalars['Int']['input']>;
+  startTime?: InputMaybe<Scalars['String']['input']>;
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  defaultRole?: InputMaybe<Role>;
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type EditShiftTemplateMutation = { __typename?: 'Mutation', editShiftTemplate: { __typename?: 'ShiftTemplate', id: string, name: string, dayOfWeek: number, startTime: string, endTime: string, crossesMidnight: boolean, defaultRole?: Role | null, active: boolean, areaId?: string | null, description?: string | null, updatedAt: any } };
+
+export type DeleteShiftTemplateMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DeleteShiftTemplateMutation = { __typename?: 'Mutation', deleteShiftTemplate: { __typename?: 'ShiftTemplate', id: string } };
+
+export type ToggleShiftTemplateActiveMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type ToggleShiftTemplateActiveMutation = { __typename?: 'Mutation', toggleShiftTemplateActive: { __typename?: 'ShiftTemplate', id: string, active: boolean, updatedAt: any } };
+
+export type GenerateShiftsFromTemplateMutationVariables = Exact<{
+  templateId: Scalars['String']['input'];
+  weekStart: Scalars['DateTime']['input'];
+  userEmails: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type GenerateShiftsFromTemplateMutation = { __typename?: 'Mutation', generateShiftsFromTemplate: number };
+
 export type GetAvailableTablesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1726,6 +2238,83 @@ export type GetReservationsQueryVariables = Exact<{
 
 
 export type GetReservationsQuery = { __typename?: 'Query', getReservations: Array<{ __typename?: 'Reservation', createdAt: any, createdBy: string, id: string, numOfDiners: number, reservationTime: any, status: ReservationStatus, tableId: string, updatedAt: any, userEmail: string, table: { __typename?: 'Table', tableNumber: number }, user: { __typename?: 'User', name?: string | null, profile?: { __typename?: 'Profile', phone?: string | null } | null } }> };
+
+export type GetActiveClockInQueryVariables = Exact<{
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetActiveClockInQuery = { __typename?: 'Query', getActiveClockIn?: { __typename?: 'TimeEntry', id: string, clockIn: any, status: TimeEntryStatus, note?: string | null, userEmail: string, shiftId?: string | null, shift?: { __typename?: 'Shift', id: string, startTime: any, endTime: any, shiftRole?: Role | null } | null } | null };
+
+export type GetTimeEntryQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetTimeEntryQuery = { __typename?: 'Query', getTimeEntry: { __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus, note?: string | null, userEmail: string, shiftId?: string | null, editedByEmail?: string | null, createdAt: any, updatedAt: any, user: { __typename?: 'User', name?: string | null, email?: string | null, image?: string | null }, shift?: { __typename?: 'Shift', id: string, startTime: any, endTime: any, status: ShiftStatus, shiftRole?: Role | null } | null, editedByUser?: { __typename?: 'User', name?: string | null, email?: string | null } | null } };
+
+export type GetTimeEntriesQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<TimeEntryStatus>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetTimeEntriesQuery = { __typename?: 'Query', getTimeEntries: { __typename?: 'QueryGetTimeEntriesConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetTimeEntriesConnectionEdge', cursor: string, node: { __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus, note?: string | null, userEmail: string, shiftId?: string | null, editedByEmail?: string | null, createdAt: any, user: { __typename?: 'User', name?: string | null, email?: string | null, image?: string | null }, shift?: { __typename?: 'Shift', id: string, startTime: any, endTime: any, shiftRole?: Role | null } | null } } | null> } };
+
+export type GetMyTimeEntriesQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetMyTimeEntriesQuery = { __typename?: 'Query', getMyTimeEntries: { __typename?: 'QueryGetMyTimeEntriesConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMyTimeEntriesConnectionEdge', cursor: string, node: { __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus, note?: string | null, shiftId?: string | null, createdAt: any, shift?: { __typename?: 'Shift', id: string, startTime: any, endTime: any, shiftRole?: Role | null } | null } } | null> } };
+
+export type GetAttendanceSummaryQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  userEmail?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAttendanceSummaryQuery = { __typename?: 'Query', getAttendanceSummary: { __typename?: 'AttendanceSummary', totalHours: number, shiftCount: number, avgHoursPerShift: number, overtimeHours: number, attendanceRate: number, lateCount: number, missedCount: number } };
+
+export type ClockInMutationVariables = Exact<{
+  note?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ClockInMutation = { __typename?: 'Mutation', clockIn: { __typename?: 'TimeEntry', id: string, clockIn: any, status: TimeEntryStatus, note?: string | null, userEmail: string, shiftId?: string | null } };
+
+export type ClockOutMutationVariables = Exact<{
+  timeEntryId?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ClockOutMutation = { __typename?: 'Mutation', clockOut: { __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus, note?: string | null } };
+
+export type EditTimeEntryMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  clockIn?: InputMaybe<Scalars['DateTime']['input']>;
+  clockOut?: InputMaybe<Scalars['DateTime']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type EditTimeEntryMutation = { __typename?: 'Mutation', editTimeEntry: { __typename?: 'TimeEntry', id: string, clockIn: any, clockOut?: any | null, hoursWorked?: number | null, status: TimeEntryStatus, editedByEmail?: string | null, note?: string | null, updatedAt: any } };
+
+export type DeleteTimeEntryMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DeleteTimeEntryMutation = { __typename?: 'Mutation', deleteTimeEntry: { __typename?: 'TimeEntry', id: string } };
 
 export type GetUserQueryVariables = Exact<{
   email: Scalars['String']['input'];
@@ -2160,6 +2749,24 @@ export const RemoveDriverFromOrderDocument = gql`
 
 export function useRemoveDriverFromOrderMutation() {
   return Urql.useMutation<RemoveDriverFromOrderMutation, RemoveDriverFromOrderMutationVariables>(RemoveDriverFromOrderDocument);
+};
+export const GetEmployeeDashboardKpisDocument = gql`
+    query GetEmployeeDashboardKpis($from: DateTime!, $to: DateTime!) {
+  getEmployeeDashboardKpis(from: $from, to: $to) {
+    totalShifts
+    publishedShifts
+    cancelledShifts
+    totalHoursWorked
+    avgHoursPerEmployee
+    activeClockIns
+    staffCount
+    uniqueEmployeesWorked
+  }
+}
+    `;
+
+export function useGetEmployeeDashboardKpisQuery(options: Omit<Urql.UseQueryArgs<GetEmployeeDashboardKpisQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetEmployeeDashboardKpisQuery, GetEmployeeDashboardKpisQueryVariables>({ query: GetEmployeeDashboardKpisDocument, ...options });
 };
 export const GetUserFavoritesDocument = gql`
     query GetUserFavorites($userEmail: String!) {
@@ -2660,6 +3267,377 @@ export const DeleteRestaurantDocument = gql`
 export function useDeleteRestaurantMutation() {
   return Urql.useMutation<DeleteRestaurantMutation, DeleteRestaurantMutationVariables>(DeleteRestaurantDocument);
 };
+export const GetShiftDocument = gql`
+    query GetShift($id: String!) {
+  getShift(id: $id) {
+    id
+    startTime
+    endTime
+    status
+    note
+    shiftRole
+    userEmail
+    createdByEmail
+    templateId
+    areaId
+    user {
+      name
+      email
+      image
+    }
+    area {
+      name
+    }
+    timeEntries {
+      id
+      clockIn
+      clockOut
+      hoursWorked
+      status
+    }
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetShiftQuery(options: Omit<Urql.UseQueryArgs<GetShiftQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetShiftQuery, GetShiftQueryVariables>({ query: GetShiftDocument, ...options });
+};
+export const GetShiftsDocument = gql`
+    query GetShifts($from: DateTime!, $to: DateTime!, $status: ShiftStatus, $userEmail: String, $areaId: String, $first: Int, $after: ID) {
+  getShifts(
+    from: $from
+    to: $to
+    status: $status
+    userEmail: $userEmail
+    areaId: $areaId
+    first: $first
+    after: $after
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        startTime
+        endTime
+        status
+        note
+        shiftRole
+        userEmail
+        areaId
+        templateId
+        user {
+          name
+          email
+          image
+        }
+        area {
+          name
+        }
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+export function useGetShiftsQuery(options: Omit<Urql.UseQueryArgs<GetShiftsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetShiftsQuery, GetShiftsQueryVariables>({ query: GetShiftsDocument, ...options });
+};
+export const GetMyShiftsDocument = gql`
+    query GetMyShifts($from: DateTime!, $to: DateTime!, $first: Int, $after: ID) {
+  getMyShifts(from: $from, to: $to, first: $first, after: $after) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        startTime
+        endTime
+        status
+        note
+        shiftRole
+        areaId
+        area {
+          name
+        }
+        timeEntries {
+          id
+          clockIn
+          clockOut
+          hoursWorked
+          status
+        }
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+export function useGetMyShiftsQuery(options: Omit<Urql.UseQueryArgs<GetMyShiftsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetMyShiftsQuery, GetMyShiftsQueryVariables>({ query: GetMyShiftsDocument, ...options });
+};
+export const GetWeeklyScheduleDocument = gql`
+    query GetWeeklySchedule($weekStart: DateTime!, $areaId: String) {
+  getWeeklySchedule(weekStart: $weekStart, areaId: $areaId) {
+    id
+    startTime
+    endTime
+    status
+    note
+    shiftRole
+    userEmail
+    areaId
+    user {
+      name
+      email
+      image
+    }
+    area {
+      name
+    }
+  }
+}
+    `;
+
+export function useGetWeeklyScheduleQuery(options: Omit<Urql.UseQueryArgs<GetWeeklyScheduleQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetWeeklyScheduleQuery, GetWeeklyScheduleQueryVariables>({ query: GetWeeklyScheduleDocument, ...options });
+};
+export const CreateShiftDocument = gql`
+    mutation CreateShift($userEmail: String!, $startTime: DateTime!, $endTime: DateTime!, $shiftRole: Role, $areaId: String, $note: String) {
+  createShift(
+    userEmail: $userEmail
+    startTime: $startTime
+    endTime: $endTime
+    shiftRole: $shiftRole
+    areaId: $areaId
+    note: $note
+  ) {
+    id
+    startTime
+    endTime
+    status
+    shiftRole
+    userEmail
+    areaId
+    note
+    createdAt
+  }
+}
+    `;
+
+export function useCreateShiftMutation() {
+  return Urql.useMutation<CreateShiftMutation, CreateShiftMutationVariables>(CreateShiftDocument);
+};
+export const EditShiftDocument = gql`
+    mutation EditShift($id: String!, $startTime: DateTime, $endTime: DateTime, $status: ShiftStatus, $note: String, $shiftRole: Role, $areaId: String) {
+  editShift(
+    id: $id
+    startTime: $startTime
+    endTime: $endTime
+    status: $status
+    note: $note
+    shiftRole: $shiftRole
+    areaId: $areaId
+  ) {
+    id
+    startTime
+    endTime
+    status
+    shiftRole
+    note
+    areaId
+    updatedAt
+  }
+}
+    `;
+
+export function useEditShiftMutation() {
+  return Urql.useMutation<EditShiftMutation, EditShiftMutationVariables>(EditShiftDocument);
+};
+export const CancelShiftDocument = gql`
+    mutation CancelShift($id: String!) {
+  cancelShift(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}
+    `;
+
+export function useCancelShiftMutation() {
+  return Urql.useMutation<CancelShiftMutation, CancelShiftMutationVariables>(CancelShiftDocument);
+};
+export const PublishShiftsDocument = gql`
+    mutation PublishShifts($ids: [String!]!) {
+  publishShifts(ids: $ids)
+}
+    `;
+
+export function usePublishShiftsMutation() {
+  return Urql.useMutation<PublishShiftsMutation, PublishShiftsMutationVariables>(PublishShiftsDocument);
+};
+export const GetShiftTemplatesDocument = gql`
+    query GetShiftTemplates($active: Boolean) {
+  getShiftTemplates(active: $active) {
+    id
+    name
+    description
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    area {
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetShiftTemplatesQuery(options?: Omit<Urql.UseQueryArgs<GetShiftTemplatesQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetShiftTemplatesQuery, GetShiftTemplatesQueryVariables>({ query: GetShiftTemplatesDocument, ...options });
+};
+export const GetShiftTemplateDocument = gql`
+    query GetShiftTemplate($id: String!) {
+  getShiftTemplate(id: $id) {
+    id
+    name
+    description
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    area {
+      name
+    }
+    shifts {
+      id
+      startTime
+      endTime
+      status
+      userEmail
+    }
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetShiftTemplateQuery(options: Omit<Urql.UseQueryArgs<GetShiftTemplateQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetShiftTemplateQuery, GetShiftTemplateQueryVariables>({ query: GetShiftTemplateDocument, ...options });
+};
+export const CreateShiftTemplateDocument = gql`
+    mutation CreateShiftTemplate($name: String!, $dayOfWeek: Int!, $startTime: String!, $endTime: String!, $defaultRole: Role, $areaId: String, $description: String) {
+  createShiftTemplate(
+    name: $name
+    dayOfWeek: $dayOfWeek
+    startTime: $startTime
+    endTime: $endTime
+    defaultRole: $defaultRole
+    areaId: $areaId
+    description: $description
+  ) {
+    id
+    name
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    createdAt
+  }
+}
+    `;
+
+export function useCreateShiftTemplateMutation() {
+  return Urql.useMutation<CreateShiftTemplateMutation, CreateShiftTemplateMutationVariables>(CreateShiftTemplateDocument);
+};
+export const EditShiftTemplateDocument = gql`
+    mutation EditShiftTemplate($id: String!, $name: String, $dayOfWeek: Int, $startTime: String, $endTime: String, $defaultRole: Role, $areaId: String, $description: String) {
+  editShiftTemplate(
+    id: $id
+    name: $name
+    dayOfWeek: $dayOfWeek
+    startTime: $startTime
+    endTime: $endTime
+    defaultRole: $defaultRole
+    areaId: $areaId
+    description: $description
+  ) {
+    id
+    name
+    dayOfWeek
+    startTime
+    endTime
+    crossesMidnight
+    defaultRole
+    active
+    areaId
+    description
+    updatedAt
+  }
+}
+    `;
+
+export function useEditShiftTemplateMutation() {
+  return Urql.useMutation<EditShiftTemplateMutation, EditShiftTemplateMutationVariables>(EditShiftTemplateDocument);
+};
+export const DeleteShiftTemplateDocument = gql`
+    mutation DeleteShiftTemplate($id: String!) {
+  deleteShiftTemplate(id: $id) {
+    id
+  }
+}
+    `;
+
+export function useDeleteShiftTemplateMutation() {
+  return Urql.useMutation<DeleteShiftTemplateMutation, DeleteShiftTemplateMutationVariables>(DeleteShiftTemplateDocument);
+};
+export const ToggleShiftTemplateActiveDocument = gql`
+    mutation ToggleShiftTemplateActive($id: String!) {
+  toggleShiftTemplateActive(id: $id) {
+    id
+    active
+    updatedAt
+  }
+}
+    `;
+
+export function useToggleShiftTemplateActiveMutation() {
+  return Urql.useMutation<ToggleShiftTemplateActiveMutation, ToggleShiftTemplateActiveMutationVariables>(ToggleShiftTemplateActiveDocument);
+};
+export const GenerateShiftsFromTemplateDocument = gql`
+    mutation GenerateShiftsFromTemplate($templateId: String!, $weekStart: DateTime!, $userEmails: [String!]!) {
+  generateShiftsFromTemplate(
+    templateId: $templateId
+    weekStart: $weekStart
+    userEmails: $userEmails
+  )
+}
+    `;
+
+export function useGenerateShiftsFromTemplateMutation() {
+  return Urql.useMutation<GenerateShiftsFromTemplateMutation, GenerateShiftsFromTemplateMutationVariables>(GenerateShiftsFromTemplateDocument);
+};
 export const GetAvailableTablesDocument = gql`
     query GetAvailableTables {
   getAvailableTables {
@@ -2934,6 +3912,223 @@ export const GetReservationsDocument = gql`
 
 export function useGetReservationsQuery(options?: Omit<Urql.UseQueryArgs<GetReservationsQueryVariables>, 'query'>) {
   return Urql.useQuery<GetReservationsQuery, GetReservationsQueryVariables>({ query: GetReservationsDocument, ...options });
+};
+export const GetActiveClockInDocument = gql`
+    query GetActiveClockIn($userEmail: String) {
+  getActiveClockIn(userEmail: $userEmail) {
+    id
+    clockIn
+    status
+    note
+    userEmail
+    shiftId
+    shift {
+      id
+      startTime
+      endTime
+      shiftRole
+    }
+  }
+}
+    `;
+
+export function useGetActiveClockInQuery(options?: Omit<Urql.UseQueryArgs<GetActiveClockInQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetActiveClockInQuery, GetActiveClockInQueryVariables>({ query: GetActiveClockInDocument, ...options });
+};
+export const GetTimeEntryDocument = gql`
+    query GetTimeEntry($id: String!) {
+  getTimeEntry(id: $id) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    note
+    userEmail
+    shiftId
+    editedByEmail
+    user {
+      name
+      email
+      image
+    }
+    shift {
+      id
+      startTime
+      endTime
+      status
+      shiftRole
+    }
+    editedByUser {
+      name
+      email
+    }
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useGetTimeEntryQuery(options: Omit<Urql.UseQueryArgs<GetTimeEntryQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetTimeEntryQuery, GetTimeEntryQueryVariables>({ query: GetTimeEntryDocument, ...options });
+};
+export const GetTimeEntriesDocument = gql`
+    query GetTimeEntries($from: DateTime!, $to: DateTime!, $userEmail: String, $status: TimeEntryStatus, $first: Int, $after: ID) {
+  getTimeEntries(
+    from: $from
+    to: $to
+    userEmail: $userEmail
+    status: $status
+    first: $first
+    after: $after
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        clockIn
+        clockOut
+        hoursWorked
+        status
+        note
+        userEmail
+        shiftId
+        editedByEmail
+        user {
+          name
+          email
+          image
+        }
+        shift {
+          id
+          startTime
+          endTime
+          shiftRole
+        }
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+export function useGetTimeEntriesQuery(options: Omit<Urql.UseQueryArgs<GetTimeEntriesQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetTimeEntriesQuery, GetTimeEntriesQueryVariables>({ query: GetTimeEntriesDocument, ...options });
+};
+export const GetMyTimeEntriesDocument = gql`
+    query GetMyTimeEntries($from: DateTime!, $to: DateTime!, $first: Int, $after: ID) {
+  getMyTimeEntries(from: $from, to: $to, first: $first, after: $after) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        clockIn
+        clockOut
+        hoursWorked
+        status
+        note
+        shiftId
+        shift {
+          id
+          startTime
+          endTime
+          shiftRole
+        }
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+export function useGetMyTimeEntriesQuery(options: Omit<Urql.UseQueryArgs<GetMyTimeEntriesQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetMyTimeEntriesQuery, GetMyTimeEntriesQueryVariables>({ query: GetMyTimeEntriesDocument, ...options });
+};
+export const GetAttendanceSummaryDocument = gql`
+    query GetAttendanceSummary($from: DateTime!, $to: DateTime!, $userEmail: String) {
+  getAttendanceSummary(from: $from, to: $to, userEmail: $userEmail) {
+    totalHours
+    shiftCount
+    avgHoursPerShift
+    overtimeHours
+    attendanceRate
+    lateCount
+    missedCount
+  }
+}
+    `;
+
+export function useGetAttendanceSummaryQuery(options: Omit<Urql.UseQueryArgs<GetAttendanceSummaryQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetAttendanceSummaryQuery, GetAttendanceSummaryQueryVariables>({ query: GetAttendanceSummaryDocument, ...options });
+};
+export const ClockInDocument = gql`
+    mutation ClockIn($note: String) {
+  clockIn(note: $note) {
+    id
+    clockIn
+    status
+    note
+    userEmail
+    shiftId
+  }
+}
+    `;
+
+export function useClockInMutation() {
+  return Urql.useMutation<ClockInMutation, ClockInMutationVariables>(ClockInDocument);
+};
+export const ClockOutDocument = gql`
+    mutation ClockOut($timeEntryId: String, $note: String) {
+  clockOut(timeEntryId: $timeEntryId, note: $note) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    note
+  }
+}
+    `;
+
+export function useClockOutMutation() {
+  return Urql.useMutation<ClockOutMutation, ClockOutMutationVariables>(ClockOutDocument);
+};
+export const EditTimeEntryDocument = gql`
+    mutation EditTimeEntry($id: String!, $clockIn: DateTime, $clockOut: DateTime, $note: String) {
+  editTimeEntry(id: $id, clockIn: $clockIn, clockOut: $clockOut, note: $note) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    editedByEmail
+    note
+    updatedAt
+  }
+}
+    `;
+
+export function useEditTimeEntryMutation() {
+  return Urql.useMutation<EditTimeEntryMutation, EditTimeEntryMutationVariables>(EditTimeEntryDocument);
+};
+export const DeleteTimeEntryDocument = gql`
+    mutation DeleteTimeEntry($id: String!) {
+  deleteTimeEntry(id: $id) {
+    id
+  }
+}
+    `;
+
+export function useDeleteTimeEntryMutation() {
+  return Urql.useMutation<DeleteTimeEntryMutation, DeleteTimeEntryMutationVariables>(DeleteTimeEntryDocument);
 };
 export const GetUserDocument = gql`
     query GetUser($email: String!) {

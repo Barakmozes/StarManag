@@ -26,6 +26,12 @@ builder.prismaObject("User", {
     waitlists: t.relation("waitlists", { nullable: true }),
     createdReservations: t.relation("createdReservations", { nullable: true }),
 
+    // Employee Management relations
+    shifts: t.relation("shifts", { nullable: true }),
+    createdShifts: t.relation("createdShifts", { nullable: true }),
+    timeEntries: t.relation("timeEntries", { nullable: true }),
+    editedTimeEntries: t.relation("editedTimeEntries", { nullable: true }),
+
     // Timestamps
     createdAt: t.expose("createdAt", { type: "DateTime" }),
     updatedAt: t.expose("updatedAt", { type: "DateTime" }),

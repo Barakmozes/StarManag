@@ -5,7 +5,7 @@ import DialogComponent from "./DialogComponent";
 import { BsCalendarCheck, BsHeartFill } from "react-icons/bs";
 import { MdHelp } from "react-icons/md";
 import { FaReceipt } from "react-icons/fa";
-import { HiHome, HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
+import { HiHome, HiOutlineArrowRightOnRectangle, HiOutlineClock } from "react-icons/hi2";
 import Link from "next/link";
 import Image from "next/image";
 import { useLoginModal, useSideBarDrawer } from "@/lib/store";
@@ -92,6 +92,18 @@ const SideBar = ({ user }: Props) => {
                 >
                   <BsCalendarCheck className="h-5 w-5 mr-3 shrink-0" />
                   <span className="text-sm">Reservations</span>
+                </Link>
+              )}
+
+              {/* My Shifts — visible to all staff roles */}
+              {(user?.role === "ADMIN" || user?.role === "MANAGER" || user?.role === "WAITER" || user?.role === "DELIVERY") && (
+                <Link
+                  href="/user/shifts"
+                  onClick={onSideBarClose}
+                  className="flex min-h-[48px] items-center rounded-lg px-3 transition-colors hover:bg-green-50 hover:text-green-700 font-medium text-slate-600"
+                >
+                  <HiOutlineClock className="h-5 w-5 mr-3 shrink-0" />
+                  <span className="text-sm">My Shifts</span>
                 </Link>
               )}
 

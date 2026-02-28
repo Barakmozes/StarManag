@@ -6,7 +6,17 @@
       "Bash(test:*)",
       "Bash(grep:*)",
       "Bash(head:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npx prisma migrate dev --name add_employee_management --create-only)",
+      "Bash(npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --script)",
+      "Bash(npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --script --shadow-database-url \"$SHADOW_DATABASE_URL\")",
+      "Bash(npx prisma migrate deploy)",
+      "Bash(npx prisma generate)",
+      "Bash(npx tsc --noEmit --strict \"app/\\(dashboard\\)/dashboard/scheduling/SchedulingDashboard.tsx\")",
+      "Bash(npx tsc --noEmit --project tsconfig.json)",
+      "Bash(yarn lint)"
     ]
-  }
+  },
+  "model": "claude-opus-4-6",
+  "thinkingBudget": "max"
 }

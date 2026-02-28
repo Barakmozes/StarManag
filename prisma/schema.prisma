@@ -62,6 +62,25 @@ enum WaitlistStatus {
   CANCELLED
 }
 
+// Employee Management Enums
+enum ShiftStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum TimeEntryType {
+  CLOCK_IN
+  CLOCK_OUT
+}
+
+enum TimeEntryStatus {
+  ACTIVE
+  COMPLETED
+  AUTO_CLOSED
+  EDITED
+}
+
 // -----------------------------------------------------------------------------
 // Existing + Enhanced Models
 // -----------------------------------------------------------------------------
@@ -129,6 +148,12 @@ model User {
   notifications       Notification[]
   waitlists           Waitlist[]
   createdReservations Reservation[]  @relation("CreatorOfReservation")
+
+  // Employee Management relations
+  shifts             Shift[]      @relation("EmployeeShifts")
+  createdShifts      Shift[]      @relation("CreatedShifts")
+  timeEntries        TimeEntry[]  @relation("EmployeeTimeEntries")
+  editedTimeEntries  TimeEntry[]  @relation("EditedTimeEntries")
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -331,9 +356,11 @@ model Area {
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   // Additional relations
-  gridConfig GridConfig?
-  waitlists  Waitlist[]
-  tables     Table[]
+  gridConfig     GridConfig?
+  waitlists      Waitlist[]
+  tables         Table[]
+  shifts         Shift[]
+  shiftTemplates ShiftTemplate[]
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -454,4 +481,108 @@ model Waitlist {
   // Indexes
   @@index([userEmail])
   @@index([areaId])
+}
+
+// -----------------------------------------------------------------------------
+// Employee Management Models
+// -----------------------------------------------------------------------------
+
+model ShiftTemplate {
+  id             String  @id @default(cuid())
+  name           String
+  description    String?
+  dayOfWeek      Int     // 0=Sun, 6=Sat
+  startTime      String  // "HH:MM" format
+  endTime        String  // "HH:MM" format
+  crossesMidnight Boolean @default(false)
+  defaultRole    Role?
+  active         Boolean @default(true)
+
+  // Relation to Area
+  areaId String?
+  area   Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+
+  // Shifts created from this template
+  shifts Shift[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Indexes
+  @@index([areaId])
+  @@index([dayOfWeek])
+}
+
+model Shift {
+  id        String      @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  status    ShiftStatus @default(DRAFT)
+  note      String?
+  shiftRole Role?
+
+  // Assigned employee
+  userEmail String
+  user      User   @relation("EmployeeShifts", fields: [userEmail], references: [email], onDelete: Cascade)
+
+  // Who created the shift
+  createdByEmail String?
+  createdByUser  User?   @relation("CreatedShifts", fields: [createdByEmail], references: [email], onDelete: SetNull)
+
+  // Optional area context
+  areaId String?
+  area   Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+
+  // Optional template reference
+  templateId String?
+  template   ShiftTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  // Time entries covering this shift
+  timeEntries TimeEntry[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Indexes
+  @@index([userEmail])
+  @@index([createdByEmail])
+  @@index([areaId])
+  @@index([templateId])
+  @@index([startTime, endTime], map: "shift_startTime_endTime_idx")
+  @@index([status, startTime], map: "shift_status_startTime_idx")
+}
+
+model TimeEntry {
+  id          String          @id @default(cuid())
+  clockIn     DateTime
+  clockOut    DateTime?
+  hoursWorked Float?
+  status      TimeEntryStatus @default(ACTIVE)
+  note        String?
+
+  // Employee
+  userEmail String
+  user      User   @relation("EmployeeTimeEntries", fields: [userEmail], references: [email], onDelete: Cascade)
+
+  // Optional link to scheduled shift
+  shiftId String?
+  shift   Shift?  @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  // Who edited (if manually adjusted)
+  editedByEmail String?
+  editedByUser  User?   @relation("EditedTimeEntries", fields: [editedByEmail], references: [email], onDelete: SetNull)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Indexes
+  @@index([userEmail])
+  @@index([shiftId])
+  @@index([editedByEmail])
+  @@index([clockIn, clockOut], map: "timeentry_clockIn_clockOut_idx")
+  @@index([userEmail, clockIn], map: "timeentry_userEmail_clockIn_idx")
+  @@index([status, clockIn], map: "timeentry_status_clockIn_idx")
 }
