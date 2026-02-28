@@ -4,6 +4,32 @@ import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
 
+const RESERVATION_DURATION_MINUTES =
+  parseInt(process.env.RESERVATION_DURATION_MINUTES || "") || 120;
+
+const DAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday",
+  "Thursday", "Friday", "Saturday",
+];
+
+type OpenDay = { day: string; open: string; close: string; closed: boolean };
+
+function validateOpeningHours(openTimes: unknown, requestedTime: Date): void {
+  if (!openTimes || !Array.isArray(openTimes)) return;
+  const dayName = DAY_NAMES[requestedTime.getDay()];
+  const dayEntry = (openTimes as OpenDay[]).find((d) => d.day === dayName);
+  if (!dayEntry) return;
+  if (dayEntry.closed) {
+    throw new GraphQLError("The restaurant is closed on this day");
+  }
+  const hh = String(requestedTime.getHours()).padStart(2, "0");
+  const mm = String(requestedTime.getMinutes()).padStart(2, "0");
+  const timeStr = `${hh}:${mm}`;
+  if (timeStr < dayEntry.open || timeStr >= dayEntry.close) {
+    throw new GraphQLError("The restaurant is closed at the requested time");
+  }
+}
+
 /**
  * Pothos Prisma Object: Area
  *
@@ -76,6 +102,24 @@ export const BasicArea = builder.objectRef<{
     name: t.exposeString("name"),
     floorPlanImage: t.exposeString("floorPlanImage", { nullable: true }),
     createdAt: t.expose("createdAt", { type: "DateTime" }),
+  }),
+});
+
+export const AreaAvailability = builder.objectRef<{
+  id: string;
+  name: string;
+  description: string | null;
+  floorPlanImage: string | null;
+  totalTables: number;
+  availableTables: number;
+}>("AreaAvailability").implement({
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    name: t.exposeString("name"),
+    description: t.exposeString("description", { nullable: true }),
+    floorPlanImage: t.exposeString("floorPlanImage", { nullable: true }),
+    totalTables: t.exposeInt("totalTables"),
+    availableTables: t.exposeInt("availableTables"),
   }),
 });
 
@@ -191,5 +235,67 @@ builder.queryFields((t) => ({
     },
   }),
 
+  getAreasWithAvailability: t.field({
+    type: [AreaAvailability],
+    args: {
+      date: t.arg.string({ required: true }),
+      time: t.arg.string({ required: true }),
+      numOfDiners: t.arg.int({ required: true }),
+    },
+    resolve: async (_, args, contextPromise) => {
+      const context = await contextPromise;
+      if (!context.user) {
+        throw new GraphQLError("You must be logged in to check availability");
+      }
+
+      const requestedTime = new Date(`${args.date}T${args.time}:00`);
+      if (isNaN(requestedTime.getTime())) {
+        throw new GraphQLError("Invalid date or time format");
+      }
+
+      const restaurant = await prisma.restaurant.findFirst();
+      if (restaurant) {
+        validateOpeningHours(restaurant.openTimes, requestedTime);
+      }
+
+      const durationMs = RESERVATION_DURATION_MINUTES * 60 * 1000;
+      const windowEnd = new Date(requestedTime.getTime() + durationMs);
+
+      const areas = await prisma.area.findMany({
+        include: {
+          tables: {
+            where: { diners: { gte: args.numOfDiners } },
+            include: {
+              reservations: {
+                where: {
+                  status: { in: ["PENDING", "CONFIRMED"] },
+                  reservationTime: {
+                    gt: new Date(requestedTime.getTime() - durationMs),
+                    lt: windowEnd,
+                  },
+                },
+                select: { id: true },
+              },
+            },
+          },
+        },
+      });
+
+      return areas.map((area) => {
+        const totalTables = area.tables.length;
+        const availableTables = area.tables.filter(
+          (t) => t.reservations.length === 0
+        ).length;
+        return {
+          id: area.id,
+          name: area.name,
+          description: area.description,
+          floorPlanImage: area.floorPlanImage,
+          totalTables,
+          availableTables,
+        };
+      });
+    },
+  }),
 
 }));

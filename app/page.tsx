@@ -21,7 +21,7 @@ export default async function Home() {
   
       {user?.role !== "WAITER" && user?.role !== "MANAGER" ? (
         <>
-          <HeroSection />
+          <HeroSection user={user as User} />
           <Promos />
         </>
       ) : (

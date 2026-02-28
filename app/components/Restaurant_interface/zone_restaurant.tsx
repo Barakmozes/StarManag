@@ -37,6 +37,7 @@ import AddZoneForm from "./CRUD_Zone-CRUD_Table/AddZoneForm";
 import EditZoneModal from "./CRUD_Zone-CRUD_Table/EditZoneModal";
 import DeleteZoneModal from "./CRUD_Zone-CRUD_Table/DeleteZoneModal";
 import AddTableModal from "./CRUD_Zone-CRUD_Table/AddTableModal";
+import DailyReservationsModal from "./DailyReservationsModal";
 
 import AreaSelector from "./AreaSelector";
 import FloorToolbar from "./FloorToolbar";
@@ -304,8 +305,8 @@ export default function ZoneRestaurant({ userRole }: ZoneRestaurantProps) {
     <section className="w-full">
       <div className="mx-auto max-w-[1400px] p-3 sm:p-4">
         {/* Header */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div className="flex  flex-col gap-3">
+          <div className="flex  flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900">
                 Floor
@@ -315,114 +316,106 @@ export default function ZoneRestaurant({ userRole }: ZoneRestaurantProps) {
               </p>
             </div>
 
-            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl shadow-sm mb-4">
-              {/* --- Left Side: Filters (English) --- */}
-              <div className="flex w-full md:w-auto  rounded-lg overflow-x-auto scrollbar-hide">
-                <div className="flex w-full md:w-auto items-center gap-1 text-slate-700">
-                  {[
-                    {
-                      mode: "ALL",
-                      label: "All Tables",
-                      icon: HiSquares2X2,
-                      activeColor:
-                        "border-blue-200 bg-blue-100 text-blue-800 ring-1 ring-blue-200",
-                    },
-                    {
-                      mode: "AVAILABLE",
-                      label: "Available",
-                      icon: HiCheckCircle,
-                      activeColor:
-                        "border-emerald-200 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
-                    },
-                    {
-                      mode: "UNPAID",
-                      label: "Unpaid",
-                      icon: HiCurrencyDollar,
-                      activeColor:
-                        "border-amber-200 bg-amber-100 text-amber-800 ring-1 ring-amber-200",
-                    },
-                  ].map((btn) => {
-                    const isActive = overviewMode === btn.mode;
-                    const Icon = btn.icon;
-
-                    return (
-                      <button
-                        key={btn.mode}
-                        onClick={() => {
-                          setOverviewMode((m) =>
-                            m === btn.mode
-                              ? "NONE"
-                              : (btn.mode as OverviewMode),
-                          );
-                          if (!isActive) clearSelectedArea();
-                        }}
-                        className={`
-              relative flex-1 md:flex-none flex items-center justify-center gap-1.5 
-              px-4 py-2 min-h-[40px]  text-sm font-semibold rounded-full border transition-all duration-200 whitespace-nowrap
+            <div className="w-full flex flex-wrap flex-col md:flex-row items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl shadow-sm mb-4">
+          {/* --- Filter & Admin Bar --- */}
+<div className="flex flex-col md:flex-row w-full gap-2 rounded-lg">
+  
+  {/* --- Left Side: Filters --- */}
+  <div className="flex w-full md:w-auto overflow-x-auto scrollbar-hide">
+    <div className="flex w-full md:w-auto items-center gap-1 text-slate-700">
+      {[
+        {
+          mode: "ALL",
+          label: "All Tables",
+          icon: HiSquares2X2,
+          activeColor:
+            "border-blue-200 bg-blue-100 text-blue-800 ring-1 ring-blue-200",
+        },
+        {
+          mode: "AVAILABLE",
+          label: "Available",
+          icon: HiCheckCircle,
+          activeColor:
+            "border-emerald-200 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+        },
+        {
+          mode: "UNPAID",
+          label: "Unpaid",
+          icon: HiCurrencyDollar,
+          activeColor:
+            "border-amber-200 bg-amber-100 text-amber-800 ring-1 ring-amber-200",
+        },
+      ].map((btn) => {
+        const isActive = overviewMode === btn.mode;
+        const Icon = btn.icon;
+        return (
+          <button
+            key={btn.mode}
+            onClick={() => {
+              setOverviewMode((m) =>
+                m === btn.mode ? "NONE" : (btn.mode as OverviewMode),
+              );
+              if (!isActive) clearSelectedArea();
+            }}
+            className={`
+              relative flex-1 md:flex-none flex items-center justify-center gap-1.5
+              px-1 py-1 min-h-[40px] text-sm font-semibold rounded-full border
+              transition-all duration-200 whitespace-nowrap
               ${
                 isActive
                   ? btn.activeColor
                   : "bg-white border-gray-200 text-slate-700 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900"
               }
             `}
-                      >
-                        <Icon
-                          size={16}
-                          className={isActive ? "opacity-100" : "opacity-70"}
-                        />
-                        <span>{btn.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          >
+            <Icon
+              size={16}
+              className={isActive ? "opacity-100" : "opacity-70"}
+            />
+            <span>{btn.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
 
-              {/* --- Right Side: Admin Actions --- */}
-              {canManage && (
-                <div className="flex flex-wrap w-full md:w-auto items-center justify-end gap-2 px-1">
-                  {/* 1. Add Table Button (High Emphasis) */}
+  {/* --- Right Side: Admin Actions --- */}
+  {canManage && (
+    <div className="flex w-full md:w-auto items-center justify-start md:justify-end gap-2 px-1 flex-wrap md:flex-nowrap md:ml-auto">
+      
+      {/* Daily Reservations */}
+      {canManage && <DailyReservationsModal />}
+
+      {/* Divider (hidden on mobile) */}
+      <div className="hidden md:block w-px h-5 bg-slate-200 mx-0.5" />
+
+      {/* Edit Zone View */}
+      <button
+        className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+        title="Edit Zone"
+      >
+        <HiViewBoards size={18} />
+      </button>
+
+      {/* Add Table */}
+      <AddTableModal allAreas={areas} areaSelectID={selectedArea} />
+
+      {/* Add Zone */}
+      <AddZoneForm />
+
+      {/* Context Actions (Only if area selected) */}
+      {selectedArea && (
+        <>
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
+          <DeleteZoneModal areas={areas} areaSelectToDelete={selectedArea} />
+          <EditZoneModal areas={areas} areaSelectToEdit={selectedArea} />
+        </>
+      )}
+    </div>
+  )}
+</div>
 
               
-                      <AddTableModal
-                        allAreas={areas}
-                        areaSelectID={selectedArea}
-                      />
-                 
-                    
-               
-
-                  {/* 2. Add Zone Button (Medium Emphasis) */}
-
-                
-                      <AddZoneForm />
-                  
-                 
-
-                  {/* 3. Context Actions (Only if area selected) */}
-                  {selectedArea && (
-                    <>
-                      <div className="w-px h-5 bg-slate-200 mx-0.5" />{" "}
-                      {/* Divider */}
-                      <button
-                        className="p-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                        title="Edit Zone"
-                      >
-                        <HiViewBoards size={18} />
-                      </button>
-                     
-                          <DeleteZoneModal
-                            areas={areas}
-                            areaSelectToDelete={selectedArea}
-                          />
-                      
-                      <EditZoneModal
-                            areas={areas}
-                            areaSelectToEdit={selectedArea}
-                          />
-                    </>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 

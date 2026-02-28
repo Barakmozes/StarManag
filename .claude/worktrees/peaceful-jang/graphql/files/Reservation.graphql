@@ -1,0 +1,34 @@
+mutation AddReservation($createdBy: Role!, $numOfDiners: Int!, $reservationTime: DateTime!, $tableId: String!, $userEmail: String!) {
+  addReservation(createdBy: $createdBy, numOfDiners: $numOfDiners, reservationTime: $reservationTime, tableId: $tableId, userEmail: $userEmail) {
+    id
+  }
+}
+export const AddGuestReservationDocument = gql`
+    mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
+  addGuestReservation(
+    customerName: $customerName
+    tableId: $tableId
+    reservationTime: $reservationTime
+    numOfDiners: $numOfDiners
+    createdBy: $createdBy
+  ) {
+    id
+  }
+}
+    `;
+
+    export const AddReservationDocument = gql`
+  mutation AddReservation($userEmail: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
+    addReservation(userEmail: $userEmail, tableId: $tableId, reservationTime: $reservationTime, numOfDiners: $numOfDiners, createdBy: $createdBy) {
+      id
+    }
+  }
+`;
+
+export const AddGuestReservationDocument = gql`
+  mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
+    addGuestReservation(customerName: $customerName, tableId: $tableId, reservationTime: $reservationTime, numOfDiners: $numOfDiners, createdBy: $createdBy) {
+      id
+    }
+  }
+`;

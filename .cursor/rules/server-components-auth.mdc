@@ -1,0 +1,65 @@
+---
+description: Server component patterns, user session passing, and auth flow for pages and layouts
+globs:
+  - app/**/page.tsx
+  - app/**/layout.tsx
+alwaysApply: false
+---
+
+# Pages, Layouts & Auth Flow
+
+## Iron Rule: `page.tsx` / `layout.tsx` Are Server Components
+
+- **Never** add `"use client"` to `page.tsx` or `layout.tsx`.
+- Place all client interactivity in child components.
+
+## Required User Session Pattern
+
+```tsx
+// page.tsx — SERVER COMPONENT
+import { getCurrentUser } from "@/lib/session";
+import { User } from "@prisma/client";
+import { redirect } from "next/navigation";
+
+export default async function Page() {
+  const user = await getCurrentUser();
+
+  // Protected route
+  if (!user) redirect("/login");
+
+  // Role-based access
+  const role = (user as User)?.role;
+  if (role !== "ADMIN" && role !== "MANAGER") redirect("/");
+
+  return (
+    <ClientComponent
+      user={user as User}
+      currentUserId={(user as User)?.id ?? null}
+      currentUserRole={role ?? null}
+    />
+  );
+}
+```
+
+## Layout Pattern
+
+```tsx
+import { getCurrentUser } from "@/lib/session";
+import { User } from "@prisma/client";
+
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+  return <Wrapper user={user as User}>{children}</Wrapper>;
+}
+```
+
+## Rules
+
+- Retrieve session **only** through `getCurrentUser()` from `@/lib/session`.
+- Pass `user={user as User}` (or `User | null`) as props to client components.
+- **Never** call `getCurrentUser()` or `getServerSession()` in client components.
+- **Never** use `useSession()` for initial auth in pages — only for reactive updates inside client components that already receive `user` from server.
+- Use `redirect()` from `next/navigation` for auth failures — do not render protected content.
+- Role checks use Prisma enum values: `ADMIN`, `MANAGER`, `WAITER`, `USER`, `DELIVERY`.
+- Prefer server-first data fetching; use minimal client components for interaction-only concerns.
+- **Always** add/keep `loading.tsx` in the same folder as async pages for Suspense fallback — this is required, not optional.

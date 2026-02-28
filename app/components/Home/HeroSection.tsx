@@ -1,12 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useKeenSlider, KeenSliderPlugin } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import { HiStar } from "react-icons/hi2";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { BsCalendarCheck } from "react-icons/bs";
+import { User } from "@prisma/client";
 import RestaurantDetailsModal from "./RestaurantDetailsModal";
+import ReservationBookingModal from "./ReservationBookingModal";
 
 /**
  * Autoplay plugin for Keen Slider
@@ -29,7 +32,10 @@ function Autoplay(delay = 3000): KeenSliderPlugin {
   };
 }
 
-export default function HeroSection() {
+type Props = { user: User | null };
+
+export default function HeroSection({ user }: Props) {
+  const [bookingOpen, setBookingOpen] = useState(false);
   const slides = ["/img/banner5.jpg", "/img/banner6.jpg", "/img/banner4.jpg"];
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>(
@@ -132,13 +138,26 @@ className="
         <span className="ml-1 text-sm text-black sm:text-base">4.5 rating</span>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-2 flex items-center gap-2 flex-wrap">
         <RestaurantDetailsModal />
+        <button
+          type="button"
+          onClick={() => setBookingOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-4 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-green-700 active:scale-95 sm:text-sm"
+        >
+          <BsCalendarCheck size={14} />
+          Reserve a Table
+        </button>
       </div>
     </div>
   </div>
 </div>
 
+      <ReservationBookingModal
+        user={user}
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+      />
     </section>
   );
 }

@@ -1,10 +1,40 @@
-mutation AddReservation($createdBy: Role!, $numOfDiners: Int!, $reservationTime: DateTime!, $tableId: String!, $userEmail: String!) {
-  addReservation(createdBy: $createdBy, numOfDiners: $numOfDiners, reservationTime: $reservationTime, tableId: $tableId, userEmail: $userEmail) {
+# --- Preserved operations (used by TableReservations.tsx) ---
+
+mutation AddReservation(
+  $createdBy: Role!
+  $numOfDiners: Int!
+  $reservationTime: DateTime!
+  $tableId: String!
+  $userEmail: String!
+) {
+  addReservation(
+    createdBy: $createdBy
+    numOfDiners: $numOfDiners
+    reservationTime: $reservationTime
+    tableId: $tableId
+    userEmail: $userEmail
+  ) {
     id
+    status
+    reservationTime
+    numOfDiners
+    table {
+      tableNumber
+      diners
+      area {
+        name
+      }
+    }
   }
 }
-export const AddGuestReservationDocument = gql`
-    mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
+
+mutation AddGuestReservation(
+  $customerName: String!
+  $tableId: String!
+  $reservationTime: DateTime!
+  $numOfDiners: Int!
+  $createdBy: Role!
+) {
   addGuestReservation(
     customerName: $customerName
     tableId: $tableId
@@ -15,20 +45,94 @@ export const AddGuestReservationDocument = gql`
     id
   }
 }
-    `;
 
-    export const AddReservationDocument = gql`
-  mutation AddReservation($userEmail: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
-    addReservation(userEmail: $userEmail, tableId: $tableId, reservationTime: $reservationTime, numOfDiners: $numOfDiners, createdBy: $createdBy) {
-      id
+mutation EditReservation(
+  $id: String!
+  $reservationTime: DateTime
+  $numOfDiners: Int
+  $status: ReservationStatus
+) {
+  editReservation(
+    id: $id
+    reservationTime: $reservationTime
+    numOfDiners: $numOfDiners
+    status: $status
+  ) {
+    id
+    reservationTime
+    numOfDiners
+    status
+    updatedAt
+    userEmail
+    tableId
+  }
+}
+
+mutation CompleteReservation($id: String!) {
+  completeReservation(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}
+
+# --- New operations for customer reservation flow ---
+
+query GetUserReservations($userEmail: String!) {
+  getUserReservations(userEmail: $userEmail) {
+    id
+    status
+    reservationTime
+    numOfDiners
+    userEmail
+    createdBy
+    createdAt
+    updatedAt
+    table {
+      tableNumber
+      diners
+      area {
+        name
+      }
     }
   }
-`;
+}
 
-export const AddGuestReservationDocument = gql`
-  mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
-    addGuestReservation(customerName: $customerName, tableId: $tableId, reservationTime: $reservationTime, numOfDiners: $numOfDiners, createdBy: $createdBy) {
-      id
-    }
+query GetAvailableTablesForReservation(
+  $date: String!
+  $time: String!
+  $numOfDiners: Int!
+  $areaId: String
+) {
+  getAvailableTablesForReservation(
+    date: $date
+    time: $time
+    numOfDiners: $numOfDiners
+    areaId: $areaId
+  ) {
+    id
+    tableNumber
+    diners
+    areaId
+    position
   }
-`;
+}
+
+query GetAreasWithAvailability(
+  $date: String!
+  $time: String!
+  $numOfDiners: Int!
+) {
+  getAreasWithAvailability(
+    date: $date
+    time: $time
+    numOfDiners: $numOfDiners
+  ) {
+    id
+    name
+    description
+    floorPlanImage
+    totalTables
+    availableTables
+  }
+}

@@ -26,13 +26,14 @@ import {
   EditReservationDocument,
   CompleteReservationDocument,
 } from "@/graphql/generated";
+import { getIsraelDateString } from "@/lib/localeUtils";
 
 interface TableReservationsProps {
   table: Table;
 }
 
 const TableReservations: React.FC<TableReservationsProps> = ({ table }) => {
-  const todayString = new Date().toISOString().split("T")[0];
+  const todayString = getIsraelDateString();
   
   // --- Refs ---
   const formRef = useRef<HTMLDivElement>(null);
@@ -106,7 +107,7 @@ const TableReservations: React.FC<TableReservationsProps> = ({ table }) => {
       customerName: name,
       userEmail: res.userEmail || "",
       numOfDiners: res.numOfDiners,
-      date: dateObj.toISOString().split("T")[0],
+      date: getIsraelDateString(dateObj),
       time: dateObj.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
     });
     setEditingId(res.id);
