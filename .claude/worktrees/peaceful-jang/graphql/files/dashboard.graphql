@@ -47,3 +47,55 @@ mutation AssignDriverToOrder($orderNumber: String!, $driverName: String!, $drive
 mutation RemoveDriverFromOrder($orderNumber: String!) {
   removeDriverFromOrder(orderNumber: $orderNumber)
 }
+
+query GetDashboardKpisCompare($from: DateTime!, $to: DateTime!) {
+  getDashboardKpisCompare(from: $from, to: $to) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    current {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      uniqueCustomers
+      newCustomers
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+    }
+    previous {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      uniqueCustomers
+      newCustomers
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+    }
+  }
+}
+
+query GetDashboardRevenueCompare($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
+  getDashboardRevenueCompare(from: $from, to: $to, groupBy: $groupBy) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    points {
+      bucket
+      revenue
+      orders
+      previousBucket
+      previousRevenue
+      previousOrders
+    }
+  }
+}
