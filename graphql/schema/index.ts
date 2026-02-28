@@ -16,5 +16,8 @@ import "./Waitlist"
 import "./Notification"
 import "./Dashboard";
 import "./Delivery";
+import "./Shift";
+import "./TimeEntry";
+import "./ShiftTemplate";
 
 export const schema = builder.toSchema({})

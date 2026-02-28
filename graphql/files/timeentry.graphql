@@ -1,0 +1,187 @@
+# --- TimeEntry Queries ---
+
+query GetActiveClockIn($userEmail: String) {
+  getActiveClockIn(userEmail: $userEmail) {
+    id
+    clockIn
+    status
+    note
+    userEmail
+    shiftId
+    shift {
+      id
+      startTime
+      endTime
+      shiftRole
+    }
+  }
+}
+
+query GetTimeEntry($id: String!) {
+  getTimeEntry(id: $id) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    note
+    userEmail
+    shiftId
+    editedByEmail
+    user {
+      name
+      email
+      image
+    }
+    shift {
+      id
+      startTime
+      endTime
+      status
+      shiftRole
+    }
+    editedByUser {
+      name
+      email
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetTimeEntries(
+  $from: DateTime!
+  $to: DateTime!
+  $userEmail: String
+  $status: TimeEntryStatus
+  $first: Int
+  $after: ID
+) {
+  getTimeEntries(
+    from: $from
+    to: $to
+    userEmail: $userEmail
+    status: $status
+    first: $first
+    after: $after
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        clockIn
+        clockOut
+        hoursWorked
+        status
+        note
+        userEmail
+        shiftId
+        editedByEmail
+        user {
+          name
+          email
+          image
+        }
+        shift {
+          id
+          startTime
+          endTime
+          shiftRole
+        }
+        createdAt
+      }
+    }
+  }
+}
+
+query GetMyTimeEntries($from: DateTime!, $to: DateTime!, $first: Int, $after: ID) {
+  getMyTimeEntries(from: $from, to: $to, first: $first, after: $after) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        clockIn
+        clockOut
+        hoursWorked
+        status
+        note
+        shiftId
+        shift {
+          id
+          startTime
+          endTime
+          shiftRole
+        }
+        createdAt
+      }
+    }
+  }
+}
+
+query GetAttendanceSummary($from: DateTime!, $to: DateTime!, $userEmail: String) {
+  getAttendanceSummary(from: $from, to: $to, userEmail: $userEmail) {
+    totalHours
+    shiftCount
+    avgHoursPerShift
+    overtimeHours
+    attendanceRate
+    lateCount
+    missedCount
+  }
+}
+
+# --- TimeEntry Mutations ---
+
+mutation ClockIn($note: String) {
+  clockIn(note: $note) {
+    id
+    clockIn
+    status
+    note
+    userEmail
+    shiftId
+  }
+}
+
+mutation ClockOut($timeEntryId: String, $note: String) {
+  clockOut(timeEntryId: $timeEntryId, note: $note) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    note
+  }
+}
+
+mutation EditTimeEntry(
+  $id: String!
+  $clockIn: DateTime
+  $clockOut: DateTime
+  $note: String
+) {
+  editTimeEntry(id: $id, clockIn: $clockIn, clockOut: $clockOut, note: $note) {
+    id
+    clockIn
+    clockOut
+    hoursWorked
+    status
+    editedByEmail
+    note
+    updatedAt
+  }
+}
+
+mutation DeleteTimeEntry($id: String!) {
+  deleteTimeEntry(id: $id) {
+    id
+  }
+}

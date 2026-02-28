@@ -1,0 +1,205 @@
+# --- Shift Queries ---
+
+query GetShift($id: String!) {
+  getShift(id: $id) {
+    id
+    startTime
+    endTime
+    status
+    note
+    shiftRole
+    userEmail
+    createdByEmail
+    templateId
+    areaId
+    user {
+      name
+      email
+      image
+    }
+    area {
+      name
+    }
+    timeEntries {
+      id
+      clockIn
+      clockOut
+      hoursWorked
+      status
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetShifts(
+  $from: DateTime!
+  $to: DateTime!
+  $status: ShiftStatus
+  $userEmail: String
+  $areaId: String
+  $first: Int
+  $after: ID
+) {
+  getShifts(
+    from: $from
+    to: $to
+    status: $status
+    userEmail: $userEmail
+    areaId: $areaId
+    first: $first
+    after: $after
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        startTime
+        endTime
+        status
+        note
+        shiftRole
+        userEmail
+        areaId
+        templateId
+        user {
+          name
+          email
+          image
+        }
+        area {
+          name
+        }
+        createdAt
+      }
+    }
+  }
+}
+
+query GetMyShifts($from: DateTime!, $to: DateTime!, $first: Int, $after: ID) {
+  getMyShifts(from: $from, to: $to, first: $first, after: $after) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        startTime
+        endTime
+        status
+        note
+        shiftRole
+        areaId
+        area {
+          name
+        }
+        timeEntries {
+          id
+          clockIn
+          clockOut
+          hoursWorked
+          status
+        }
+        createdAt
+      }
+    }
+  }
+}
+
+query GetWeeklySchedule($weekStart: DateTime!, $areaId: String) {
+  getWeeklySchedule(weekStart: $weekStart, areaId: $areaId) {
+    id
+    startTime
+    endTime
+    status
+    note
+    shiftRole
+    userEmail
+    areaId
+    user {
+      name
+      email
+      image
+    }
+    area {
+      name
+    }
+  }
+}
+
+# --- Shift Mutations ---
+
+mutation CreateShift(
+  $userEmail: String!
+  $startTime: DateTime!
+  $endTime: DateTime!
+  $shiftRole: Role
+  $areaId: String
+  $note: String
+) {
+  createShift(
+    userEmail: $userEmail
+    startTime: $startTime
+    endTime: $endTime
+    shiftRole: $shiftRole
+    areaId: $areaId
+    note: $note
+  ) {
+    id
+    startTime
+    endTime
+    status
+    shiftRole
+    userEmail
+    areaId
+    note
+    createdAt
+  }
+}
+
+mutation EditShift(
+  $id: String!
+  $startTime: DateTime
+  $endTime: DateTime
+  $status: ShiftStatus
+  $note: String
+  $shiftRole: Role
+  $areaId: String
+) {
+  editShift(
+    id: $id
+    startTime: $startTime
+    endTime: $endTime
+    status: $status
+    note: $note
+    shiftRole: $shiftRole
+    areaId: $areaId
+  ) {
+    id
+    startTime
+    endTime
+    status
+    shiftRole
+    note
+    areaId
+    updatedAt
+  }
+}
+
+mutation CancelShift($id: String!) {
+  cancelShift(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}
+
+mutation PublishShifts($ids: [String!]!) {
+  publishShifts(ids: $ids)
+}

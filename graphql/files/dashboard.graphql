@@ -47,3 +47,18 @@ mutation AssignDriverToOrder($orderNumber: String!, $driverName: String!, $drive
 mutation RemoveDriverFromOrder($orderNumber: String!) {
   removeDriverFromOrder(orderNumber: $orderNumber)
 }
+
+# --- Employee Dashboard KPIs ---
+
+query GetEmployeeDashboardKpis($from: DateTime!, $to: DateTime!) {
+  getEmployeeDashboardKpis(from: $from, to: $to) {
+    totalShifts
+    publishedShifts
+    cancelledShifts
+    totalHoursWorked
+    avgHoursPerEmployee
+    activeClockIns
+    staffCount
+    uniqueEmployeesWorked
+  }
+}

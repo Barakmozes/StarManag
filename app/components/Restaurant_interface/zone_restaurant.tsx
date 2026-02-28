@@ -38,6 +38,7 @@ import EditZoneModal from "./CRUD_Zone-CRUD_Table/EditZoneModal";
 import DeleteZoneModal from "./CRUD_Zone-CRUD_Table/DeleteZoneModal";
 import AddTableModal from "./CRUD_Zone-CRUD_Table/AddTableModal";
 import DailyReservationsModal from "./DailyReservationsModal";
+import ClockInOutButton from "./ClockInOutButton";
 
 import AreaSelector from "./AreaSelector";
 import FloorToolbar from "./FloorToolbar";
@@ -50,9 +51,10 @@ import { BsSearch } from "react-icons/bs";
 type OverviewMode = "NONE" | "ALL" | "AVAILABLE" | "UNPAID";
 type ZoneRestaurantProps = {
   userRole?: string | null;
+  userEmail?: string | null;
 };
 
-export default function ZoneRestaurant({ userRole }: ZoneRestaurantProps) {
+export default function ZoneRestaurant({ userRole, userEmail }: ZoneRestaurantProps) {
   const canManage = userRole === "ADMIN" || userRole === "MANAGER";
   const canEditLayout = canManage;
 
@@ -649,6 +651,9 @@ export default function ZoneRestaurant({ userRole }: ZoneRestaurantProps) {
           });
         }}
       />
+
+      {/* Clock In/Out FAB for staff */}
+      {userEmail && <ClockInOutButton />}
     </section>
   );
 }

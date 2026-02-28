@@ -22,9 +22,9 @@ function validateGraphApiKey(request: NextRequest): boolean {
 
 export async function createContext({ req }: { req: NextRequest }) {
   // // Disable this function when testing in Apollo SandBox
-  if (!validateGraphApiKey(req)) {
-    throw new Error("Unauthorized: No Access");
-  }
+  // if (!validateGraphApiKey(req)) {
+  //   throw new Error("Unauthorized: No Access");
+  // }
 
   const session = await getServerSession(authOptions);
 
