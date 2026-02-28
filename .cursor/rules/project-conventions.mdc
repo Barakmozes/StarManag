@@ -1,0 +1,97 @@
+---
+description: Core project conventions, architecture, and iron rules for Next.js food ordering app
+alwaysApply: true
+---
+
+# Project Conventions — StarManag / Food Ordering App
+
+## Iron Rule: Server Components & User Passing
+
+**page.tsx files are ALWAYS server components.** Never add `"use client"` to page.tsx.
+
+Fetch the current user server-side and pass it down to client components:
+
+```tsx
+// page.tsx — SERVER COMPONENT
+import { getCurrentUser } from "@/lib/session";
+import { User } from "@prisma/client";
+
+export default async function MyPage() {
+  const user = await getCurrentUser();
+  return <ClientComponent user={user as User} />;
+}
+```
+
+- Use `getCurrentUser()` from `@/lib/session` — never fetch session in client components for initial page data.
+- Pass `user={user as User}` to client components that need auth state.
+- For protected routes: `if (!user) redirect("/login");` and role checks before rendering.
+
+---
+
+## Architecture Overview
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 14 App Router |
+| Database | PostgreSQL (Prisma ORM) |
+| API | GraphQL (Pothos schema builder) |
+| Auth | NextAuth with Prisma adapter |
+| State | Zustand (cart, sidebar, login modal, restaurant store) |
+| GraphQL Client | urql + GraphQL Code Generator |
+| Styling | TailwindCSS + Headless UI |
+| Storage | Supabase (images, floor plans) |
+| Payment | Stripe |
+
+---
+
+## Folder Structure
+
+```
+app/
+  (dashboard)/dashboard/     — Admin routes (users, orders, menu, deliveries, settings)
+  (user)/user/              — User routes (profile, favorites, orders, help)
+  components/                — Shared UI (Common, Home, Restaurant_interface)
+  api/auth/[...nextauth]/    — NextAuth route
+  api/graphql/               — GraphQL endpoint
+graphql/
+  schema/                    — Pothos schema by domain (User, Menu, Order, etc.)
+  files/                     — .graphql query/mutation documents
+lib/                         — session, prisma, store, supabaseStorage
+prisma/
+  schema.prisma              — Single source of truth for DB schema
+```
+
+---
+
+## Code Style
+
+- **Indentation**: 2 spaces
+- **Components**: PascalCase (`AdminUserTable`, `MenuSection`)
+- **Files**: PascalCase for components (`AdminUserTable.tsx`), camelCase for utils (`floorUtils.ts`)
+- **Hooks**: `use` prefix (`useCartStore`, `useRestaurantStore`)
+- **GraphQL**: Domain-organized — each domain has `index.ts`, `queries.ts`, `mutations.ts`, `enum.ts`
+
+---
+
+## What NOT to Do (Anti-Patterns)
+
+1. **Never** add `"use client"` to `page.tsx` — pages must stay server components.
+2. **Never** call `getCurrentUser()` or `getServerSession()` inside client components.
+3. **Never** bypass role checks — dashboard routes require ADMIN; GraphQL resolvers must check `context.user?.role`.
+4. **Never** mutate Prisma schema without running `prisma migrate dev` and `prisma generate`.
+5. **Never** hardcode API keys or secrets — use `.env` and `NEXT_PUBLIC_` only for client-safe values.
+6. **Never** use `any` when Prisma/GraphQL types are available — prefer `User`, generated types from `@/graphql/generated`.
+7. **Never** fetch data in client components when server components can do it — prefer server fetch + props.
+8. **Never** forget `loading.tsx` for async routes — use Suspense boundaries for better UX.
+
+---
+
+## Role-Based Access
+
+- **ADMIN**: Full dashboard, user management, GraphQL admin mutations
+- **MANAGER**: Dashboard + Restaurant Interface (zone/table management)
+- **WAITER**: Restaurant Interface only
+- **USER**: Cart, orders, favorites, profile
+- **DELIVERY**: Delivery-specific views
+
+Middleware protects `/dashboard`, `/user`, `/pay`, `/payment-success`. GraphQL resolvers enforce role checks per operation.

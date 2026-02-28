@@ -1,0 +1,41 @@
+mutation AddWaitlistEntry(
+  $userEmail: String!
+  $areaId: String!
+  $numOfDiners: Int!
+) {
+  addWaitlistEntry(
+    userEmail: $userEmail
+    areaId: $areaId
+    numOfDiners: $numOfDiners
+  ) {
+    id
+    status
+    numOfDiners
+    createdAt
+    area {
+      name
+    }
+  }
+}
+
+mutation CancelWaitlistEntry($id: String!) {
+  cancelWaitlistEntry(id: $id) {
+    id
+    status
+  }
+}
+
+query GetUserWaitlistEntries($userEmail: String!) {
+  getUserWaitlistEntries(userEmail: $userEmail) {
+    id
+    status
+    numOfDiners
+    calledAt
+    seatedAt
+    createdAt
+    updatedAt
+    area {
+      name
+    }
+  }
+}

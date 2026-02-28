@@ -2,7 +2,7 @@
 
 import { createElement } from "react";
 import DialogComponent from "./DialogComponent";
-import { BsHeartFill } from "react-icons/bs";
+import { BsCalendarCheck, BsHeartFill } from "react-icons/bs";
 import { MdHelp } from "react-icons/md";
 import { FaReceipt } from "react-icons/fa";
 import { HiHome, HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
@@ -83,6 +83,17 @@ const SideBar = ({ user }: Props) => {
                   <span className="text-sm">{link.title}</span>
                 </Link>
               ))}
+
+              {user?.role !== "MANAGER" && user?.role !== "WAITER" && (
+                <Link
+                  href="/user/reservations"
+                  onClick={onSideBarClose}
+                  className="flex min-h-[48px] items-center rounded-lg px-3 transition-colors hover:bg-green-50 hover:text-green-700 font-medium text-slate-600"
+                >
+                  <BsCalendarCheck className="h-5 w-5 mr-3 shrink-0" />
+                  <span className="text-sm">Reservations</span>
+                </Link>
+              )}
 
               <button
                 type="button"

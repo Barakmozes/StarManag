@@ -1,6 +1,16 @@
 export type Locale = "en" | "he";
 
 /**
+ * Returns a YYYY-MM-DD string in the Israel timezone (Asia/Jerusalem).
+ * Avoids the UTC drift caused by `toISOString().split("T")[0]`.
+ */
+export function getIsraelDateString(date?: Date): string {
+  return (date ?? new Date()).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Jerusalem",
+  });
+}
+
+/**
  * Normalizes any value we might see in cookies / external systems.
  * - "he" or the legacy "iw" => "he"
  * - everything else => "en"

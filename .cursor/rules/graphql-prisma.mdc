@@ -1,0 +1,70 @@
+---
+description: GraphQL (Apollo + Pothos) and Prisma schema conventions
+globs:
+  - graphql/**/*.ts
+  - graphql/files/*.graphql
+  - app/api/graphql/**/*.ts
+  - prisma/schema.prisma
+alwaysApply: false
+---
+
+# GraphQL & Prisma Conventions
+
+## Prisma Schema (`schema.prisma`)
+
+- **Source of truth** for all data models — consult before adding or changing DB fields.
+- **Enums**: SCREAMING_SNAKE_CASE. Known enums: `Role`, `OrderStatus`, `ReservationStatus`, `NotificationStatus`, `WaitlistStatus`.
+- **Models**: PascalCase; relations use camelCase (`user`, `profile`, `order`).
+- **Relations**: Use `onDelete: Cascade` for dependent relations; `SetNull` when preserving parent data. Avoid orphaned records.
+- **Indexes**: Add `@@index` for frequently queried fields (`orderDate`, `status`, `userEmail`).
+- After schema changes: `prisma migrate dev` (local) or `prisma migrate deploy` (production), then `prisma generate`.
+
+## Pothos Domain Structure
+
+Under `graphql/schema/*`, each domain has its own folder:
+
+```
+User/
+  index.ts      — exports schema
+  queries.ts    — getUsers, getUser, etc.
+  mutations.ts  — editUserRole, etc.
+  enum.ts       — Role enum (if needed)
+```
+
+Keep domain boundaries clean: User, Menu, Order, Area, Table, Reservation, Waitlist, etc.
+
+## Resolver Standards
+
+- Use `builder.prismaObject()` to expose Prisma models.
+- Use `t.prismaField` / `t.prismaMutation` for Prisma-backed operations.
+- **Always** check `context.user?.role` for authorization:
+
+```ts
+resolve: async (query, _parent, args, contextPromise) => {
+  const context = await contextPromise;
+  if (context.user?.role !== "ADMIN") {
+    throw new GraphQLError("You don't have permission to perform this action");
+  }
+  return prisma.user.findMany({ ...query });
+}
+```
+
+- Validate inputs and return typed GraphQL errors for forbidden actions.
+- Keep business logic centralized in resolvers/services, not duplicated in UI.
+
+## Naming
+
+- Queries: `getUsers`, `getUser`, `getMenus`, `getTableOrder`
+- Mutations: `editUserRole`, `addMenu`, `editTable`, `deleteArea`
+
+## API Context & Security
+
+- `createContext` provides `prisma` and `user` (from `getServerSession`).
+- GraphQL API requires `GRAPHQL_API_KEY` in headers or query params.
+- Never hardcode secrets or fallback keys.
+
+## Client Contract Safety
+
+- Place `.graphql` documents in `graphql/files/` (`user.graphql`, `menu.graphql`).
+- Keep operations compatible with generated types in `graphql/generated.ts`.
+- When schema or documents change, run `yarn codegen` and update usage sites.

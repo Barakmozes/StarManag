@@ -1,0 +1,85 @@
+---
+description: Client components, Zustand stores, uploads, and restaurant interface patterns
+globs:
+  - app/**/*.tsx
+  - lib/store.ts
+  - lib/AreaStore.ts
+  - lib/supabaseStorage.ts
+alwaysApply: false
+---
+
+# Client Components, State & UI Patterns
+
+## When to Use `"use client"`
+
+Add `"use client"` **only** when the component needs:
+
+- React hooks (`useState`, `useEffect`, `useQuery`, `useMutation`)
+- Event handlers (`onClick`, `onChange`)
+- Browser APIs or Zustand store access
+- Third-party client libraries (urql, react-hot-toast)
+
+Keep components server by default whenever interactivity is not required.
+(See `server-components-auth.mdc` for page/layout rules.)
+
+## Receiving User from Server
+
+Client components receive `user` as a prop from server components:
+
+```tsx
+"use client";
+
+import { User } from "@prisma/client";
+
+type Props = { user: User };
+
+export default function Header({ user }: Props) {
+  if (!user) return <LoginButton />;
+  return <AccountDropDown user={user} />;
+}
+```
+
+## Zustand Store Conventions
+
+| Store | Location | Purpose | Persistence |
+|-------|----------|---------|-------------|
+| `useCartStore` | `lib/store.ts` | Cart items, `tableId`, `tableNumber` | `"You&i_cart"` |
+| `useSideBarDrawer` | `lib/store.ts` | Sidebar UI state | None |
+| `useLoginModal` | `lib/store.ts` | Login modal UI state | None |
+| `useRestaurantStore` | `lib/AreaStore.ts` | Floor plan, areas, tables, grid config | `"restaurant-areas"` |
+
+**Rules**:
+
+- Global app state belongs to `lib/store.ts`.
+- Restaurant/floor state belongs to `lib/AreaStore.ts`.
+- Extend existing stores before creating new global stores.
+- Do not introduce Redux or additional state libraries.
+- Use `persist` middleware with `skipHydration: true` for Next.js compatibility.
+- Use `devtools` middleware in development.
+
+## GraphQL in Client Components
+
+- Use `useQuery` and `useMutation` from `@urql/next`.
+- Import generated types and documents from `@/graphql/generated`.
+- Handle loading/error states; use toast for mutation feedback.
+
+## Restaurant Interface Compatibility
+
+For `app/components/Restaurant_interface/*` changes:
+
+- Keep compatibility with `AreaStore` state shape/actions.
+- Keep GraphQL mutations and Prisma schema aligned.
+- Respect domain boundaries: zones, tables, reservations, table usage, grid config.
+- Avoid local-only state logic that diverges from shared store or server truth.
+
+## Upload & Media Pattern
+
+- Follow existing `UploadImg.tsx` workflow (size handling, drag/drop, preview).
+- Use `lib/supabaseStorage.ts` for upload/delete integration.
+- Store resulting URLs as strings through existing GraphQL/Prisma paths.
+
+## Quality & Typing
+
+- Use generated GraphQL types and Prisma types; avoid `any`.
+- Maintain clean separation: UI rendering vs state vs data access.
+- Keep role-based rendering defensive in UI, but enforce permissions on server/resolver layers.

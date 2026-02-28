@@ -37,6 +37,16 @@ export type Area = {
   waitlists: Array<Waitlist>;
 };
 
+export type AreaAvailability = {
+  __typename?: 'AreaAvailability';
+  availableTables: Scalars['Int']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  floorPlanImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  totalTables: Scalars['Int']['output'];
+};
+
 export type AreaOrderByInput = {
   createdAt?: InputMaybe<SortOrder>;
 };
@@ -717,7 +727,9 @@ export type Query = {
   getArea: Area;
   getAreas: Array<Area>;
   getAreasNameDescription: Array<BasicArea>;
+  getAreasWithAvailability: Array<AreaAvailability>;
   getAvailableTables: Array<Table>;
+  getAvailableTablesForReservation: Array<Table>;
   getCategories: Array<Category>;
   getCategory: Category;
   getChildAreas: Array<Area>;
@@ -770,6 +782,21 @@ export type QueryGetAreaArgs = {
 
 export type QueryGetAreasNameDescriptionArgs = {
   orderBy?: InputMaybe<AreaOrderByInput>;
+};
+
+
+export type QueryGetAreasWithAvailabilityArgs = {
+  date: Scalars['String']['input'];
+  numOfDiners: Scalars['Int']['input'];
+  time: Scalars['String']['input'];
+};
+
+
+export type QueryGetAvailableTablesForReservationArgs = {
+  areaId?: InputMaybe<Scalars['String']['input']>;
+  date: Scalars['String']['input'];
+  numOfDiners: Scalars['Int']['input'];
+  time: Scalars['String']['input'];
 };
 
 
@@ -1153,6 +1180,71 @@ export enum WaitlistStatus {
   Waiting = 'WAITING'
 }
 
+export type AddReservationMutationVariables = Exact<{
+  createdBy: Role;
+  numOfDiners: Scalars['Int']['input'];
+  reservationTime: Scalars['DateTime']['input'];
+  tableId: Scalars['String']['input'];
+  userEmail: Scalars['String']['input'];
+}>;
+
+
+export type AddReservationMutation = { __typename?: 'Mutation', addReservation: { __typename?: 'Reservation', id: string, status: ReservationStatus, reservationTime: any, numOfDiners: number, table: { __typename?: 'Table', tableNumber: number, diners: number, area: { __typename?: 'Area', name: string } } } };
+
+export type AddGuestReservationMutationVariables = Exact<{
+  customerName: Scalars['String']['input'];
+  tableId: Scalars['String']['input'];
+  reservationTime: Scalars['DateTime']['input'];
+  numOfDiners: Scalars['Int']['input'];
+  createdBy: Role;
+}>;
+
+
+export type AddGuestReservationMutation = { __typename?: 'Mutation', addGuestReservation: { __typename?: 'Reservation', id: string } };
+
+export type EditReservationMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  reservationTime?: InputMaybe<Scalars['DateTime']['input']>;
+  numOfDiners?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<ReservationStatus>;
+}>;
+
+
+export type EditReservationMutation = { __typename?: 'Mutation', editReservation: { __typename?: 'Reservation', id: string, reservationTime: any, numOfDiners: number, status: ReservationStatus, updatedAt: any, userEmail: string, tableId: string } };
+
+export type CompleteReservationMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type CompleteReservationMutation = { __typename?: 'Mutation', completeReservation: { __typename?: 'Reservation', id: string, status: ReservationStatus, updatedAt: any } };
+
+export type GetUserReservationsQueryVariables = Exact<{
+  userEmail: Scalars['String']['input'];
+}>;
+
+
+export type GetUserReservationsQuery = { __typename?: 'Query', getUserReservations: Array<{ __typename?: 'Reservation', id: string, status: ReservationStatus, reservationTime: any, numOfDiners: number, userEmail: string, createdBy: string, createdAt: any, updatedAt: any, table: { __typename?: 'Table', tableNumber: number, diners: number, area: { __typename?: 'Area', name: string } } }> };
+
+export type GetAvailableTablesForReservationQueryVariables = Exact<{
+  date: Scalars['String']['input'];
+  time: Scalars['String']['input'];
+  numOfDiners: Scalars['Int']['input'];
+  areaId?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAvailableTablesForReservationQuery = { __typename?: 'Query', getAvailableTablesForReservation: Array<{ __typename?: 'Table', id: string, tableNumber: number, diners: number, areaId: string, position: any }> };
+
+export type GetAreasWithAvailabilityQueryVariables = Exact<{
+  date: Scalars['String']['input'];
+  time: Scalars['String']['input'];
+  numOfDiners: Scalars['Int']['input'];
+}>;
+
+
+export type GetAreasWithAvailabilityQuery = { __typename?: 'Query', getAreasWithAvailability: Array<{ __typename?: 'AreaAvailability', id: string, name: string, description?: string | null, floorPlanImage?: string | null, totalTables: number, availableTables: number }> };
+
 export type GetAreaQueryVariables = Exact<{
   getAreaId: Scalars['String']['input'];
 }>;
@@ -1284,6 +1376,29 @@ export type RemoveFavoriteMutationVariables = Exact<{
 
 
 export type RemoveFavoriteMutation = { __typename?: 'Mutation', removeFavorite: { __typename?: 'Favorite', id: string, menu: Array<string> } };
+
+export type GetGridConfigByAreaQueryVariables = Exact<{
+  areaId: Scalars['String']['input'];
+}>;
+
+
+export type GetGridConfigByAreaQuery = { __typename?: 'Query', getGridConfigByArea?: { __typename?: 'GridConfig', areaId: string, gridSize: number, id: string } | null };
+
+export type AddGridConfigMutationVariables = Exact<{
+  areaId: Scalars['String']['input'];
+  gridSize?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type AddGridConfigMutation = { __typename?: 'Mutation', addGridConfig: { __typename?: 'GridConfig', areaId: string, gridSize: number, id: string } };
+
+export type EditGridConfigMutationVariables = Exact<{
+  editGridConfigId: Scalars['String']['input'];
+  gridSize?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type EditGridConfigMutation = { __typename?: 'Mutation', editGridConfig: { __typename?: 'GridConfig', areaId: string, gridSize: number, id: string } };
 
 export type AddMenuMutationVariables = Exact<{
   category: Scalars['String']['input'];
@@ -1512,7 +1627,7 @@ export type GetTableQuery = { __typename?: 'Query', getTable: { __typename?: 'Ta
 export type GetTablesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTablesQuery = { __typename?: 'Query', getTables: Array<{ __typename?: 'Table', areaId: string, createdAt: any, diners: number, id: string, position: any, reserved: boolean, specialRequests: Array<string>, tableNumber: number, updatedAt: any }> };
+export type GetTablesQuery = { __typename?: 'Query', getTables: Array<{ __typename?: 'Table', id: string, tableNumber: number, diners: number, areaId: string, reserved: boolean, specialRequests: Array<string>, unpaidOrdersCount: number, position: any, createdAt: any, updatedAt: any }> };
 
 export type GetTableOrderQueryVariables = Exact<{
   tableId: Scalars['String']['input'];
@@ -1598,6 +1713,20 @@ export type ToggleTableReservationMutationVariables = Exact<{
 
 export type ToggleTableReservationMutation = { __typename?: 'Mutation', toggleTableReservation: { __typename?: 'Table', id: string, reserved: boolean } };
 
+export type CancelReservationMutationVariables = Exact<{
+  cancelReservationId: Scalars['String']['input'];
+}>;
+
+
+export type CancelReservationMutation = { __typename?: 'Mutation', cancelReservation: { __typename?: 'Reservation', id: string, createdByUserEmail?: string | null, numOfDiners: number, reservationTime: any, status: ReservationStatus, tableId: string, updatedAt: any, userEmail: string, table: { __typename?: 'Table', tableNumber: number }, user: { __typename?: 'User', name?: string | null, email?: string | null, profile?: { __typename?: 'Profile', phone?: string | null } | null } } };
+
+export type GetReservationsQueryVariables = Exact<{
+  status?: InputMaybe<ReservationStatus>;
+}>;
+
+
+export type GetReservationsQuery = { __typename?: 'Query', getReservations: Array<{ __typename?: 'Reservation', createdAt: any, createdBy: string, id: string, numOfDiners: number, reservationTime: any, status: ReservationStatus, tableId: string, updatedAt: any, userEmail: string, table: { __typename?: 'Table', tableNumber: number }, user: { __typename?: 'User', name?: string | null, profile?: { __typename?: 'Profile', phone?: string | null } | null } }> };
+
 export type GetUserQueryVariables = Exact<{
   email: Scalars['String']['input'];
 }>;
@@ -1632,117 +1761,170 @@ export type EditProfileMutationVariables = Exact<{
 
 export type EditProfileMutation = { __typename?: 'Mutation', editProfile: { __typename?: 'Profile', id: string } };
 
-export type GetDashboardKpisQueryVariables = Exact<{
-  from: Scalars['DateTime']['input'];
-  to: Scalars['DateTime']['input'];
-}>;
-
-
-export type GetDashboardKpisQuery = { __typename?: 'Query', getDashboardKpis: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number } };
-
-export type GetDashboardRevenueQueryVariables = Exact<{
-  from: Scalars['DateTime']['input'];
-  to: Scalars['DateTime']['input'];
-  groupBy: RevenueGroupBy;
-}>;
-
-
-export type GetDashboardRevenueQuery = { __typename?: 'Query', getDashboardRevenue: Array<{ __typename?: 'DashboardRevenuePoint', bucket: any, revenue: number, orders: number }> };
-
-export type GetDashboardKpisCompareQueryVariables = Exact<{
-  from: Scalars['DateTime']['input'];
-  to: Scalars['DateTime']['input'];
-}>;
-
-
-export type GetDashboardKpisCompareQuery = { __typename?: 'Query', getDashboardKpisCompare: { __typename?: 'DashboardKpisCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, current: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number }, previous: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number, uniqueCustomers: number, newCustomers: number } } };
-
-export type GetDashboardRevenueCompareQueryVariables = Exact<{
-  from: Scalars['DateTime']['input'];
-  to: Scalars['DateTime']['input'];
-  groupBy: RevenueGroupBy;
-}>;
-
-
-export type GetDashboardRevenueCompareQuery = { __typename?: 'Query', getDashboardRevenueCompare: { __typename?: 'DashboardRevenueCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, points: Array<{ __typename?: 'DashboardRevenueComparePoint', bucket: any, revenue: number, orders: number, previousBucket?: any | null, previousRevenue: number, previousOrders: number }> } };
-
-export type GetGridConfigByAreaQueryVariables = Exact<{
+export type AddWaitlistEntryMutationVariables = Exact<{
+  userEmail: Scalars['String']['input'];
   areaId: Scalars['String']['input'];
-}>;
-
-
-export type GetGridConfigByAreaQuery = { __typename?: 'Query', getGridConfigByArea?: { __typename?: 'GridConfig', id: string, areaId: string, gridSize: number, createdAt: any, updatedAt: any } | null };
-
-export type AddGridConfigMutationVariables = Exact<{
-  areaId: Scalars['String']['input'];
-  gridSize?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type AddGridConfigMutation = { __typename?: 'Mutation', addGridConfig: { __typename?: 'GridConfig', id: string, areaId: string, gridSize: number, createdAt: any, updatedAt: any } };
-
-export type EditGridConfigMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-  gridSize?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type EditGridConfigMutation = { __typename?: 'Mutation', editGridConfig: { __typename?: 'GridConfig', id: string, areaId: string, gridSize: number, createdAt: any, updatedAt: any } };
-
-export type CancelReservationMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type CancelReservationMutation = { __typename?: 'Mutation', cancelReservation: { __typename?: 'Reservation', id: string, createdByUserEmail?: string | null, numOfDiners: number, reservationTime: any, status: ReservationStatus, tableId: string, updatedAt: any, userEmail: string, user: { __typename?: 'User', name?: string | null, email?: string | null, profile?: { __typename?: 'Profile', phone?: string | null } | null } } };
-
-export type GetReservationsQueryVariables = Exact<{
-  status?: InputMaybe<ReservationStatus>;
-}>;
-
-
-export type GetReservationsQuery = { __typename?: 'Query', getReservations: Array<{ __typename?: 'Reservation', createdAt: any, createdBy: string, id: string, numOfDiners: number, reservationTime: any, status: ReservationStatus, tableId: string, updatedAt: any, userEmail: string, table: { __typename?: 'Table', tableNumber: number }, user: { __typename?: 'User', name?: string | null, profile?: { __typename?: 'Profile', phone?: string | null } | null } }> };
-
-export type AddReservationMutationVariables = Exact<{
-  createdBy: Role;
   numOfDiners: Scalars['Int']['input'];
-  reservationTime: Scalars['DateTime']['input'];
-  tableId: Scalars['String']['input'];
+}>;
+
+
+export type AddWaitlistEntryMutation = { __typename?: 'Mutation', addWaitlistEntry: { __typename?: 'Waitlist', id: string, status: WaitlistStatus, numOfDiners: number, createdAt: any, area: { __typename?: 'Area', name: string } } };
+
+export type CancelWaitlistEntryMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type CancelWaitlistEntryMutation = { __typename?: 'Mutation', cancelWaitlistEntry: { __typename?: 'Waitlist', id: string, status: WaitlistStatus } };
+
+export type GetUserWaitlistEntriesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
 }>;
 
 
-export type AddReservationMutation = { __typename?: 'Mutation', addReservation: { __typename?: 'Reservation', id: string } };
-
-export type AddGuestReservationMutationVariables = Exact<{
-  customerName: Scalars['String']['input'];
-  tableId: Scalars['String']['input'];
-  reservationTime: Scalars['DateTime']['input'];
-  numOfDiners: Scalars['Int']['input'];
-  createdBy: Role;
-}>;
+export type GetUserWaitlistEntriesQuery = { __typename?: 'Query', getUserWaitlistEntries: Array<{ __typename?: 'Waitlist', id: string, status: WaitlistStatus, numOfDiners: number, calledAt?: any | null, seatedAt?: any | null, createdAt: any, updatedAt: any, area: { __typename?: 'Area', name: string } }> };
 
 
-export type AddGuestReservationMutation = { __typename?: 'Mutation', addGuestReservation: { __typename?: 'Reservation', id: string } };
+export const AddReservationDocument = gql`
+    mutation AddReservation($createdBy: Role!, $numOfDiners: Int!, $reservationTime: DateTime!, $tableId: String!, $userEmail: String!) {
+  addReservation(
+    createdBy: $createdBy
+    numOfDiners: $numOfDiners
+    reservationTime: $reservationTime
+    tableId: $tableId
+    userEmail: $userEmail
+  ) {
+    id
+    status
+    reservationTime
+    numOfDiners
+    table {
+      tableNumber
+      diners
+      area {
+        name
+      }
+    }
+  }
+}
+    `;
 
-export type EditReservationMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-  reservationTime?: InputMaybe<Scalars['DateTime']['input']>;
-  numOfDiners?: InputMaybe<Scalars['Int']['input']>;
-  status?: InputMaybe<ReservationStatus>;
-}>;
+export function useAddReservationMutation() {
+  return Urql.useMutation<AddReservationMutation, AddReservationMutationVariables>(AddReservationDocument);
+};
+export const AddGuestReservationDocument = gql`
+    mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
+  addGuestReservation(
+    customerName: $customerName
+    tableId: $tableId
+    reservationTime: $reservationTime
+    numOfDiners: $numOfDiners
+    createdBy: $createdBy
+  ) {
+    id
+  }
+}
+    `;
 
+export function useAddGuestReservationMutation() {
+  return Urql.useMutation<AddGuestReservationMutation, AddGuestReservationMutationVariables>(AddGuestReservationDocument);
+};
+export const EditReservationDocument = gql`
+    mutation EditReservation($id: String!, $reservationTime: DateTime, $numOfDiners: Int, $status: ReservationStatus) {
+  editReservation(
+    id: $id
+    reservationTime: $reservationTime
+    numOfDiners: $numOfDiners
+    status: $status
+  ) {
+    id
+    reservationTime
+    numOfDiners
+    status
+    updatedAt
+    userEmail
+    tableId
+  }
+}
+    `;
 
-export type EditReservationMutation = { __typename?: 'Mutation', editReservation: { __typename?: 'Reservation', id: string, reservationTime: any, numOfDiners: number, status: ReservationStatus, updatedAt: any, userEmail: string, tableId: string } };
+export function useEditReservationMutation() {
+  return Urql.useMutation<EditReservationMutation, EditReservationMutationVariables>(EditReservationDocument);
+};
+export const CompleteReservationDocument = gql`
+    mutation CompleteReservation($id: String!) {
+  completeReservation(id: $id) {
+    id
+    status
+    updatedAt
+  }
+}
+    `;
 
-export type CompleteReservationMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
+export function useCompleteReservationMutation() {
+  return Urql.useMutation<CompleteReservationMutation, CompleteReservationMutationVariables>(CompleteReservationDocument);
+};
+export const GetUserReservationsDocument = gql`
+    query GetUserReservations($userEmail: String!) {
+  getUserReservations(userEmail: $userEmail) {
+    id
+    status
+    reservationTime
+    numOfDiners
+    userEmail
+    createdBy
+    createdAt
+    updatedAt
+    table {
+      tableNumber
+      diners
+      area {
+        name
+      }
+    }
+  }
+}
+    `;
 
+export function useGetUserReservationsQuery(options: Omit<Urql.UseQueryArgs<GetUserReservationsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetUserReservationsQuery, GetUserReservationsQueryVariables>({ query: GetUserReservationsDocument, ...options });
+};
+export const GetAvailableTablesForReservationDocument = gql`
+    query GetAvailableTablesForReservation($date: String!, $time: String!, $numOfDiners: Int!, $areaId: String) {
+  getAvailableTablesForReservation(
+    date: $date
+    time: $time
+    numOfDiners: $numOfDiners
+    areaId: $areaId
+  ) {
+    id
+    tableNumber
+    diners
+    areaId
+    position
+  }
+}
+    `;
 
-export type CompleteReservationMutation = { __typename?: 'Mutation', completeReservation: { __typename?: 'Reservation', id: string, status: ReservationStatus, updatedAt: any } };
+export function useGetAvailableTablesForReservationQuery(options: Omit<Urql.UseQueryArgs<GetAvailableTablesForReservationQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetAvailableTablesForReservationQuery, GetAvailableTablesForReservationQueryVariables>({ query: GetAvailableTablesForReservationDocument, ...options });
+};
+export const GetAreasWithAvailabilityDocument = gql`
+    query GetAreasWithAvailability($date: String!, $time: String!, $numOfDiners: Int!) {
+  getAreasWithAvailability(date: $date, time: $time, numOfDiners: $numOfDiners) {
+    id
+    name
+    description
+    floorPlanImage
+    totalTables
+    availableTables
+  }
+}
+    `;
 
-
+export function useGetAreasWithAvailabilityQuery(options: Omit<Urql.UseQueryArgs<GetAreasWithAvailabilityQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetAreasWithAvailabilityQuery, GetAreasWithAvailabilityQueryVariables>({ query: GetAreasWithAvailabilityDocument, ...options });
+};
 export const GetAreaDocument = gql`
     query GetArea($getAreaId: String!) {
   getArea(id: $getAreaId) {
@@ -2015,6 +2197,45 @@ export const RemoveFavoriteDocument = gql`
 
 export function useRemoveFavoriteMutation() {
   return Urql.useMutation<RemoveFavoriteMutation, RemoveFavoriteMutationVariables>(RemoveFavoriteDocument);
+};
+export const GetGridConfigByAreaDocument = gql`
+    query GetGridConfigByArea($areaId: String!) {
+  getGridConfigByArea(areaId: $areaId) {
+    areaId
+    gridSize
+    id
+  }
+}
+    `;
+
+export function useGetGridConfigByAreaQuery(options: Omit<Urql.UseQueryArgs<GetGridConfigByAreaQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetGridConfigByAreaQuery, GetGridConfigByAreaQueryVariables>({ query: GetGridConfigByAreaDocument, ...options });
+};
+export const AddGridConfigDocument = gql`
+    mutation AddGridConfig($areaId: String!, $gridSize: Int) {
+  addGridConfig(areaId: $areaId, gridSize: $gridSize) {
+    areaId
+    gridSize
+    id
+  }
+}
+    `;
+
+export function useAddGridConfigMutation() {
+  return Urql.useMutation<AddGridConfigMutation, AddGridConfigMutationVariables>(AddGridConfigDocument);
+};
+export const EditGridConfigDocument = gql`
+    mutation EditGridConfig($editGridConfigId: String!, $gridSize: Int) {
+  editGridConfig(id: $editGridConfigId, gridSize: $gridSize) {
+    areaId
+    gridSize
+    id
+  }
+}
+    `;
+
+export function useEditGridConfigMutation() {
+  return Urql.useMutation<EditGridConfigMutation, EditGridConfigMutationVariables>(EditGridConfigDocument);
 };
 export const AddMenuDocument = gql`
     mutation AddMenu($category: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
@@ -2477,14 +2698,15 @@ export function useGetTableQuery(options: Omit<Urql.UseQueryArgs<GetTableQueryVa
 export const GetTablesDocument = gql`
     query GetTables {
   getTables {
-    areaId
-    createdAt
-    diners
     id
-    position
+    tableNumber
+    diners
+    areaId
     reserved
     specialRequests
-    tableNumber
+    unpaidOrdersCount
+    position
+    createdAt
     updatedAt
   }
 }
@@ -2657,6 +2879,62 @@ export const ToggleTableReservationDocument = gql`
 export function useToggleTableReservationMutation() {
   return Urql.useMutation<ToggleTableReservationMutation, ToggleTableReservationMutationVariables>(ToggleTableReservationDocument);
 };
+export const CancelReservationDocument = gql`
+    mutation CancelReservation($cancelReservationId: String!) {
+  cancelReservation(id: $cancelReservationId) {
+    id
+    createdByUserEmail
+    numOfDiners
+    reservationTime
+    status
+    table {
+      tableNumber
+    }
+    tableId
+    updatedAt
+    userEmail
+    user {
+      name
+      email
+      profile {
+        phone
+      }
+    }
+  }
+}
+    `;
+
+export function useCancelReservationMutation() {
+  return Urql.useMutation<CancelReservationMutation, CancelReservationMutationVariables>(CancelReservationDocument);
+};
+export const GetReservationsDocument = gql`
+    query GetReservations($status: ReservationStatus) {
+  getReservations(status: $status) {
+    createdAt
+    createdBy
+    id
+    numOfDiners
+    reservationTime
+    status
+    table {
+      tableNumber
+    }
+    tableId
+    updatedAt
+    userEmail
+    user {
+      name
+      profile {
+        phone
+      }
+    }
+  }
+}
+    `;
+
+export function useGetReservationsQuery(options?: Omit<Urql.UseQueryArgs<GetReservationsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetReservationsQuery, GetReservationsQueryVariables>({ query: GetReservationsDocument, ...options });
+};
 export const GetUserDocument = gql`
     query GetUser($email: String!) {
   getUser(email: $email) {
@@ -2728,266 +3006,56 @@ export const EditProfileDocument = gql`
 export function useEditProfileMutation() {
   return Urql.useMutation<EditProfileMutation, EditProfileMutationVariables>(EditProfileDocument);
 };
-export const GetDashboardKpisDocument = gql`
-    query GetDashboardKpis($from: DateTime!, $to: DateTime!) {
-  getDashboardKpis(from: $from, to: $to) {
-    grossRevenue
-    ordersCount
-    completedOrders
-    canceledOrders
-    avgOrderValue
-    menusCount
-    categoriesCount
-    tablesCount
-    usersCount
-    uniqueCustomers
-    newCustomers
-  }
-}
-    `;
-
-export function useGetDashboardKpisQuery(options: Omit<Urql.UseQueryArgs<GetDashboardKpisQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetDashboardKpisQuery, GetDashboardKpisQueryVariables>({ query: GetDashboardKpisDocument, ...options });
-};
-export const GetDashboardRevenueDocument = gql`
-    query GetDashboardRevenue($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
-  getDashboardRevenue(from: $from, to: $to, groupBy: $groupBy) {
-    bucket
-    revenue
-    orders
-  }
-}
-    `;
-
-export function useGetDashboardRevenueQuery(options: Omit<Urql.UseQueryArgs<GetDashboardRevenueQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetDashboardRevenueQuery, GetDashboardRevenueQueryVariables>({ query: GetDashboardRevenueDocument, ...options });
-};
-export const GetDashboardKpisCompareDocument = gql`
-    query GetDashboardKpisCompare($from: DateTime!, $to: DateTime!) {
-  getDashboardKpisCompare(from: $from, to: $to) {
-    currentFrom
-    currentTo
-    previousFrom
-    previousTo
-    current {
-      grossRevenue
-      ordersCount
-      completedOrders
-      canceledOrders
-      avgOrderValue
-      menusCount
-      categoriesCount
-      tablesCount
-      usersCount
-      uniqueCustomers
-      newCustomers
-    }
-    previous {
-      grossRevenue
-      ordersCount
-      completedOrders
-      canceledOrders
-      avgOrderValue
-      menusCount
-      categoriesCount
-      tablesCount
-      usersCount
-      uniqueCustomers
-      newCustomers
-    }
-  }
-}
-    `;
-
-export function useGetDashboardKpisCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardKpisCompareQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetDashboardKpisCompareQuery, GetDashboardKpisCompareQueryVariables>({ query: GetDashboardKpisCompareDocument, ...options });
-};
-export const GetDashboardRevenueCompareDocument = gql`
-    query GetDashboardRevenueCompare($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
-  getDashboardRevenueCompare(from: $from, to: $to, groupBy: $groupBy) {
-    currentFrom
-    currentTo
-    previousFrom
-    previousTo
-    points {
-      bucket
-      revenue
-      orders
-      previousBucket
-      previousRevenue
-      previousOrders
-    }
-  }
-}
-    `;
-
-export function useGetDashboardRevenueCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardRevenueCompareQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetDashboardRevenueCompareQuery, GetDashboardRevenueCompareQueryVariables>({ query: GetDashboardRevenueCompareDocument, ...options });
-};
-export const GetGridConfigByAreaDocument = gql`
-    query GetGridConfigByArea($areaId: String!) {
-  getGridConfigByArea(areaId: $areaId) {
-    id
-    areaId
-    gridSize
-    createdAt
-    updatedAt
-  }
-}
-    `;
-
-export function useGetGridConfigByAreaQuery(options: Omit<Urql.UseQueryArgs<GetGridConfigByAreaQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetGridConfigByAreaQuery, GetGridConfigByAreaQueryVariables>({ query: GetGridConfigByAreaDocument, ...options });
-};
-export const AddGridConfigDocument = gql`
-    mutation AddGridConfig($areaId: String!, $gridSize: Int) {
-  addGridConfig(areaId: $areaId, gridSize: $gridSize) {
-    id
-    areaId
-    gridSize
-    createdAt
-    updatedAt
-  }
-}
-    `;
-
-export function useAddGridConfigMutation() {
-  return Urql.useMutation<AddGridConfigMutation, AddGridConfigMutationVariables>(AddGridConfigDocument);
-};
-export const EditGridConfigDocument = gql`
-    mutation EditGridConfig($id: String!, $gridSize: Int) {
-  editGridConfig(id: $id, gridSize: $gridSize) {
-    id
-    areaId
-    gridSize
-    createdAt
-    updatedAt
-  }
-}
-    `;
-
-export function useEditGridConfigMutation() {
-  return Urql.useMutation<EditGridConfigMutation, EditGridConfigMutationVariables>(EditGridConfigDocument);
-};
-export const CancelReservationDocument = gql`
-    mutation CancelReservation($id: String!) {
-  cancelReservation(id: $id) {
-    id
-    createdByUserEmail
-    numOfDiners
-    reservationTime
-    status
-    tableId
-    updatedAt
-    userEmail
-    user {
-      name
-      email
-      profile {
-        phone
-      }
-    }
-  }
-}
-    `;
-
-export function useCancelReservationMutation() {
-  return Urql.useMutation<CancelReservationMutation, CancelReservationMutationVariables>(CancelReservationDocument);
-};
-export const GetReservationsDocument = gql`
-    query GetReservations($status: ReservationStatus) {
-  getReservations(status: $status) {
-    createdAt
-    createdBy
-    id
-    numOfDiners
-    reservationTime
-    status
-    table {
-      tableNumber
-    }
-    tableId
-    updatedAt
-    userEmail
-    user {
-      name
-      profile {
-        phone
-      }
-    }
-  }
-}
-    `;
-
-export function useGetReservationsQuery(options?: Omit<Urql.UseQueryArgs<GetReservationsQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetReservationsQuery, GetReservationsQueryVariables>({ query: GetReservationsDocument, ...options });
-};
-export const AddReservationDocument = gql`
-    mutation AddReservation($createdBy: Role!, $numOfDiners: Int!, $reservationTime: DateTime!, $tableId: String!, $userEmail: String!) {
-  addReservation(
-    createdBy: $createdBy
-    numOfDiners: $numOfDiners
-    reservationTime: $reservationTime
-    tableId: $tableId
+export const AddWaitlistEntryDocument = gql`
+    mutation AddWaitlistEntry($userEmail: String!, $areaId: String!, $numOfDiners: Int!) {
+  addWaitlistEntry(
     userEmail: $userEmail
-  ) {
-    id
-  }
-}
-    `;
-
-export function useAddReservationMutation() {
-  return Urql.useMutation<AddReservationMutation, AddReservationMutationVariables>(AddReservationDocument);
-};
-export const AddGuestReservationDocument = gql`
-    mutation AddGuestReservation($customerName: String!, $tableId: String!, $reservationTime: DateTime!, $numOfDiners: Int!, $createdBy: Role!) {
-  addGuestReservation(
-    customerName: $customerName
-    tableId: $tableId
-    reservationTime: $reservationTime
+    areaId: $areaId
     numOfDiners: $numOfDiners
-    createdBy: $createdBy
   ) {
     id
-  }
-}
-    `;
-
-export function useAddGuestReservationMutation() {
-  return Urql.useMutation<AddGuestReservationMutation, AddGuestReservationMutationVariables>(AddGuestReservationDocument);
-};
-export const EditReservationDocument = gql`
-    mutation EditReservation($id: String!, $reservationTime: DateTime, $numOfDiners: Int, $status: ReservationStatus) {
-  editReservation(
-    id: $id
-    reservationTime: $reservationTime
-    numOfDiners: $numOfDiners
-    status: $status
-  ) {
-    id
-    reservationTime
+    status
     numOfDiners
-    status
-    updatedAt
-    userEmail
-    tableId
+    createdAt
+    area {
+      name
+    }
   }
 }
     `;
 
-export function useEditReservationMutation() {
-  return Urql.useMutation<EditReservationMutation, EditReservationMutationVariables>(EditReservationDocument);
+export function useAddWaitlistEntryMutation() {
+  return Urql.useMutation<AddWaitlistEntryMutation, AddWaitlistEntryMutationVariables>(AddWaitlistEntryDocument);
 };
-export const CompleteReservationDocument = gql`
-    mutation CompleteReservation($id: String!) {
-  completeReservation(id: $id) {
+export const CancelWaitlistEntryDocument = gql`
+    mutation CancelWaitlistEntry($id: String!) {
+  cancelWaitlistEntry(id: $id) {
     id
     status
-    updatedAt
   }
 }
     `;
 
-export function useCompleteReservationMutation() {
-  return Urql.useMutation<CompleteReservationMutation, CompleteReservationMutationVariables>(CompleteReservationDocument);
+export function useCancelWaitlistEntryMutation() {
+  return Urql.useMutation<CancelWaitlistEntryMutation, CancelWaitlistEntryMutationVariables>(CancelWaitlistEntryDocument);
+};
+export const GetUserWaitlistEntriesDocument = gql`
+    query GetUserWaitlistEntries($userEmail: String!) {
+  getUserWaitlistEntries(userEmail: $userEmail) {
+    id
+    status
+    numOfDiners
+    calledAt
+    seatedAt
+    createdAt
+    updatedAt
+    area {
+      name
+    }
+  }
+}
+    `;
+
+export function useGetUserWaitlistEntriesQuery(options: Omit<Urql.UseQueryArgs<GetUserWaitlistEntriesQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetUserWaitlistEntriesQuery, GetUserWaitlistEntriesQueryVariables>({ query: GetUserWaitlistEntriesDocument, ...options });
 };

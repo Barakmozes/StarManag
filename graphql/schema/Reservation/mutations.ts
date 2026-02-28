@@ -3,9 +3,39 @@
 import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
-import { ReservationStatus } from "./enum"; // if using the ReservationStatus enum
-import { Role } from "@/graphql/schema/User/enum"; // or wherever your Role enum is
+import { ReservationStatus } from "./enum";
+import { Role } from "@/graphql/schema/User/enum";
 import { Role as PrismaRole } from "@prisma/client";
+
+const RESERVATION_DURATION_MINUTES =
+  parseInt(process.env.RESERVATION_DURATION_MINUTES || "") || 120;
+const MIN_RESERVATION_ADVANCE_HOURS =
+  parseInt(process.env.MIN_RESERVATION_ADVANCE_HOURS || "") || 2;
+const MAX_ACTIVE_RESERVATIONS =
+  parseInt(process.env.MAX_ACTIVE_RESERVATIONS || "") || 3;
+
+const DAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday",
+  "Thursday", "Friday", "Saturday",
+];
+
+type OpenDay = { day: string; open: string; close: string; closed: boolean };
+
+function validateOpeningHours(openTimes: unknown, requestedTime: Date): void {
+  if (!openTimes || !Array.isArray(openTimes)) return;
+  const dayName = DAY_NAMES[requestedTime.getDay()];
+  const dayEntry = (openTimes as OpenDay[]).find((d) => d.day === dayName);
+  if (!dayEntry) return;
+  if (dayEntry.closed) {
+    throw new GraphQLError("The restaurant is closed on this day");
+  }
+  const hh = String(requestedTime.getHours()).padStart(2, "0");
+  const mm = String(requestedTime.getMinutes()).padStart(2, "0");
+  const timeStr = `${hh}:${mm}`;
+  if (timeStr < dayEntry.open || timeStr >= dayEntry.close) {
+    throw new GraphQLError("The restaurant is closed at the requested time");
+  }
+}
 
   
   // --- addGuestReservation ---
@@ -97,7 +127,59 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("You are not authorized to create a reservation for this user");
       }
 
-      // Now 'args.createdBy' is typed as 'Role'
+      const reservationTime = new Date(args.reservationTime);
+
+      // Guard 1: Minimum advance time (skip for staff bookings)
+      if (!isAdminOrManager) {
+        const minAdvanceMs = MIN_RESERVATION_ADVANCE_HOURS * 60 * 60 * 1000;
+        if (reservationTime.getTime() < Date.now() + minAdvanceMs) {
+          throw new GraphQLError(
+            `Reservations must be made at least ${MIN_RESERVATION_ADVANCE_HOURS} hours in advance.`
+          );
+        }
+      }
+
+      // Guard 2: Opening hours validation
+      const restaurant = await prisma.restaurant.findFirst();
+      if (restaurant) {
+        validateOpeningHours(restaurant.openTimes, reservationTime);
+      }
+
+      // Guard 3: Active reservation limit (skip for staff bookings)
+      if (!isAdminOrManager) {
+        const activeCount = await prisma.reservation.count({
+          where: {
+            userEmail: args.userEmail,
+            status: { in: ["PENDING", "CONFIRMED"] },
+            reservationTime: { gte: new Date() },
+          },
+        });
+        if (activeCount >= MAX_ACTIVE_RESERVATIONS) {
+          throw new GraphQLError(
+            `You have reached the maximum number of active reservations (${MAX_ACTIVE_RESERVATIONS}).`
+          );
+        }
+      }
+
+      // Guard 4: Race condition — check for overlapping reservation on the same table
+      const durationMs = RESERVATION_DURATION_MINUTES * 60 * 1000;
+      const windowEnd = new Date(reservationTime.getTime() + durationMs);
+      const overlap = await prisma.reservation.findFirst({
+        where: {
+          tableId: args.tableId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          reservationTime: {
+            gt: new Date(reservationTime.getTime() - durationMs),
+            lt: windowEnd,
+          },
+        },
+      });
+      if (overlap) {
+        throw new GraphQLError(
+          "This table was just booked. Please select another."
+        );
+      }
+
       const reservation = await prisma.reservation.create({
         ...query,
         data: {
@@ -105,9 +187,8 @@ builder.mutationFields((t) => ({
           tableId: args.tableId,
           reservationTime: args.reservationTime,
           numOfDiners: args.numOfDiners,
-          createdBy: args.createdBy, // no TS error now
+          createdBy: args.createdBy,
           createdByUserEmail: args.createdByUserEmail ?? null,
-          // status defaults to PENDING
         },
       });
       return reservation;

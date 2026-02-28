@@ -1,0 +1,100 @@
+---
+description: Core architecture, stack, folder structure, code style, roles, and anti-patterns
+alwaysApply: true
+---
+
+# StarManag — Core Project Rules
+
+You are extending a production-grade Restaurant Management SaaS. Preserve architecture and conventions before adding new code.
+
+## Mandatory Stack (Do Not Replace)
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 14 App Router (server-first rendering) |
+| Database | PostgreSQL (Prisma ORM) + Supabase cloud DB |
+| API | GraphQL — Apollo Server + Pothos schema builder |
+| GraphQL Client | urql + GraphQL Code Generator |
+| Auth | NextAuth with Prisma adapter |
+| State | Zustand (cart, sidebar, login modal, restaurant store) |
+| Styling | TailwindCSS + Headless UI |
+| Storage | Supabase Storage (images, floor plans) |
+| Payments | PayPlus (via `/api/payplus/[total]/route.ts`; payment success updates order and clears cart) |
+| Maps | Mapbox geocoding/maps |
+| Deployment | Vercel |
+
+Do not introduce alternative frameworks/libraries unless explicitly requested.
+
+## Folder Structure
+
+```
+app/
+  (dashboard)/dashboard/     — Admin routes (users, orders, menu, deliveries, settings)
+  (user)/user/               — User routes (profile, favorites, orders, help)
+  components/
+    Common/                  — Shared UI (Header, SideBar, Footer, AuthModal)
+    Home/                    — Home page sections (HeroSection, MenuSection, Promos)
+    Restaurant_interface/    — Floor plan, zones, tables (MANAGER/WAITER only)
+  api/auth/[...nextauth]/    — NextAuth route
+  api/graphql/               — GraphQL endpoint
+graphql/
+  schema/                    — Pothos schema by domain (User, Menu, Order, Area, Table…)
+  files/                     — .graphql query/mutation documents
+  generated.ts               — Auto-generated types and hooks
+lib/                         — session.ts, prisma.ts, store.ts, AreaStore.ts, supabaseStorage.ts
+prisma/
+  schema.prisma              — Single source of truth for DB schema
+```
+
+## Delivery Standard For Any Feature
+
+Implement changes in this order:
+
+1. Prisma model/enums/relations (`prisma/schema.prisma`)
+2. GraphQL schema/resolvers (`graphql/schema/*`)
+3. Generated types/codegen sync → run `yarn codegen`
+4. Client query/mutation usage (`app/**`, `graphql/files/*.graphql`)
+5. UI integration with role-aware behavior
+
+Mention when `yarn codegen` or `prisma migrate dev` is required.
+
+## Role-Based Access
+
+| Role | Access |
+|------|--------|
+| `ADMIN` | Full dashboard, user management, GraphQL admin mutations |
+| `MANAGER` | Dashboard + Restaurant Interface (zone/table management) |
+| `WAITER` | Restaurant Interface only |
+| `USER` | Cart, orders, favorites, profile |
+| `DELIVERY` | Delivery-specific views |
+
+Middleware protects `/dashboard/*`, `/user/*`, `/pay/*`, `/payment-success`. GraphQL resolvers enforce role checks per operation.
+
+## Code Style
+
+- **Indentation**: 2 spaces.
+- **Components**: PascalCase (`AdminUserTable`, `MenuSection`).
+- **Files**: PascalCase for components (`AdminUserTable.tsx`), camelCase for utils (`session.ts`).
+- **Hooks**: `use` prefix (`useCartStore`, `useRestaurantStore`).
+- **Types**: PascalCase (`CartItemType`, `User`, `OrderStatus`).
+- **Imports order**: React/Next → third-party → `@/` internal → relative.
+- Use `@/` path alias for all internal imports.
+- Use TypeScript strict mode; avoid `any` — prefer Prisma/GraphQL generated types.
+
+## Anti-Patterns (NEVER DO)
+
+| Anti-Pattern | Correct Approach |
+|--------------|------------------|
+| `"use client"` in `page.tsx` / `layout.tsx` | Keep pages/layouts as server components; create child client components |
+| Fetching user in client component for initial render | Fetch in server component, pass `user` prop |
+| `getServerSession()` / `getCurrentUser()` in client | Only in server components or API routes |
+| Modifying `schema.prisma` without migration | Run `prisma migrate dev` then `prisma generate` |
+| Hardcoding API keys or secrets | Use `process.env.*` and `.env`; `NEXT_PUBLIC_` only for client-safe values |
+| REST for data instead of GraphQL | Use urql + generated hooks from `graphql/generated.ts` |
+| New state libraries (Redux, Context for global state) | Use Zustand (already in place) |
+| Skipping role checks in resolvers | Always check `context.user?.role` |
+| `(user as any)` | Use `user as User` from `@prisma/client` |
+| Architecture rewrites or parallel tech stacks | Extend existing modules |
+| Bypassing Prisma with ad hoc DB access | Always go through Prisma |
+| Bypassing GraphQL layer for domain data | Use existing GraphQL operations |
+| Breaking codegen contracts | Run `yarn codegen` after schema/document changes |
