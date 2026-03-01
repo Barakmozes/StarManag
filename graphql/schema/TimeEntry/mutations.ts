@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
 
-const STAFF_ROLES = ["ADMIN", "MANAGER", "WAITER", "DELIVERY"];
+const STAFF_ROLES = ["ADMIN", "MANAGER", "WAITER", "DELIVERY", "CHEF", "BARTENDER"];
 const AUTO_CLOSE_HOURS = 14;
 
 builder.mutationFields((t) => ({

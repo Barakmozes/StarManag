@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { HiHome } from "react-icons/hi2";
 
 interface StationHeaderProps {
   title: string;
@@ -50,8 +52,15 @@ export default function StationHeader({
       className="flex items-center justify-between px-4 py-3 border-b border-gray-700"
       style={{ backgroundColor: "#1a1a2e" }}
     >
-      {/* Left: title + connection */}
+      {/* Left: home + title + connection */}
       <div className="flex items-center gap-3">
+        <Link
+          href="/"
+          className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+          title="Home"
+        >
+          <HiHome className="h-5 w-5" />
+        </Link>
         <h1 className="text-xl font-bold text-white" style={{ color: accentColor }}>
           {title}
         </h1>

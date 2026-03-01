@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "urql";
+import { useQuery, useMutation } from "@urql/next";
 import { User } from "@prisma/client";
 import {
   GetKitchenTicketsDocument,

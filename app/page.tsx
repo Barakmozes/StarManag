@@ -15,7 +15,12 @@ import ClockInOutButton from "./components/Restaurant_interface/ClockInOutButton
 export default async function Home() {
 
   const user = await getCurrentUser()
-  const isStaff = user?.role === "ADMIN" || user?.role === "MANAGER" || user?.role === "WAITER" || user?.role === "DELIVERY";
+
+
+
+  const isStaff = user?.role === "ADMIN" || user?.role === "MANAGER" || user?.role === "WAITER" || user?.role === "DELIVERY" || user?.role === "CHEF" || user?.role === "BARTENDER"; 
+
+
 
   return (
     <main className="">
