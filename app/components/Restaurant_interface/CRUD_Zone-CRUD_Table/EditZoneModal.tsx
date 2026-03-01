@@ -171,7 +171,7 @@ const EditZoneModal = ({ areas, areaSelectToEdit }: Props) => {
 
       // 2) Upsert grid config
       if (gridConfigId) {
-        await editGridConfig({ id: gridConfigId, gridSize: gs });
+        await editGridConfig({ editGridConfigId: gridConfigId, gridSize: gs });
       } else {
         await addGridConfig({ areaId: selectedAreaId, gridSize: gs });
       }
