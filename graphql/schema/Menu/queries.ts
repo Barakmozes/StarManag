@@ -33,6 +33,8 @@ builder.prismaObject("Menu", {
     prepType: t.exposeStringList("prepType"),
     onPromo: t.exposeBoolean("onPromo"),
     category: t.exposeString("category"),
+    categoryId: t.exposeString("categoryId", { nullable: true }),
+    Category: t.relation("Category", { nullable: true }),
   }),
 });
 

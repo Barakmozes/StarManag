@@ -41,6 +41,12 @@ query GetOrders(
 
         cart
         items
+
+        tickets {
+          id
+          station
+          status
+        }
       }
     }
   }
@@ -87,6 +93,11 @@ mutation AddOrder(
     tableId: $tableId
   ) {
     id
+    tickets {
+      id
+      station
+      status
+    }
   }
 }
 

@@ -48,6 +48,7 @@ const AdminAddMenu = () => {
 
   const [title, setTitle] = useState("");
   const [categoryTitle, setCategoryTitle] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [longDescr, setLongDescr] = useState("");
   const [shortDescr, setShortDescr] = useState("");
   const [price, setPrice] = useState<number>(0);
@@ -80,6 +81,7 @@ const AdminAddMenu = () => {
     if (didInitCategory.current) return;
     if (categories.length > 0) {
       setCategoryTitle(categories[0].title);
+      setCategoryId(categories[0].id);
       didInitCategory.current = true;
     }
   }, [categories]);
@@ -87,6 +89,7 @@ const AdminAddMenu = () => {
   const clearForm = () => {
     setTitle("");
     setCategoryTitle(categories[0]?.title ?? "");
+    setCategoryId(categories[0]?.id ?? "");
     setLongDescr("");
     setShortDescr("");
     setPrice(0);
@@ -175,13 +178,14 @@ const AdminAddMenu = () => {
         image,
         title: cleanedTitle,
         category: cleanedCategory,
+        categoryId: categoryId || undefined,
         longDescr: cleanedLong,
         shortDescr: cleanedShort,
         prepType: cleanedPrep,
         price,
-        sellingPrice: selling, 
-        onPromo, 
-      } as any); // <- remove "as any" after codegen updates
+        sellingPrice: selling,
+        onPromo,
+      });
 
       if (res.data?.addMenu?.id) {
         toast.success("Menu Added Successfully", { id: toastId, duration: 1200 });
@@ -272,7 +276,11 @@ const AdminAddMenu = () => {
                 <select
                   id="category"
                   className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-500"
-                  onChange={(e) => setCategoryTitle(e.target.value)}
+                  onChange={(e) => {
+                    const selected = categories.find(c => c.title === e.target.value);
+                    setCategoryTitle(e.target.value);
+                    setCategoryId(selected?.id ?? "");
+                  }}
                   value={categoryTitle}
                   disabled={noCategories || catFetching}
                 >

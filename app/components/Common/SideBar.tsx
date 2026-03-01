@@ -4,7 +4,7 @@ import { createElement } from "react";
 import DialogComponent from "./DialogComponent";
 import { BsCalendarCheck, BsHeartFill } from "react-icons/bs";
 import { MdHelp } from "react-icons/md";
-import { FaReceipt } from "react-icons/fa";
+import { FaReceipt, FaUtensils, FaWineGlassAlt } from "react-icons/fa";
 import { HiHome, HiOutlineArrowRightOnRectangle, HiOutlineClock } from "react-icons/hi2";
 import Link from "next/link";
 import Image from "next/image";
@@ -84,7 +84,7 @@ const SideBar = ({ user }: Props) => {
                 </Link>
               ))}
 
-              {user?.role !== "MANAGER" && user?.role !== "WAITER" && (
+              {user?.role !== "MANAGER" && user?.role !== "WAITER" && user?.role !== "CHEF" && user?.role !== "BARTENDER" && (
                 <Link
                   href="/user/reservations"
                   onClick={onSideBarClose}
@@ -96,7 +96,7 @@ const SideBar = ({ user }: Props) => {
               )}
 
               {/* My Shifts — visible to all staff roles */}
-              {(user?.role === "ADMIN" || user?.role === "MANAGER" || user?.role === "WAITER" || user?.role === "DELIVERY") && (
+              {(user?.role === "ADMIN" || user?.role === "MANAGER" || user?.role === "WAITER" || user?.role === "DELIVERY" || user?.role === "CHEF" || user?.role === "BARTENDER") && (
                 <Link
                   href="/user/shifts"
                   onClick={onSideBarClose}
@@ -104,6 +104,54 @@ const SideBar = ({ user }: Props) => {
                 >
                   <HiOutlineClock className="h-5 w-5 mr-3 shrink-0" />
                   <span className="text-sm">My Shifts</span>
+                </Link>
+              )}
+
+              {/* My Station — prominent CTA for CHEF */}
+              {user?.role === "CHEF" && (
+                <Link
+                  href="/kitchen"
+                  onClick={onSideBarClose}
+                  className="mt-2 flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-orange-600 text-sm font-bold text-white shadow-md hover:bg-orange-700 transition-all active:scale-95"
+                >
+                  <FaUtensils className="h-4 w-4 shrink-0" />
+                  My Station — Kitchen
+                </Link>
+              )}
+
+              {/* My Station — prominent CTA for BARTENDER */}
+              {user?.role === "BARTENDER" && (
+                <Link
+                  href="/bar"
+                  onClick={onSideBarClose}
+                  className="mt-2 flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-purple-600 text-sm font-bold text-white shadow-md hover:bg-purple-700 transition-all active:scale-95"
+                >
+                  <FaWineGlassAlt className="h-4 w-4 shrink-0" />
+                  My Station — Bar
+                </Link>
+              )}
+
+              {/* Kitchen Display — link for ADMIN, MANAGER */}
+              {(user?.role === "ADMIN" || user?.role === "MANAGER") && (
+                <Link
+                  href="/kitchen"
+                  onClick={onSideBarClose}
+                  className="flex min-h-[48px] items-center rounded-lg px-3 transition-colors hover:bg-orange-50 hover:text-orange-700 font-medium text-slate-600"
+                >
+                  <FaUtensils className="h-5 w-5 mr-3 shrink-0" />
+                  <span className="text-sm">Kitchen Display</span>
+                </Link>
+              )}
+
+              {/* Bar Display — link for ADMIN, MANAGER */}
+              {(user?.role === "ADMIN" || user?.role === "MANAGER") && (
+                <Link
+                  href="/bar"
+                  onClick={onSideBarClose}
+                  className="flex min-h-[48px] items-center rounded-lg px-3 transition-colors hover:bg-purple-50 hover:text-purple-700 font-medium text-slate-600"
+                >
+                  <FaWineGlassAlt className="h-5 w-5 mr-3 shrink-0" />
+                  <span className="text-sm">Bar Display</span>
                 </Link>
               )}
 

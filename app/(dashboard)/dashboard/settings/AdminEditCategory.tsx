@@ -16,6 +16,7 @@ import {
   EditCategoryMutation,
   EditCategoryMutationVariables,
   GetCategoriesQuery,
+  DisplayStation,
 } from "@/graphql/generated";
 
 type Props = {
@@ -39,6 +40,9 @@ const AdminEditCategory = ({ category }: Props) => {
   const [title, setTitle] = useState(category.title);
   const [desc, setDesc] = useState(category.desc);
   const [img, setImg] = useState(category.img);
+  const [station, setStation] = useState<DisplayStation>(
+    (category.station as DisplayStation) ?? DisplayStation.Kitchen
+  );
 
   // Keep modal form in sync (fixes exhaustive-deps warning properly)
   useEffect(() => {
@@ -46,7 +50,8 @@ const AdminEditCategory = ({ category }: Props) => {
     setTitle(category.title);
     setDesc(category.desc);
     setImg(category.img);
-  }, [isOpen, category.title, category.desc, category.img]);
+    setStation((category.station as DisplayStation) ?? DisplayStation.Kitchen);
+  }, [isOpen, category.title, category.desc, category.img, category.station]);
 
   const closeModal = () => setIsOpen(false);
   const openModal = () => setIsOpen(true);
@@ -87,7 +92,7 @@ const AdminEditCategory = ({ category }: Props) => {
     }
 
     try {
-      const res = await editCategory({ editCategoryId, title, desc, img });
+      const res = await editCategory({ editCategoryId, title, desc, img, station });
 
       if (res.data?.editCategory) {
         toast.success("Category Edited Successfully", { duration: 1000 });
@@ -152,6 +157,20 @@ const AdminEditCategory = ({ category }: Props) => {
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor={`station-${category.id}`} className="form-label">
+                  Station
+                </label>
+                <select
+                  id={`station-${category.id}`}
+                  className="form-input min-h-11 text-base sm:text-sm"
+                  value={station}
+                  onChange={(e) => setStation(e.target.value as DisplayStation)}
+                >
+                  <option value={DisplayStation.Kitchen}>Kitchen (food)</option>
+                  <option value={DisplayStation.Bar}>Bar (drinks)</option>
+                </select>
               </div>
             </div>
 

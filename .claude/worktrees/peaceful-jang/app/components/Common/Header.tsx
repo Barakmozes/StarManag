@@ -87,7 +87,7 @@ const Header = ({ user }: HeaderProps) => {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   const ALL_ROLES: Role[] = useMemo(
-    () => [Role.User, Role.Admin, Role.Manager,  Role.Waiter, Role.Delivery],
+    () => [Role.User, Role.Admin, Role.Manager,  Role.Waiter, Role.Delivery,Role.Chef,Role.Bartender],
     []
   );
 

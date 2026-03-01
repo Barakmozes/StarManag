@@ -180,9 +180,22 @@ const edges = useMemo(() => data?.getMenus?.edges ?? [], [data?.getMenus?.edges]
               </td>
 
               <td className="px-3 sm:px-6 py-2 align-top">
-                <span className="inline-flex bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded whitespace-nowrap">
-                  {menu.category}
-                </span>
+                <div className="flex flex-wrap gap-1">
+                  <span className="inline-flex bg-green-100 text-green-600 text-xs font-medium px-2 py-0.5 rounded whitespace-nowrap">
+                    {menu.category}
+                  </span>
+                  {menu.Category?.station && (
+                    <span
+                      className={`inline-flex text-xs font-medium px-2 py-0.5 rounded whitespace-nowrap ${
+                        menu.Category.station === "BAR"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-orange-100 text-orange-700"
+                      }`}
+                    >
+                      {menu.Category.station === "BAR" ? "Bar" : "Kitchen"}
+                    </span>
+                  )}
+                </div>
               </td>
 
               <td className="px-3 sm:px-6 py-2 align-top whitespace-nowrap">

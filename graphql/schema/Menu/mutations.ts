@@ -23,8 +23,9 @@ builder.mutationFields((t) => ({
       sellingPrice: t.arg.float(),
       image: t.arg.string({ required: true }),
       category: t.arg.string({ required: true }),
+      categoryId: t.arg.string(),
       prepType: t.arg.stringList({ required: true }),
-       onPromo: t.arg.boolean({ required: true }),
+      onPromo: t.arg.boolean({ required: true }),
     },
     resolve: async (query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -34,30 +35,38 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("You are not authorized to perform this action");
       }
 
-      // Check if a menu with this title already exists
-      const existingMenu = await prisma.menu.findFirst({
-        ...query,
-        where: { title: args.title },
-      });
-      if (existingMenu) {
-        throw new GraphQLError("Menu already exists");
-      }
+      return prisma.$transaction(async (tx) => {
+        // If categoryId provided, verify it exists
+        if (args.categoryId) {
+          const cat = await tx.category.findUnique({ where: { id: args.categoryId } });
+          if (!cat) throw new GraphQLError(`Category not found: ${args.categoryId}`);
+        }
 
-      // Create a new menu item
-      const newMenu = await prisma.menu.create({
-        data: {
-          title: args.title,
-          shortDescr: args.shortDescr,
-          longDescr: args.longDescr,
-          price: args.price,
-          sellingPrice: args.sellingPrice ?? undefined,
-          image: args.image,
-          category: args.category,
-          prepType: args.prepType,
-           onPromo: args.onPromo, // ✅ חדש
-        },
+        // Check if a menu with this title already exists
+        const existingMenu = await tx.menu.findFirst({
+          ...query,
+          where: { title: args.title },
+        });
+        if (existingMenu) {
+          throw new GraphQLError("Menu already exists");
+        }
+
+        // Create a new menu item
+        return tx.menu.create({
+          data: {
+            title: args.title,
+            shortDescr: args.shortDescr,
+            longDescr: args.longDescr,
+            price: args.price,
+            sellingPrice: args.sellingPrice ?? undefined,
+            image: args.image,
+            category: args.category,
+            categoryId: args.categoryId ?? undefined,
+            prepType: args.prepType,
+            onPromo: args.onPromo,
+          },
+        });
       });
-      return newMenu;
     },
   }),
 
@@ -76,8 +85,9 @@ builder.mutationFields((t) => ({
       sellingPrice: t.arg.float(),
       image: t.arg.string({ required: true }),
       category: t.arg.string({ required: true }),
+      categoryId: t.arg.string(),
       prepType: t.arg.stringList({ required: true }),
-         onPromo: t.arg.boolean({ required: true }), // ✅ חדש
+      onPromo: t.arg.boolean({ required: true }),
     },
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -87,23 +97,30 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("You are not authorized to perform this action");
       }
 
-      // Update the menu item
-      const updatedMenu = await prisma.menu.update({
-        where: { id: args.id },
-        data: {
-          title: args.title,
-          shortDescr: args.shortDescr,
-          longDescr: args.longDescr,
-          price: args.price,
-          sellingPrice: args.sellingPrice === undefined ? undefined : args.sellingPrice,
-          image: args.image,
-          category: args.category,
-          prepType: args.prepType,
-           onPromo: args.onPromo, // ✅ חדש
-          
-        },
+      return prisma.$transaction(async (tx) => {
+        // If categoryId provided, verify it exists
+        if (args.categoryId) {
+          const cat = await tx.category.findUnique({ where: { id: args.categoryId } });
+          if (!cat) throw new GraphQLError(`Category not found: ${args.categoryId}`);
+        }
+
+        // Update the menu item
+        return tx.menu.update({
+          where: { id: args.id },
+          data: {
+            title: args.title,
+            shortDescr: args.shortDescr,
+            longDescr: args.longDescr,
+            price: args.price,
+            sellingPrice: args.sellingPrice === undefined ? undefined : args.sellingPrice,
+            image: args.image,
+            category: args.category,
+            categoryId: args.categoryId ?? undefined,
+            prepType: args.prepType,
+            onPromo: args.onPromo,
+          },
+        });
       });
-      return updatedMenu;
     },
   }),
 

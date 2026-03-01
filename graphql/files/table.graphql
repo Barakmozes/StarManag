@@ -57,6 +57,12 @@ query GetTableOrder($tableId: String!) {
     total
     userName
     userPhone
+    tickets {
+      id
+      station
+      status
+      updatedAt
+    }
   }
 }
 
@@ -107,6 +113,12 @@ mutation AddOrderToTable($cart: JSON!, $orderNumber: String!, $serviceFee: Float
     userEmail
     userName
     id
+    tickets {
+      id
+      station
+      status
+      updatedAt
+    }
   }
 }
 

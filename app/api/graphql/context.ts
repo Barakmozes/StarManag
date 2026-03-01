@@ -31,5 +31,8 @@ export async function createContext({ req }: { req: NextRequest }) {
   return {
     prisma,
     user: session?.user,
+    // Per-request caches for KitchenTicket N+1 prevention
+    orderCache: new Map<string, any>(),
+    siblingCache: new Map<string, any>(),
   };
 }

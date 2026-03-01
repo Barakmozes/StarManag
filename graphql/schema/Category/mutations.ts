@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
+import { DisplayStation } from "@/graphql/schema/KitchenTicket/enum";
 
 /**
  * Mutation Fields for Category
@@ -19,6 +20,7 @@ builder.mutationFields((t) => ({
       title: t.arg.string({ required: true }),
       desc: t.arg.string({ required: true }),
       img: t.arg.string({ required: true }),
+      station: t.arg({ type: DisplayStation }),
     },
     resolve: async (query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -47,6 +49,7 @@ builder.mutationFields((t) => ({
           title: args.title,
           desc: args.desc,
           img: args.img,
+          station: args.station ?? "KITCHEN",
         },
       });
       return newCategory;
@@ -64,6 +67,7 @@ builder.mutationFields((t) => ({
       title: t.arg.string({ required: true }),
       desc: t.arg.string({ required: true }),
       img: t.arg.string({ required: true }),
+      station: t.arg({ type: DisplayStation }),
     },
     resolve: async (_query, _parent, args, contextPromise) => {
       const context = await contextPromise;
@@ -84,6 +88,7 @@ builder.mutationFields((t) => ({
           title: args.title,
           desc: args.desc,
           img: args.img,
+          ...(args.station ? { station: args.station } : {}),
         },
       });
       return updatedCategory;

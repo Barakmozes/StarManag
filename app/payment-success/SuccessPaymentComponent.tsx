@@ -88,6 +88,13 @@ const SuccessPaymentComponent = () => {
 // console.log("Added order", addOrderRes.data?.addOrder);
   // Update the payment status and token
         if (addOrderRes.data?.addOrder) {
+          // Warn if no KDS tickets were created
+          const tickets = addOrderRes.data.addOrder.tickets ?? [];
+          if (tickets.length === 0) {
+            console.warn("Order created but no KDS tickets generated");
+            toast.error("Warning: No kitchen tickets created — check item categories", { duration: 5000 });
+          }
+
           const editOrderRes = await editPaidOrder({
             editOrderOnPaymentId:addOrderRes.data.addOrder.id,// Use the ID from the created order
             paymentToken: paymentToken,

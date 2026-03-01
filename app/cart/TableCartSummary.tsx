@@ -17,6 +17,7 @@ import {
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { ORDER_NUMBER } from "@/lib/createOrderNumber";
+import TicketDots from "@/app/components/Common/TicketDots";
 
 // --- Types ---
 
@@ -172,6 +173,8 @@ export default function TableCartSummary({ user }: TableCartSummaryProps) {
         price: item.price,
         basePrice: item.basePrice,
         sellingPrice: item.sellingPrice,
+        category: item.category,
+        categoryId: item.categoryId,
       }));
 
       const response = await addTableOrder({
@@ -191,7 +194,12 @@ export default function TableCartSummary({ user }: TableCartSummaryProps) {
         return;
       }
 
-      toast.success("Order sent to Kitchen!", { duration: 3000 });
+      const tickets = response.data?.addOrderToTable?.tickets ?? [];
+      if (tickets.length === 0) {
+        toast.error("Order created but NO KDS tickets — check item categories", { duration: 5000 });
+      } else {
+        toast.success(`Order sent! ${tickets.length} ticket(s) created`, { duration: 3000 });
+      }
       resetCart();
       setNote("");
     } catch (error) {
@@ -242,16 +250,32 @@ export default function TableCartSummary({ user }: TableCartSummaryProps) {
                     <FaCheckCircle className="text-sm" />
                     <h3 className="text-sm font-bold uppercase tracking-wide">In Kitchen / Served</h3>
                 </div>
-                <div className="space-y-3">
-                    {allPreviousItems.map((item, idx) => (
-                        <div key={`${item.id}-${idx}`} className="flex justify-between items-start text-sm text-gray-700">
-                            <div className="flex gap-2">
-                                <span className="font-semibold text-gray-900 w-6">{item.quantity}x</span>
-                                <span className="text-gray-600">{item.title}</span>
-                            </div>
-                            <span className="font-medium whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+                <div className="space-y-4">
+                    {activeOrders.map((order, oIdx) => {
+                      const orderItems = Array.isArray(order.cart)
+                        ? order.cart.map((c: any) => ({ id: c.id, title: c.title || "Unknown", price: Number(c.price) || 0, quantity: Number(c.quantity) || 1 }))
+                        : [];
+                      if (orderItems.length === 0) return null;
+                      return (
+                        <div key={order.id || oIdx}>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-xs font-semibold text-blue-600">Round {oIdx + 1}</span>
+                            <TicketDots tickets={order.tickets as any} />
+                          </div>
+                          <div className="space-y-1.5 pl-2">
+                            {orderItems.map((item: any, idx: number) => (
+                              <div key={`${item.id}-${idx}`} className="flex justify-between items-start text-sm text-gray-700">
+                                <div className="flex gap-2">
+                                  <span className="font-semibold text-gray-900 w-6">{item.quantity}x</span>
+                                  <span className="text-gray-600">{item.title}</span>
+                                </div>
+                                <span className="font-medium whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                    ))}
+                      );
+                    })}
                 </div>
                 <div className="mt-4 pt-2 border-t border-blue-200 flex justify-between text-sm font-bold text-blue-900">
                     <span>Subtotal (Ordered)</span>
