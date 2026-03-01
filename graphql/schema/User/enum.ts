@@ -13,8 +13,9 @@ export const Role = builder.enumType("Role", {
     "ADMIN",     // System administrator
     "DELIVERY",  // Delivery personnel
     "WAITER",    // Restaurant staff (waiter)
-    // "CHEF",      // Kitchen staff
+    "CHEF",      // Kitchen staff
     "MANAGER",   // Restaurant manager
+    "BARTENDER",   // Restaurant manager
   ] as const,
   description: "User roles in the system",
 });

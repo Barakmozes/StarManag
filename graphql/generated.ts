@@ -75,6 +75,7 @@ export type Category = {
   desc: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   img: Scalars['String']['output'];
+  station: DisplayStation;
   title: Scalars['String']['output'];
 };
 
@@ -141,6 +142,12 @@ export type Delivery = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** Which preparation station handles this category/ticket. */
+export enum DisplayStation {
+  Bar = 'BAR',
+  Kitchen = 'KITCHEN'
+}
+
 export type EmployeeDashboardKpis = {
   __typename?: 'EmployeeDashboardKpis';
   activeClockIns: Scalars['Int']['output'];
@@ -168,6 +175,42 @@ export type GridConfig = {
   createdAt: Scalars['DateTime']['output'];
   gridSize: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type KitchenTicket = {
+  __typename?: 'KitchenTicket';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  items: Array<KitchenTicketItem>;
+  order: Order;
+  orderDate: Scalars['DateTime']['output'];
+  orderId: Scalars['String']['output'];
+  orderNote?: Maybe<Scalars['String']['output']>;
+  orderNumber: Scalars['String']['output'];
+  orderType: Scalars['String']['output'];
+  priority: Scalars['Int']['output'];
+  siblingTicketStatus?: Maybe<Scalars['String']['output']>;
+  specialNotes?: Maybe<Scalars['String']['output']>;
+  station: DisplayStation;
+  status: TicketStatus;
+  tableId?: Maybe<Scalars['String']['output']>;
+  tableNumber?: Maybe<Scalars['Int']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userName: Scalars['String']['output'];
+};
+
+export type KitchenTicketItem = {
+  __typename?: 'KitchenTicketItem';
+  category: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  instructions: Scalars['String']['output'];
+  menuItemId?: Maybe<Scalars['String']['output']>;
+  menuTitle: Scalars['String']['output'];
+  prepare: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  status: TicketItemStatus;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -203,6 +246,7 @@ export type Mutation = {
   addTableUsage: TableUsage;
   addWaitlistEntry: Waitlist;
   assignDriverToOrder: Delivery;
+  bumpTicketStatus: KitchenTicket;
   callWaitlistEntry: Waitlist;
   cancelReservation: Reservation;
   cancelShift: Shift;
@@ -246,15 +290,18 @@ export type Mutation = {
   markNotificationAsRead: Notification;
   movePositionTable: Table;
   publishShifts: Scalars['Int']['output'];
+  recallTicket: KitchenTicket;
   removeDriverFromOrder: Scalars['Boolean']['output'];
   removeFavorite: Favorite;
   removeWaitlistEntry: Waitlist;
   seatWaitlistEntry: Waitlist;
+  setTicketPriority: KitchenTicket;
   toggleShiftTemplateActive: ShiftTemplate;
   toggleTableReservation: Table;
   updateManyTables: Array<Table>;
   updateNotification: Notification;
   updateTableUsage: TableUsage;
+  updateTicketItemStatus: KitchenTicketItem;
   updateUserProfile: User;
   updateWaitlistEntry: Waitlist;
 };
@@ -272,6 +319,7 @@ export type MutationAddAreaArgs = {
 export type MutationAddCategoryArgs = {
   desc: Scalars['String']['input'];
   img: Scalars['String']['input'];
+  station?: InputMaybe<DisplayStation>;
   title: Scalars['String']['input'];
 };
 
@@ -417,6 +465,12 @@ export type MutationAssignDriverToOrderArgs = {
 };
 
 
+export type MutationBumpTicketStatusArgs = {
+  status: TicketStatus;
+  ticketId: Scalars['String']['input'];
+};
+
+
 export type MutationCallWaitlistEntryArgs = {
   id: Scalars['String']['input'];
 };
@@ -543,6 +597,7 @@ export type MutationEditCategoryArgs = {
   desc: Scalars['String']['input'];
   id: Scalars['String']['input'];
   img: Scalars['String']['input'];
+  station?: InputMaybe<DisplayStation>;
   title: Scalars['String']['input'];
 };
 
@@ -701,6 +756,11 @@ export type MutationPublishShiftsArgs = {
 };
 
 
+export type MutationRecallTicketArgs = {
+  ticketId: Scalars['String']['input'];
+};
+
+
 export type MutationRemoveDriverFromOrderArgs = {
   orderNumber: Scalars['String']['input'];
 };
@@ -719,6 +779,12 @@ export type MutationRemoveWaitlistEntryArgs = {
 
 export type MutationSeatWaitlistEntryArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationSetTicketPriorityArgs = {
+  priority: Scalars['Int']['input'];
+  ticketId: Scalars['String']['input'];
 };
 
 
@@ -750,6 +816,12 @@ export type MutationUpdateTableUsageArgs = {
   id: Scalars['String']['input'];
   lastUsed?: InputMaybe<Scalars['DateTime']['input']>;
   usageCount?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationUpdateTicketItemStatusArgs = {
+  itemId: Scalars['String']['input'];
+  status: TicketItemStatus;
 };
 
 
@@ -815,6 +887,7 @@ export type Order = {
   status: OrderStatus;
   table?: Maybe<Table>;
   tableId?: Maybe<Scalars['String']['output']>;
+  tickets: Array<KitchenTicket>;
   total: Scalars['Float']['output'];
   updatedAt: Scalars['DateTime']['output'];
   user: User;
@@ -877,6 +950,8 @@ export type Query = {
   getGridConfig: GridConfig;
   getGridConfigByArea?: Maybe<GridConfig>;
   getGridConfigs: Array<GridConfig>;
+  getKitchenTicket: KitchenTicket;
+  getKitchenTickets: Array<KitchenTicket>;
   getMenu: Menu;
   getMenuUserFavorites: Array<Menu>;
   getMenus: QueryGetMenusConnection;
@@ -1015,6 +1090,19 @@ export type QueryGetGridConfigArgs = {
 
 export type QueryGetGridConfigByAreaArgs = {
   areaId: Scalars['String']['input'];
+};
+
+
+export type QueryGetKitchenTicketArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryGetKitchenTicketsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  station: DisplayStation;
+  statusIn?: InputMaybe<Array<TicketStatus>>;
+  updatedAfter?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 
@@ -1369,6 +1457,8 @@ export enum RevenueGroupBy {
 /** User roles in the system */
 export enum Role {
   Admin = 'ADMIN',
+  Bartender = 'BARTENDER',
+  Chef = 'CHEF',
   Delivery = 'DELIVERY',
   Manager = 'MANAGER',
   User = 'USER',
@@ -1455,6 +1545,23 @@ export type TableUsage = {
   updatedAt: Scalars['DateTime']['output'];
   usageCount: Scalars['Int']['output'];
 };
+
+/** Status of an individual item within a ticket. */
+export enum TicketItemStatus {
+  Cancelled = 'CANCELLED',
+  Done = 'DONE',
+  InProgress = 'IN_PROGRESS',
+  Pending = 'PENDING'
+}
+
+/** Lifecycle status of a kitchen/bar ticket. */
+export enum TicketStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  InProgress = 'IN_PROGRESS',
+  New = 'NEW',
+  Recalled = 'RECALLED'
+}
 
 export type TimeEntry = {
   __typename?: 'TimeEntry';
@@ -1655,33 +1762,35 @@ export type GetAreasNameDescriptionQuery = { __typename?: 'Query', getAreasNameD
 export type GetCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCategoriesQuery = { __typename?: 'Query', getCategories: Array<{ __typename?: 'Category', id: string, title: string, desc: string, img: string }> };
+export type GetCategoriesQuery = { __typename?: 'Query', getCategories: Array<{ __typename?: 'Category', id: string, title: string, desc: string, img: string, station: DisplayStation }> };
 
 export type GetCategoryQueryVariables = Exact<{
   getCategoryId: Scalars['String']['input'];
 }>;
 
 
-export type GetCategoryQuery = { __typename?: 'Query', getCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+export type GetCategoryQuery = { __typename?: 'Query', getCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string, station: DisplayStation } };
 
 export type AddCategoryMutationVariables = Exact<{
   title: Scalars['String']['input'];
   desc: Scalars['String']['input'];
   img: Scalars['String']['input'];
+  station?: InputMaybe<DisplayStation>;
 }>;
 
 
-export type AddCategoryMutation = { __typename?: 'Mutation', addCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+export type AddCategoryMutation = { __typename?: 'Mutation', addCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string, station: DisplayStation } };
 
 export type EditCategoryMutationVariables = Exact<{
   editCategoryId: Scalars['String']['input'];
   title: Scalars['String']['input'];
   desc: Scalars['String']['input'];
   img: Scalars['String']['input'];
+  station?: InputMaybe<DisplayStation>;
 }>;
 
 
-export type EditCategoryMutation = { __typename?: 'Mutation', editCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string } };
+export type EditCategoryMutation = { __typename?: 'Mutation', editCategory: { __typename?: 'Category', id: string, title: string, desc: string, img: string, station: DisplayStation } };
 
 export type DeleteCategoryMutationVariables = Exact<{
   deleteCategoryId: Scalars['String']['input'];
@@ -1724,6 +1833,23 @@ export type GetEmployeeDashboardKpisQueryVariables = Exact<{
 
 
 export type GetEmployeeDashboardKpisQuery = { __typename?: 'Query', getEmployeeDashboardKpis: { __typename?: 'EmployeeDashboardKpis', totalShifts: number, publishedShifts: number, cancelledShifts: number, totalHoursWorked: number, avgHoursPerEmployee: number, activeClockIns: number, staffCount: number, uniqueEmployeesWorked: number } };
+
+export type GetDashboardKpisCompareQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetDashboardKpisCompareQuery = { __typename?: 'Query', getDashboardKpisCompare: { __typename?: 'DashboardKpisCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, current: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, uniqueCustomers: number, newCustomers: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number }, previous: { __typename?: 'DashboardKpis', grossRevenue: number, ordersCount: number, completedOrders: number, canceledOrders: number, avgOrderValue: number, uniqueCustomers: number, newCustomers: number, menusCount: number, categoriesCount: number, tablesCount: number, usersCount: number } } };
+
+export type GetDashboardRevenueCompareQueryVariables = Exact<{
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+  groupBy: RevenueGroupBy;
+}>;
+
+
+export type GetDashboardRevenueCompareQuery = { __typename?: 'Query', getDashboardRevenueCompare: { __typename?: 'DashboardRevenueCompare', currentFrom: any, currentTo: any, previousFrom: any, previousTo: any, points: Array<{ __typename?: 'DashboardRevenueComparePoint', bucket: any, revenue: number, orders: number, previousBucket?: any | null, previousRevenue: number, previousOrders: number }> } };
 
 export type GetUserFavoritesQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
@@ -1770,6 +1896,54 @@ export type EditGridConfigMutationVariables = Exact<{
 
 
 export type EditGridConfigMutation = { __typename?: 'Mutation', editGridConfig: { __typename?: 'GridConfig', areaId: string, gridSize: number, id: string } };
+
+export type GetKitchenTicketsQueryVariables = Exact<{
+  station: DisplayStation;
+  statusIn?: InputMaybe<Array<TicketStatus> | TicketStatus>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  updatedAfter?: InputMaybe<Scalars['DateTime']['input']>;
+}>;
+
+
+export type GetKitchenTicketsQuery = { __typename?: 'Query', getKitchenTickets: Array<{ __typename?: 'KitchenTicket', id: string, orderId: string, station: DisplayStation, status: TicketStatus, priority: number, createdAt: any, updatedAt: any, orderNumber: string, tableId?: string | null, tableNumber?: number | null, orderNote?: string | null, specialNotes?: string | null, orderDate: any, userName: string, orderType: string, siblingTicketStatus?: string | null, items: Array<{ __typename?: 'KitchenTicketItem', id: string, menuItemId?: string | null, menuTitle: string, quantity: number, instructions: string, prepare: string, category: string, status: TicketItemStatus }> }> };
+
+export type GetKitchenTicketQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetKitchenTicketQuery = { __typename?: 'Query', getKitchenTicket: { __typename?: 'KitchenTicket', id: string, orderId: string, station: DisplayStation, status: TicketStatus, priority: number, createdAt: any, updatedAt: any, orderNumber: string, tableId?: string | null, tableNumber?: number | null, orderNote?: string | null, specialNotes?: string | null, orderDate: any, userName: string, orderType: string, siblingTicketStatus?: string | null, items: Array<{ __typename?: 'KitchenTicketItem', id: string, menuItemId?: string | null, menuTitle: string, quantity: number, instructions: string, prepare: string, category: string, status: TicketItemStatus }> } };
+
+export type UpdateTicketItemStatusMutationVariables = Exact<{
+  itemId: Scalars['String']['input'];
+  status: TicketItemStatus;
+}>;
+
+
+export type UpdateTicketItemStatusMutation = { __typename?: 'Mutation', updateTicketItemStatus: { __typename?: 'KitchenTicketItem', id: string, status: TicketItemStatus } };
+
+export type BumpTicketStatusMutationVariables = Exact<{
+  ticketId: Scalars['String']['input'];
+  status: TicketStatus;
+}>;
+
+
+export type BumpTicketStatusMutation = { __typename?: 'Mutation', bumpTicketStatus: { __typename?: 'KitchenTicket', id: string, status: TicketStatus, items: Array<{ __typename?: 'KitchenTicketItem', id: string, status: TicketItemStatus }> } };
+
+export type RecallTicketMutationVariables = Exact<{
+  ticketId: Scalars['String']['input'];
+}>;
+
+
+export type RecallTicketMutation = { __typename?: 'Mutation', recallTicket: { __typename?: 'KitchenTicket', id: string, status: TicketStatus } };
+
+export type SetTicketPriorityMutationVariables = Exact<{
+  ticketId: Scalars['String']['input'];
+  priority: Scalars['Int']['input'];
+}>;
+
+
+export type SetTicketPriorityMutation = { __typename?: 'Mutation', setTicketPriority: { __typename?: 'KitchenTicket', id: string, priority: number } };
 
 export type AddMenuMutationVariables = Exact<{
   category: Scalars['String']['input'];
@@ -1895,7 +2069,7 @@ export type GetOrdersQueryVariables = Exact<{
 }>;
 
 
-export type GetOrdersQuery = { __typename?: 'Query', getOrders: { __typename?: 'QueryGetOrdersConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetOrdersConnectionEdge', cursor: string, node: { __typename?: 'Order', id: string, orderNumber: string, orderDate: any, deliveryTime?: any | null, pickupTime?: any | null, userName: string, userEmail: string, userPhone: string, paymentToken?: string | null, paid: boolean, deliveryAddress: string, deliveryFee: number, serviceFee: number, discount?: number | null, total: number, status: OrderStatus, note?: string | null, specialNotes?: string | null, preOrder: boolean, tableId?: string | null, cart: any, items?: any | null } } | null> } };
+export type GetOrdersQuery = { __typename?: 'Query', getOrders: { __typename?: 'QueryGetOrdersConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetOrdersConnectionEdge', cursor: string, node: { __typename?: 'Order', id: string, orderNumber: string, orderDate: any, deliveryTime?: any | null, pickupTime?: any | null, userName: string, userEmail: string, userPhone: string, paymentToken?: string | null, paid: boolean, deliveryAddress: string, deliveryFee: number, serviceFee: number, discount?: number | null, total: number, status: OrderStatus, note?: string | null, specialNotes?: string | null, preOrder: boolean, tableId?: string | null, cart: any, items?: any | null, tickets: Array<{ __typename?: 'KitchenTicket', id: string, station: DisplayStation, status: TicketStatus }> } } | null> } };
 
 export type AddOrderMutationVariables = Exact<{
   cart: Scalars['JSON']['input'];
@@ -2620,6 +2794,7 @@ export const GetCategoriesDocument = gql`
     title
     desc
     img
+    station
   }
 }
     `;
@@ -2634,6 +2809,7 @@ export const GetCategoryDocument = gql`
     title
     desc
     img
+    station
   }
 }
     `;
@@ -2642,12 +2818,13 @@ export function useGetCategoryQuery(options: Omit<Urql.UseQueryArgs<GetCategoryQ
   return Urql.useQuery<GetCategoryQuery, GetCategoryQueryVariables>({ query: GetCategoryDocument, ...options });
 };
 export const AddCategoryDocument = gql`
-    mutation AddCategory($title: String!, $desc: String!, $img: String!) {
-  addCategory(title: $title, desc: $desc, img: $img) {
+    mutation AddCategory($title: String!, $desc: String!, $img: String!, $station: DisplayStation) {
+  addCategory(title: $title, desc: $desc, img: $img, station: $station) {
     id
     title
     desc
     img
+    station
   }
 }
     `;
@@ -2656,12 +2833,19 @@ export function useAddCategoryMutation() {
   return Urql.useMutation<AddCategoryMutation, AddCategoryMutationVariables>(AddCategoryDocument);
 };
 export const EditCategoryDocument = gql`
-    mutation EditCategory($editCategoryId: String!, $title: String!, $desc: String!, $img: String!) {
-  editCategory(id: $editCategoryId, title: $title, desc: $desc, img: $img) {
+    mutation EditCategory($editCategoryId: String!, $title: String!, $desc: String!, $img: String!, $station: DisplayStation) {
+  editCategory(
+    id: $editCategoryId
+    title: $title
+    desc: $desc
+    img: $img
+    station: $station
+  ) {
     id
     title
     desc
     img
+    station
   }
 }
     `;
@@ -2768,6 +2952,68 @@ export const GetEmployeeDashboardKpisDocument = gql`
 export function useGetEmployeeDashboardKpisQuery(options: Omit<Urql.UseQueryArgs<GetEmployeeDashboardKpisQueryVariables>, 'query'>) {
   return Urql.useQuery<GetEmployeeDashboardKpisQuery, GetEmployeeDashboardKpisQueryVariables>({ query: GetEmployeeDashboardKpisDocument, ...options });
 };
+export const GetDashboardKpisCompareDocument = gql`
+    query GetDashboardKpisCompare($from: DateTime!, $to: DateTime!) {
+  getDashboardKpisCompare(from: $from, to: $to) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    current {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      uniqueCustomers
+      newCustomers
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+    }
+    previous {
+      grossRevenue
+      ordersCount
+      completedOrders
+      canceledOrders
+      avgOrderValue
+      uniqueCustomers
+      newCustomers
+      menusCount
+      categoriesCount
+      tablesCount
+      usersCount
+    }
+  }
+}
+    `;
+
+export function useGetDashboardKpisCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardKpisCompareQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardKpisCompareQuery, GetDashboardKpisCompareQueryVariables>({ query: GetDashboardKpisCompareDocument, ...options });
+};
+export const GetDashboardRevenueCompareDocument = gql`
+    query GetDashboardRevenueCompare($from: DateTime!, $to: DateTime!, $groupBy: RevenueGroupBy!) {
+  getDashboardRevenueCompare(from: $from, to: $to, groupBy: $groupBy) {
+    currentFrom
+    currentTo
+    previousFrom
+    previousTo
+    points {
+      bucket
+      revenue
+      orders
+      previousBucket
+      previousRevenue
+      previousOrders
+    }
+  }
+}
+    `;
+
+export function useGetDashboardRevenueCompareQuery(options: Omit<Urql.UseQueryArgs<GetDashboardRevenueCompareQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetDashboardRevenueCompareQuery, GetDashboardRevenueCompareQueryVariables>({ query: GetDashboardRevenueCompareDocument, ...options });
+};
 export const GetUserFavoritesDocument = gql`
     query GetUserFavorites($userEmail: String!) {
   getUserFavorites(userEmail: $userEmail) {
@@ -2843,6 +3089,135 @@ export const EditGridConfigDocument = gql`
 
 export function useEditGridConfigMutation() {
   return Urql.useMutation<EditGridConfigMutation, EditGridConfigMutationVariables>(EditGridConfigDocument);
+};
+export const GetKitchenTicketsDocument = gql`
+    query GetKitchenTickets($station: DisplayStation!, $statusIn: [TicketStatus!], $limit: Int, $updatedAfter: DateTime) {
+  getKitchenTickets(
+    station: $station
+    statusIn: $statusIn
+    limit: $limit
+    updatedAfter: $updatedAfter
+  ) {
+    id
+    orderId
+    station
+    status
+    priority
+    createdAt
+    updatedAt
+    orderNumber
+    tableId
+    tableNumber
+    orderNote
+    specialNotes
+    orderDate
+    userName
+    orderType
+    siblingTicketStatus
+    items {
+      id
+      menuItemId
+      menuTitle
+      quantity
+      instructions
+      prepare
+      category
+      status
+    }
+  }
+}
+    `;
+
+export function useGetKitchenTicketsQuery(options: Omit<Urql.UseQueryArgs<GetKitchenTicketsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetKitchenTicketsQuery, GetKitchenTicketsQueryVariables>({ query: GetKitchenTicketsDocument, ...options });
+};
+export const GetKitchenTicketDocument = gql`
+    query GetKitchenTicket($id: String!) {
+  getKitchenTicket(id: $id) {
+    id
+    orderId
+    station
+    status
+    priority
+    createdAt
+    updatedAt
+    orderNumber
+    tableId
+    tableNumber
+    orderNote
+    specialNotes
+    orderDate
+    userName
+    orderType
+    siblingTicketStatus
+    items {
+      id
+      menuItemId
+      menuTitle
+      quantity
+      instructions
+      prepare
+      category
+      status
+    }
+  }
+}
+    `;
+
+export function useGetKitchenTicketQuery(options: Omit<Urql.UseQueryArgs<GetKitchenTicketQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetKitchenTicketQuery, GetKitchenTicketQueryVariables>({ query: GetKitchenTicketDocument, ...options });
+};
+export const UpdateTicketItemStatusDocument = gql`
+    mutation UpdateTicketItemStatus($itemId: String!, $status: TicketItemStatus!) {
+  updateTicketItemStatus(itemId: $itemId, status: $status) {
+    id
+    status
+  }
+}
+    `;
+
+export function useUpdateTicketItemStatusMutation() {
+  return Urql.useMutation<UpdateTicketItemStatusMutation, UpdateTicketItemStatusMutationVariables>(UpdateTicketItemStatusDocument);
+};
+export const BumpTicketStatusDocument = gql`
+    mutation BumpTicketStatus($ticketId: String!, $status: TicketStatus!) {
+  bumpTicketStatus(ticketId: $ticketId, status: $status) {
+    id
+    status
+    items {
+      id
+      status
+    }
+  }
+}
+    `;
+
+export function useBumpTicketStatusMutation() {
+  return Urql.useMutation<BumpTicketStatusMutation, BumpTicketStatusMutationVariables>(BumpTicketStatusDocument);
+};
+export const RecallTicketDocument = gql`
+    mutation RecallTicket($ticketId: String!) {
+  recallTicket(ticketId: $ticketId) {
+    id
+    status
+  }
+}
+    `;
+
+export function useRecallTicketMutation() {
+  return Urql.useMutation<RecallTicketMutation, RecallTicketMutationVariables>(RecallTicketDocument);
+};
+export const SetTicketPriorityDocument = gql`
+    mutation SetTicketPriority($ticketId: String!, $priority: Int!) {
+  setTicketPriority(ticketId: $ticketId, priority: $priority) {
+    id
+    priority
+  }
+}
+    `;
+
+export function useSetTicketPriorityMutation() {
+  return Urql.useMutation<SetTicketPriorityMutation, SetTicketPriorityMutationVariables>(SetTicketPriorityDocument);
 };
 export const AddMenuDocument = gql`
     mutation AddMenu($category: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
@@ -3103,6 +3478,11 @@ export const GetOrdersDocument = gql`
         tableId
         cart
         items
+        tickets {
+          id
+          station
+          status
+        }
       }
     }
   }

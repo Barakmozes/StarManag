@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
+import { DisplayStation } from "@/graphql/schema/KitchenTicket/enum";
 
 /**
  * Pothos Prisma Object: Category
@@ -12,6 +13,7 @@ import { builder } from "@/graphql/builder";
  *  - title: String (unique)
  *  - desc: String
  *  - img: String
+ *  - station: DisplayStation (KITCHEN | BAR)
  */
 builder.prismaObject("Category", {
   fields: (t) => ({
@@ -19,6 +21,7 @@ builder.prismaObject("Category", {
     title: t.exposeString("title"),
     desc: t.exposeString("desc"),
     img: t.exposeString("img"),
+    station: t.expose("station", { type: DisplayStation }),
   }),
 });
 

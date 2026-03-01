@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { GraphQLError } from "graphql";
 import { builder } from "@/graphql/builder";
 import { OrderStatus } from "@prisma/client";
+import { createTicketsForOrder } from "@/graphql/schema/Order/mutations";
 
 /**
  * Mutation Fields for Table
@@ -230,9 +231,9 @@ builder.mutationFields((t) => ({
         throw new GraphQLError("Table not found");
       }
 
-      // 3. Create order + ensure table becomes occupied in one transaction.
-      const [newOrder] = await prisma.$transaction([
-        prisma.order.create({
+      // 3. Create order + mark table occupied + create KDS tickets in one transaction.
+      const newOrder = await prisma.$transaction(async (tx) => {
+        const order = await tx.order.create({
           ...query,
           data: {
             orderNumber: args.orderNumber,
@@ -247,12 +248,19 @@ builder.mutationFields((t) => ({
             total: args.total,
             paymentToken: args.paymentToken ?? undefined,
           },
-        }),
-        prisma.table.update({
+        });
+
+        await tx.table.update({
           where: { id: args.tableId },
           data: { reserved: true },
-        }),
-      ]);
+        });
+
+        // Create KDS tickets (groups items by station: KITCHEN/BAR)
+        const cartArray = Array.isArray(args.cart) ? args.cart : [];
+        await createTicketsForOrder(tx, order.id, cartArray as any[]);
+
+        return order;
+      });
 
       return newOrder;
     },

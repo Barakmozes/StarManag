@@ -9,7 +9,7 @@ import TableWrapper from "../Components/TableWrapper";
 import AdminAddCategory from "./AdminAddCategory";
 import AdminEditCategory from "./AdminEditCategory";
 import AdminDeleteCategory from "./AdminDeleteCategory";
-import { GetCategoriesDocument, type GetCategoriesQuery } from "@/graphql/generated";
+import { GetCategoriesDocument, type GetCategoriesQuery, DisplayStation } from "@/graphql/generated";
 
 function firstPresent(sp: ReadonlyURLSearchParams, keys: readonly string[]) {
   for (const k of keys) {
@@ -90,6 +90,15 @@ const AdminCategories = () => {
                     <p className="mt-1 text-sm text-gray-400 break-words line-clamp-3">
                       {cat.desc}
                     </p>
+                    <span
+                      className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium text-white ${
+                        cat.station === DisplayStation.Bar
+                          ? "bg-blue-500"
+                          : "bg-orange-500"
+                      }`}
+                    >
+                      {cat.station === DisplayStation.Bar ? "Bar" : "Kitchen"}
+                    </span>
                   </div>
                 </div>
 
@@ -123,6 +132,9 @@ const AdminCategories = () => {
                       Description
                     </th>
                     <th scope="col" className="px-6 py-3">
+                      Station
+                    </th>
+                    <th scope="col" className="px-6 py-3">
                       Edit
                     </th>
                     <th scope="col" className="px-6 py-3">
@@ -148,6 +160,17 @@ const AdminCategories = () => {
                         <p className="text-sm text-gray-400 line-clamp-2">{cat.desc}</p>
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap">
+                        <span
+                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${
+                            cat.station === DisplayStation.Bar
+                              ? "bg-blue-500"
+                              : "bg-orange-500"
+                          }`}
+                        >
+                          {cat.station === DisplayStation.Bar ? "Bar" : "Kitchen"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-2 whitespace-nowrap">
                         <AdminEditCategory category={cat} />
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap">
@@ -158,7 +181,7 @@ const AdminCategories = () => {
 
                   {!categories.length && (
                     <tr>
-                      <td className="px-6 py-6 text-center text-gray-500" colSpan={5}>
+                      <td className="px-6 py-6 text-center text-gray-500" colSpan={6}>
                         {q ? "No categories match your search." : "No categories yet. Add one."}
                       </td>
                     </tr>

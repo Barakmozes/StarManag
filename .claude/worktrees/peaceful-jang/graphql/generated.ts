@@ -1064,7 +1064,9 @@ export enum Role {
   Delivery = 'DELIVERY',
   Manager = 'MANAGER',
   User = 'USER',
-  Waiter = 'WAITER'
+  Waiter = 'WAITER',
+  Chef = 'CHEF',
+  Bartender = 'BARTENDER'
 }
 
 export enum SortOrder {

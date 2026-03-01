@@ -13,6 +13,7 @@ import {
   AddCategoryDocument,
   AddCategoryMutation,
   AddCategoryMutationVariables,
+  DisplayStation,
 } from "@/graphql/generated";
 
 const AdminAddCategory = () => {
@@ -22,6 +23,7 @@ const AdminAddCategory = () => {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [img, setImg] = useState("");
+  const [station, setStation] = useState<DisplayStation>(DisplayStation.Kitchen);
 
   const closeModal = () => setIsOpen(false);
   const openModal = () => setIsOpen(true);
@@ -30,6 +32,7 @@ const AdminAddCategory = () => {
     setTitle("");
     setDesc("");
     setImg("");
+    setStation(DisplayStation.Kitchen);
   };
 
   const getCategoryImageFile = async (file: File) => {
@@ -55,7 +58,7 @@ const AdminAddCategory = () => {
     }
 
     try {
-      const res = await addCategory({ title, desc, img });
+      const res = await addCategory({ title, desc, img, station });
 
       if (res.data?.addCategory) {
         toast.success("Category Added Successfully", { duration: 1000 });
@@ -112,6 +115,20 @@ const AdminAddCategory = () => {
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="station" className="form-label">
+                  Station
+                </label>
+                <select
+                  id="station"
+                  className="form-input min-h-11 text-base sm:text-sm"
+                  value={station}
+                  onChange={(e) => setStation(e.target.value as DisplayStation)}
+                >
+                  <option value={DisplayStation.Kitchen}>Kitchen (food)</option>
+                  <option value={DisplayStation.Bar}>Bar (drinks)</option>
+                </select>
               </div>
             </div>
 

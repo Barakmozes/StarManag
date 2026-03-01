@@ -1,0 +1,103 @@
+query GetKitchenTickets(
+  $station: DisplayStation!
+  $statusIn: [TicketStatus!]
+  $limit: Int
+  $updatedAfter: DateTime
+) {
+  getKitchenTickets(
+    station: $station
+    statusIn: $statusIn
+    limit: $limit
+    updatedAfter: $updatedAfter
+  ) {
+    id
+    orderId
+    station
+    status
+    priority
+    createdAt
+    updatedAt
+    orderNumber
+    tableId
+    tableNumber
+    orderNote
+    specialNotes
+    orderDate
+    userName
+    orderType
+    siblingTicketStatus
+    items {
+      id
+      menuItemId
+      menuTitle
+      quantity
+      instructions
+      prepare
+      category
+      status
+    }
+  }
+}
+
+query GetKitchenTicket($id: String!) {
+  getKitchenTicket(id: $id) {
+    id
+    orderId
+    station
+    status
+    priority
+    createdAt
+    updatedAt
+    orderNumber
+    tableId
+    tableNumber
+    orderNote
+    specialNotes
+    orderDate
+    userName
+    orderType
+    siblingTicketStatus
+    items {
+      id
+      menuItemId
+      menuTitle
+      quantity
+      instructions
+      prepare
+      category
+      status
+    }
+  }
+}
+
+mutation UpdateTicketItemStatus($itemId: String!, $status: TicketItemStatus!) {
+  updateTicketItemStatus(itemId: $itemId, status: $status) {
+    id
+    status
+  }
+}
+
+mutation BumpTicketStatus($ticketId: String!, $status: TicketStatus!) {
+  bumpTicketStatus(ticketId: $ticketId, status: $status) {
+    id
+    status
+    items {
+      id
+      status
+    }
+  }
+}
+
+mutation RecallTicket($ticketId: String!) {
+  recallTicket(ticketId: $ticketId) {
+    id
+    status
+  }
+}
+
+mutation SetTicketPriority($ticketId: String!, $priority: Int!) {
+  setTicketPriority(ticketId: $ticketId, priority: $priority) {
+    id
+    priority
+  }
+}

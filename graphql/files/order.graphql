@@ -41,6 +41,12 @@ query GetOrders(
 
         cart
         items
+
+        tickets {
+          id
+          station
+          status
+        }
       }
     }
   }

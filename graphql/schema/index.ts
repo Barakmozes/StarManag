@@ -19,5 +19,6 @@ import "./Delivery";
 import "./Shift";
 import "./TimeEntry";
 import "./ShiftTemplate";
+import "./KitchenTicket";
 
 export const schema = builder.toSchema({})

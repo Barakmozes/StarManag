@@ -21,8 +21,9 @@ enum Role {
   ADMIN
   DELIVERY
   WAITER
-  // CHEF
+  CHEF
   MANAGER
+  BARTENDER
 }
 
 enum OrderStatus {
@@ -79,6 +80,27 @@ enum TimeEntryStatus {
   COMPLETED
   AUTO_CLOSED
   EDITED
+}
+
+// Kitchen Display System (KDS) Enums
+enum DisplayStation {
+  KITCHEN
+  BAR
+}
+
+enum TicketStatus {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+  RECALLED
+  CANCELLED
+}
+
+enum TicketItemStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  CANCELLED
 }
 
 // -----------------------------------------------------------------------------
@@ -249,10 +271,11 @@ model Menu {
 }
 
 model Category {
-  id    String @id @default(cuid())
-  title String @unique
-  desc  String
-  img   String
+  id      String         @id @default(cuid())
+  title   String         @unique
+  desc    String
+  img     String
+  station DisplayStation @default(KITCHEN)
 
   menus Menu[]
 
@@ -296,9 +319,12 @@ model Order {
   tableId String?
   table   Table?  @relation(fields: [tableId], references: [id], onDelete: SetNull)
 
+  // KDS tickets
+  tickets KitchenTicket[]
+
   // Indexes
   @@index([userEmail])
- 
+
     // Indexes (Dashboard + Analytics)
   @@index([orderDate, status], map: "order_orderDate_status_idx")
   @@index([userEmail, orderDate], map: "order_userEmail_orderDate_idx")
@@ -585,4 +611,51 @@ model TimeEntry {
   @@index([clockIn, clockOut], map: "timeentry_clockIn_clockOut_idx")
   @@index([userEmail, clockIn], map: "timeentry_userEmail_clockIn_idx")
   @@index([status, clockIn], map: "timeentry_status_clockIn_idx")
+}
+
+// -----------------------------------------------------------------------------
+// Kitchen Display System (KDS) Models
+// -----------------------------------------------------------------------------
+
+model KitchenTicket {
+  id       String         @id @default(cuid())
+  orderId  String
+  order    Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  station  DisplayStation
+  status   TicketStatus   @default(NEW)
+  priority Int            @default(0) // 0=normal, 1=rush
+
+  items KitchenTicketItem[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one ticket per station per order
+  @@unique([orderId, station])
+
+  // Indexes
+  @@index([station, status])
+  @@index([status, createdAt])
+  @@index([station, status, priority])
+}
+
+model KitchenTicketItem {
+  id           String           @id @default(cuid())
+  ticketId     String
+  ticket       KitchenTicket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  menuItemId   String? // Menu.id for traceability (no FK — survives menu deletions)
+  menuTitle    String
+  quantity     Int
+  instructions String           @default("")
+  prepare      String           @default("")
+  category     String           @default("")
+  status       TicketItemStatus @default(PENDING)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([ticketId])
 }

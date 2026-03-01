@@ -4,6 +4,7 @@ query GetCategories {
     title
     desc
     img
+    station
   }
 }
 
@@ -13,15 +14,17 @@ query GetCategory($getCategoryId: String!) {
     title
     desc
     img
+    station
   }
 }
 
-mutation AddCategory($title: String!, $desc: String!, $img: String!) {
-  addCategory(title: $title, desc: $desc, img: $img) {
+mutation AddCategory($title: String!, $desc: String!, $img: String!, $station: DisplayStation) {
+  addCategory(title: $title, desc: $desc, img: $img, station: $station) {
     id
     title
     desc
     img
+    station
   }
 }
 
@@ -30,12 +33,14 @@ mutation EditCategory(
   $title: String!
   $desc: String!
   $img: String!
+  $station: DisplayStation
 ) {
-  editCategory(id: $editCategoryId, title: $title, desc: $desc, img: $img) {
+  editCategory(id: $editCategoryId, title: $title, desc: $desc, img: $img, station: $station) {
     id
     title
     desc
     img
+    station
   }
 }
 

@@ -43,6 +43,8 @@ builder.prismaObject("Order", {
 
     delivery: t.relation("delivery", { nullable: true }),
 
+    tickets: t.relation("tickets"),
+
     createdAt: t.expose("createdAt", { type: "DateTime" }),
     updatedAt: t.expose("updatedAt", { type: "DateTime" }),
   }),
