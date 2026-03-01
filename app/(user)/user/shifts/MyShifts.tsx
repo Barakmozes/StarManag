@@ -285,6 +285,7 @@ export default function MyShifts({ user }: Props) {
   const upcomingShifts = useMemo(() => {
     const edges = upcomingResult.data?.getMyShifts?.edges ?? [];
     return edges
+      .filter((e): e is NonNullable<typeof e> => e != null)
       .map((e) => e.node)
       .filter(
         (s) => s.status === "PUBLISHED" && toDate(s.startTime)! > new Date()
@@ -293,13 +294,14 @@ export default function MyShifts({ user }: Props) {
 
   const historyShifts = useMemo(() => {
     const edges = historyResult.data?.getMyShifts?.edges ?? [];
-    return edges.map((e) => e.node);
+    return edges.filter((e): e is NonNullable<typeof e> => e != null).map((e) => e.node);
   }, [historyResult.data]);
 
   const timeEntriesMap = useMemo(() => {
     const edges = timeEntriesResult.data?.getMyTimeEntries?.edges ?? [];
-    const map = new Map<string, typeof edges[0]["node"][]>();
+    const map = new Map<string, NonNullable<typeof edges[number]>["node"][]>();
     for (const edge of edges) {
+      if (!edge) continue;
       const shiftId = edge.node.shiftId;
       if (shiftId) {
         const existing = map.get(shiftId) ?? [];
@@ -313,7 +315,7 @@ export default function MyShifts({ user }: Props) {
   // Time entries not linked to any shift
   const unlinkedTimeEntries = useMemo(() => {
     const edges = timeEntriesResult.data?.getMyTimeEntries?.edges ?? [];
-    return edges.map((e) => e.node).filter((te) => !te.shiftId);
+    return edges.filter((e): e is NonNullable<typeof e> => e != null).map((e) => e.node).filter((te) => !te.shiftId);
   }, [timeEntriesResult.data]);
 
   const summary = summaryResult.data?.getAttendanceSummary ?? null;

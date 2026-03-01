@@ -145,7 +145,7 @@ export default function ReservationBookingModal({ user, isOpen, onClose }: Props
           numOfDiners={state.partySize}
           areaId={state.areaId}
           areaName={state.areaName}
-          userEmail={user.email}
+          userEmail={user.email ?? ""}
           selectedTableId={state.tableId}
           onSelectTable={(id, num) =>
             setState((s) => ({ ...s, tableId: id, tableNumber: num }))

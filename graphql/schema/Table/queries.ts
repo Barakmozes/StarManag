@@ -247,7 +247,7 @@ builder.queryFields((t) => ({
         select: { tableId: true },
       });
 
-      const blockedIds = [...new Set(overlapping.map((r) => r.tableId))];
+      const blockedIds = Array.from(new Set(overlapping.map((r) => r.tableId)));
 
       return prisma.table.findMany({
         ...query,
