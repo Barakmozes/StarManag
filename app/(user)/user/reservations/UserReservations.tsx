@@ -65,7 +65,7 @@ export default function UserReservations({ user }: Props) {
     GetUserReservationsQueryVariables
   >({
     query: GetUserReservationsDocument,
-    variables: { userEmail: user.email },
+    variables: { userEmail: user.email ?? "" },
     requestPolicy: "cache-and-network",
   });
 
@@ -74,7 +74,7 @@ export default function UserReservations({ user }: Props) {
     GetUserWaitlistEntriesQueryVariables
   >({
     query: GetUserWaitlistEntriesDocument,
-    variables: { userEmail: user.email },
+    variables: { userEmail: user.email ?? "" },
     requestPolicy: "cache-and-network",
   });
 
