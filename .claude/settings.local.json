@@ -24,7 +24,11 @@
       "Bash(yarn codegen)",
       "Bash(tasklist //FI \"IMAGENAME eq node.exe\" //FO CSV //NH)",
       "Bash(taskkill //F //IM node.exe)",
-      "mcp__Desktop_Commander__read_file"
+      "mcp__Desktop_Commander__read_file",
+      "mcp__Desktop_Commander__start_search",
+      "mcp__Desktop_Commander__get_more_search_results",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit graphql/schema/KitchenTicket/queries.ts)"
     ]
   },
   "model": "claude-opus-4-6",

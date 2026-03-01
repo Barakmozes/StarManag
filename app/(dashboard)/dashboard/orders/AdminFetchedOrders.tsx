@@ -17,9 +17,8 @@ import {
   type GetOrdersQuery,
   type GetOrdersQueryVariables,
   OrderStatus,
-  DisplayStation,
-  TicketStatus,
 } from "@/graphql/generated";
+import TicketDots from "@/app/components/Common/TicketDots";
 
 type OrderNode = NonNullable<NonNullable<GetOrdersQuery["getOrders"]["edges"][number]>["node"]>;
 
@@ -42,50 +41,6 @@ function parsePaid(raw: string | null): boolean | undefined {
   if (["1", "true", "yes"].includes(v)) return true;
   if (["0", "false", "no"].includes(v)) return false;
   return undefined;
-}
-
-function ticketStatusColor(status: TicketStatus): string {
-  switch (status) {
-    case TicketStatus.New: return "bg-blue-500";
-    case TicketStatus.InProgress: return "bg-yellow-500";
-    case TicketStatus.Completed: return "bg-green-500";
-    case TicketStatus.Recalled: return "bg-orange-500";
-    case TicketStatus.Cancelled: return "bg-gray-400";
-    default: return "bg-gray-300";
-  }
-}
-
-function ticketStatusLabel(status: TicketStatus): string {
-  switch (status) {
-    case TicketStatus.New: return "New";
-    case TicketStatus.InProgress: return "In Progress";
-    case TicketStatus.Completed: return "Done";
-    case TicketStatus.Recalled: return "Recalled";
-    case TicketStatus.Cancelled: return "Cancelled";
-    default: return status;
-  }
-}
-
-function TicketDots({ tickets }: { tickets?: Array<{ station: DisplayStation; status: TicketStatus }> }) {
-  if (!tickets || tickets.length === 0) return null;
-  const kitchen = tickets.find((t) => t.station === DisplayStation.Kitchen);
-  const bar = tickets.find((t) => t.station === DisplayStation.Bar);
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      {kitchen && (
-        <span
-          className={`inline-block h-2.5 w-2.5 rounded-full ${ticketStatusColor(kitchen.status)}`}
-          title={`Kitchen: ${ticketStatusLabel(kitchen.status)}`}
-        />
-      )}
-      {bar && (
-        <span
-          className={`inline-block h-2.5 w-2.5 rounded-full ring-1 ring-white ${ticketStatusColor(bar.status)}`}
-          title={`Bar: ${ticketStatusLabel(bar.status)}`}
-        />
-      )}
-    </span>
-  );
 }
 
 type Props = { pageSize?: number };

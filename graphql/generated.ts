@@ -216,7 +216,9 @@ export type KitchenTicketItem = {
 
 export type Menu = {
   __typename?: 'Menu';
+  Category?: Maybe<Category>;
   category: Scalars['String']['output'];
+  categoryId?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   image: Scalars['String']['output'];
   longDescr?: Maybe<Scalars['String']['output']>;
@@ -348,6 +350,7 @@ export type MutationAddGuestReservationArgs = {
 
 export type MutationAddMenuArgs = {
   category: Scalars['String']['input'];
+  categoryId?: InputMaybe<Scalars['String']['input']>;
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
   onPromo: Scalars['Boolean']['input'];
@@ -610,6 +613,7 @@ export type MutationEditGridConfigArgs = {
 
 export type MutationEditMenuArgs = {
   category: Scalars['String']['input'];
+  categoryId?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['String']['input'];
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
@@ -1947,6 +1951,7 @@ export type SetTicketPriorityMutation = { __typename?: 'Mutation', setTicketPrio
 
 export type AddMenuMutationVariables = Exact<{
   category: Scalars['String']['input'];
+  categoryId?: InputMaybe<Scalars['String']['input']>;
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
   prepType: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1962,6 +1967,7 @@ export type AddMenuMutation = { __typename?: 'Mutation', addMenu: { __typename?:
 
 export type EditMenuMutationVariables = Exact<{
   category: Scalars['String']['input'];
+  categoryId?: InputMaybe<Scalars['String']['input']>;
   editMenuId: Scalars['String']['input'];
   image: Scalars['String']['input'];
   longDescr: Scalars['String']['input'];
@@ -1989,7 +1995,7 @@ export type GetMenusQueryVariables = Exact<{
 }>;
 
 
-export type GetMenusQuery = { __typename?: 'Query', getMenus: { __typename?: 'QueryGetMenusConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMenusConnectionEdge', cursor: string, node: { __typename?: 'Menu', category: string, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string } } | null> } };
+export type GetMenusQuery = { __typename?: 'Query', getMenus: { __typename?: 'QueryGetMenusConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, edges: Array<{ __typename?: 'QueryGetMenusConnectionEdge', cursor: string, node: { __typename?: 'Menu', category: string, categoryId?: string | null, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string, Category?: { __typename?: 'Category', station: DisplayStation } | null } } | null> } };
 
 export type GetMenuUserFavoritesQueryVariables = Exact<{
   menuIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1997,7 +2003,7 @@ export type GetMenuUserFavoritesQueryVariables = Exact<{
 }>;
 
 
-export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavorites: Array<{ __typename?: 'Menu', category: string, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string }> };
+export type GetMenuUserFavoritesQuery = { __typename?: 'Query', getMenuUserFavorites: Array<{ __typename?: 'Menu', category: string, categoryId?: string | null, id: string, image: string, longDescr?: string | null, onPromo: boolean, prepType: Array<string>, price: number, sellingPrice?: number | null, shortDescr: string, title: string }> };
 
 export type GetUserNotificationsQueryVariables = Exact<{
   userEmail: Scalars['String']['input'];
@@ -2092,7 +2098,7 @@ export type AddOrderMutationVariables = Exact<{
 }>;
 
 
-export type AddOrderMutation = { __typename?: 'Mutation', addOrder: { __typename?: 'Order', id: string } };
+export type AddOrderMutation = { __typename?: 'Mutation', addOrder: { __typename?: 'Order', id: string, tickets: Array<{ __typename?: 'KitchenTicket', id: string, station: DisplayStation, status: TicketStatus }> } };
 
 export type EditOrderOnPaymentMutationVariables = Exact<{
   editOrderOnPaymentId: Scalars['String']['input'];
@@ -2320,7 +2326,7 @@ export type GetTableOrderQueryVariables = Exact<{
 }>;
 
 
-export type GetTableOrderQuery = { __typename?: 'Query', getTableOrder: Array<{ __typename?: 'Order', cart: any, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userName: string, userPhone: string }> };
+export type GetTableOrderQuery = { __typename?: 'Query', getTableOrder: Array<{ __typename?: 'Order', cart: any, deliveryTime?: any | null, discount?: number | null, id: string, note?: string | null, orderDate: any, orderNumber: string, paid: boolean, paymentToken?: string | null, serviceFee: number, status: OrderStatus, total: number, userName: string, userPhone: string, tickets: Array<{ __typename?: 'KitchenTicket', id: string, station: DisplayStation, status: TicketStatus, updatedAt: any }> }> };
 
 export type GetTableReservationsQueryVariables = Exact<{
   date: Scalars['String']['input'];
@@ -2374,7 +2380,7 @@ export type AddOrderToTableMutationVariables = Exact<{
 }>;
 
 
-export type AddOrderToTableMutation = { __typename?: 'Mutation', addOrderToTable: { __typename?: 'Order', cart: any, discount?: number | null, note?: string | null, orderNumber: string, paymentToken?: string | null, total: number, userEmail: string, userName: string, id: string } };
+export type AddOrderToTableMutation = { __typename?: 'Mutation', addOrderToTable: { __typename?: 'Order', cart: any, discount?: number | null, note?: string | null, orderNumber: string, paymentToken?: string | null, total: number, userEmail: string, userName: string, id: string, tickets: Array<{ __typename?: 'KitchenTicket', id: string, station: DisplayStation, status: TicketStatus, updatedAt: any }> } };
 
 export type MovePositionTableMutationVariables = Exact<{
   movePositionTableId: Scalars['String']['input'];
@@ -3220,9 +3226,10 @@ export function useSetTicketPriorityMutation() {
   return Urql.useMutation<SetTicketPriorityMutation, SetTicketPriorityMutationVariables>(SetTicketPriorityDocument);
 };
 export const AddMenuDocument = gql`
-    mutation AddMenu($category: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
+    mutation AddMenu($category: String!, $categoryId: String, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
   addMenu(
     category: $category
+    categoryId: $categoryId
     image: $image
     longDescr: $longDescr
     prepType: $prepType
@@ -3241,9 +3248,10 @@ export function useAddMenuMutation() {
   return Urql.useMutation<AddMenuMutation, AddMenuMutationVariables>(AddMenuDocument);
 };
 export const EditMenuDocument = gql`
-    mutation EditMenu($category: String!, $editMenuId: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
+    mutation EditMenu($category: String!, $categoryId: String, $editMenuId: String!, $image: String!, $longDescr: String!, $prepType: [String!]!, $price: Float!, $shortDescr: String!, $title: String!, $sellingPrice: Float, $onPromo: Boolean!) {
   editMenu(
     category: $category
+    categoryId: $categoryId
     id: $editMenuId
     image: $image
     longDescr: $longDescr
@@ -3284,6 +3292,7 @@ export const GetMenusDocument = gql`
       cursor
       node {
         category
+        categoryId
         id
         image
         longDescr
@@ -3293,6 +3302,9 @@ export const GetMenusDocument = gql`
         sellingPrice
         shortDescr
         title
+        Category {
+          station
+        }
       }
     }
   }
@@ -3306,6 +3318,7 @@ export const GetMenuUserFavoritesDocument = gql`
     query GetMenuUserFavorites($menuIds: [String!]!, $userEmail: String!) {
   getMenuUserFavorites(menuIds: $menuIds, userEmail: $userEmail) {
     category
+    categoryId
     id
     image
     longDescr
@@ -3514,6 +3527,11 @@ export const AddOrderDocument = gql`
     tableId: $tableId
   ) {
     id
+    tickets {
+      id
+      station
+      status
+    }
   }
 }
     `;
@@ -4090,6 +4108,12 @@ export const GetTableOrderDocument = gql`
     total
     userName
     userPhone
+    tickets {
+      id
+      station
+      status
+      updatedAt
+    }
   }
 }
     `;
@@ -4190,6 +4214,12 @@ export const AddOrderToTableDocument = gql`
     userEmail
     userName
     id
+    tickets {
+      id
+      station
+      status
+      updatedAt
+    }
   }
 }
     `;

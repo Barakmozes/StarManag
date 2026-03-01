@@ -33,6 +33,7 @@ type MenuLike = {
   id: string;
   title: string;
   category: string;
+  categoryId?: string | null;
   longDescr?: string | null;
   shortDescr: string;
   price: number;
@@ -61,6 +62,7 @@ const AdminEditMenu = ({ menu }: Props) => {
 
   const [title, setTitle] = useState(menu.title);
   const [categoryTitle, setCategoryTitle] = useState(menu.category);
+  const [categoryId, setCategoryId] = useState(menu.categoryId ?? "");
   const [longDescr, setLongDescr] = useState(menu.longDescr ?? "");
   const [shortDescr, setShortDescr] = useState(menu.shortDescr);
   const [price, setPrice] = useState(menu.price);
@@ -177,12 +179,13 @@ const AdminEditMenu = ({ menu }: Props) => {
         image,
         title: cleanedTitle,
         category: cleanedCategory,
+        categoryId: categoryId || undefined,
         longDescr: cleanedLong,
         shortDescr: cleanedShort,
         prepType: cleanedPrep,
         price,
-        sellingPrice: selling, 
-        onPromo, 
+        sellingPrice: selling,
+        onPromo,
       });
 
       if (res.data?.editMenu?.id) {
@@ -250,7 +253,12 @@ const AdminEditMenu = ({ menu }: Props) => {
                 <select
                   id="category"
                   className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors bg-white"
-                  onChange={(e) => setCategoryTitle(e.target.value)}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setCategoryTitle(selected);
+                    const match = categories.find((c) => c.title === selected);
+                    setCategoryId(match?.id ?? "");
+                  }}
                   value={categoryTitle}
                   disabled={catFetching}
                 >

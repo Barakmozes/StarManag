@@ -93,6 +93,11 @@ mutation AddOrder(
     tableId: $tableId
   ) {
     id
+    tickets {
+      id
+      station
+      status
+    }
   }
 }
 

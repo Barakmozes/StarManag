@@ -234,7 +234,6 @@ builder.mutationFields((t) => ({
       // 3. Create order + mark table occupied + create KDS tickets in one transaction.
       const newOrder = await prisma.$transaction(async (tx) => {
         const order = await tx.order.create({
-          ...query,
           data: {
             orderNumber: args.orderNumber,
             cart: args.cart,
@@ -259,7 +258,8 @@ builder.mutationFields((t) => ({
         const cartArray = Array.isArray(args.cart) ? args.cart : [];
         await createTicketsForOrder(tx, order.id, cartArray as any[]);
 
-        return order;
+        // Re-fetch with Pothos query (includes tickets relation if requested)
+        return tx.order.findUniqueOrThrow({ ...query, where: { id: order.id } });
       });
 
       return newOrder;

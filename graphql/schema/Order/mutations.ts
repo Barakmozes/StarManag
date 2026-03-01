@@ -59,6 +59,7 @@ export async function createTicketsForOrder(
   }
 
   // 3. Create tickets per station (skip empty)
+  let ticketCount = 0;
   for (const [station, items] of Object.entries(groups)) {
     if (items.length === 0) continue;
     await tx.kitchenTicket.create({
@@ -77,7 +78,17 @@ export async function createTicketsForOrder(
         },
       },
     });
+    ticketCount++;
   }
+
+  // Hard error: if a non-empty cart produces zero tickets, something is wrong
+  if (cart.length > 0 && ticketCount === 0) {
+    throw new GraphQLError(
+      "No KDS tickets were created — check that cart items have valid category/categoryId"
+    );
+  }
+
+  return ticketCount;
 }
 
 /**
@@ -153,7 +164,6 @@ builder.mutationFields((t) => ({
         if (existingOrder) return existingOrder;
 
         const newOrder = await tx.order.create({
-          ...query,
           data: {
             orderNumber: args.orderNumber,
             cart: args.cart as any,
@@ -183,7 +193,8 @@ builder.mutationFields((t) => ({
         const cartArray = Array.isArray(args.cart) ? args.cart : [];
         await createTicketsForOrder(tx, newOrder.id, cartArray as any[]);
 
-        return newOrder;
+        // Re-fetch with Pothos query (includes tickets relation if requested)
+        return tx.order.findUniqueOrThrow({ ...query, where: { id: newOrder.id } });
       });
     },
   }),

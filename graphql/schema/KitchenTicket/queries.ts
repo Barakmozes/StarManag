@@ -23,6 +23,51 @@ function isKitchenStaff(role?: string | null) {
 }
 
 // ---------------------------------------------------------------------------
+// Per-request cache helpers (eliminates N+1 on computed ticket fields)
+// ---------------------------------------------------------------------------
+
+async function getOrderForTicket(
+  orderId: string,
+  ctx: { orderCache: Map<string, any> }
+) {
+  if (ctx.orderCache.has(orderId)) return ctx.orderCache.get(orderId);
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      orderNumber: true,
+      tableId: true,
+      note: true,
+      specialNotes: true,
+      orderDate: true,
+      userName: true,
+      deliveryAddress: true,
+      table: { select: { tableNumber: true } },
+    },
+  });
+  ctx.orderCache.set(orderId, order);
+  return order;
+}
+
+async function getSiblingTicket(
+  orderId: string,
+  station: PrismaDisplayStation,
+  ctx: { siblingCache: Map<string, any> }
+) {
+  const siblingStation =
+    station === PrismaDisplayStation.KITCHEN
+      ? PrismaDisplayStation.BAR
+      : PrismaDisplayStation.KITCHEN;
+  const cacheKey = `${orderId}:${siblingStation}`;
+  if (ctx.siblingCache.has(cacheKey)) return ctx.siblingCache.get(cacheKey);
+  const sibling = await prisma.kitchenTicket.findUnique({
+    where: { orderId_station: { orderId, station: siblingStation } },
+    select: { status: true },
+  });
+  ctx.siblingCache.set(cacheKey, sibling);
+  return sibling;
+}
+
+// ---------------------------------------------------------------------------
 // Pothos object: KitchenTicketItem
 // ---------------------------------------------------------------------------
 
@@ -61,90 +106,66 @@ builder.prismaObject("KitchenTicket", {
     // Order relation (for nested queries)
     order: t.relation("order"),
 
-    // ---------- Computed fields from Order ----------
+    // ---------- Computed fields from Order (per-request cached) ----------
 
     orderNumber: t.string({
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { orderNumber: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.orderNumber ?? "";
       },
     }),
 
     tableId: t.string({
       nullable: true,
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { tableId: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.tableId ?? null;
       },
     }),
 
     tableNumber: t.int({
       nullable: true,
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { table: { select: { tableNumber: true } } },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.table?.tableNumber ?? null;
       },
     }),
 
     orderNote: t.string({
       nullable: true,
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { note: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.note ?? null;
       },
     }),
 
     specialNotes: t.string({
       nullable: true,
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { specialNotes: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.specialNotes ?? null;
       },
     }),
 
     orderDate: t.field({
       type: "DateTime",
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { orderDate: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.orderDate ?? new Date();
       },
     }),
 
     userName: t.string({
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { userName: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         return order?.userName ?? "";
       },
     }),
 
     // Computed: DINE_IN | DELIVERY | TAKEAWAY
     orderType: t.string({
-      resolve: async (ticket) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ticket.orderId },
-          select: { tableId: true, deliveryAddress: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const order = await getOrderForTicket(ticket.orderId, await ctx);
         if (!order) return "TAKEAWAY";
         if (order.tableId) return "DINE_IN";
         if (order.deliveryAddress && order.deliveryAddress.trim() !== "") return "DELIVERY";
@@ -155,21 +176,8 @@ builder.prismaObject("KitchenTicket", {
     // Computed: sibling station's ticket status
     siblingTicketStatus: t.string({
       nullable: true,
-      resolve: async (ticket) => {
-        const siblingStation =
-          ticket.station === PrismaDisplayStation.KITCHEN
-            ? PrismaDisplayStation.BAR
-            : PrismaDisplayStation.KITCHEN;
-
-        const sibling = await prisma.kitchenTicket.findUnique({
-          where: {
-            orderId_station: {
-              orderId: ticket.orderId,
-              station: siblingStation,
-            },
-          },
-          select: { status: true },
-        });
+      resolve: async (ticket, _args, ctx) => {
+        const sibling = await getSiblingTicket(ticket.orderId, ticket.station, await ctx);
         return sibling?.status ?? null;
       },
     }),

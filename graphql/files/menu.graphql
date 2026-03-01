@@ -1,5 +1,6 @@
 mutation AddMenu(
   $category: String!
+  $categoryId: String
   $image: String!
   $longDescr: String!
   $prepType: [String!]!
@@ -11,6 +12,7 @@ mutation AddMenu(
 ) {
   addMenu(
     category: $category
+    categoryId: $categoryId
     image: $image
     longDescr: $longDescr
     prepType: $prepType
@@ -26,6 +28,7 @@ mutation AddMenu(
 
 mutation EditMenu(
   $category: String!
+  $categoryId: String
   $editMenuId: String!
   $image: String!
   $longDescr: String!
@@ -38,6 +41,7 @@ mutation EditMenu(
 ) {
   editMenu(
     category: $category
+    categoryId: $categoryId
     id: $editMenuId
     image: $image
     longDescr: $longDescr
@@ -68,6 +72,7 @@ query GetMenus($first: Int, $after: ID) {
       cursor
       node {
         category
+        categoryId
         id
         image
         longDescr
@@ -77,6 +82,9 @@ query GetMenus($first: Int, $after: ID) {
         sellingPrice
         shortDescr
         title
+        Category {
+          station
+        }
       }
     }
   }
@@ -85,6 +93,7 @@ query GetMenus($first: Int, $after: ID) {
 query GetMenuUserFavorites($menuIds: [String!]!, $userEmail: String!) {
   getMenuUserFavorites(menuIds: $menuIds, userEmail: $userEmail) {
     category
+    categoryId
     id
     image
     longDescr
